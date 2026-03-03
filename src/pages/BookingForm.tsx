@@ -5,6 +5,7 @@ import { CheckCircle } from "lucide-react";
 import { hotels, getRooms } from "@/lib/mockData";
 import Layout from "@/components/Layout";
 import { toast } from "sonner";
+import { useI18n, useLocalizedHotelData } from "@/lib/i18n";
 
 const BookingForm = () => {
   const [searchParams] = useSearchParams();
@@ -13,10 +14,12 @@ const BookingForm = () => {
   const hotel = hotels.find((h) => h.id === hotelId);
   const room = hotel ? getRooms(hotel.id).find((r) => r.id === roomId) : null;
   const [submitted, setSubmitted] = useState(false);
+  const { t } = useI18n();
+  const { localizeHotelName, localizeCity, localizeRoomType } = useLocalizedHotelData();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("تم إرسال الحجز بنجاح!");
+    toast.success(t("booking.successToast"));
     setSubmitted(true);
   };
 
@@ -27,12 +30,19 @@ const BookingForm = () => {
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="inline-block">
             <CheckCircle className="w-16 h-16 text-primary mx-auto" />
           </motion.div>
-          <h1 className="text-3xl font-extrabold text-accent">تم تأكيد الحجز!</h1>
-          <p className="text-muted-foreground">تم إرسال حجزك إلى الفندق عبر نظام حاجز. ستتلقى بريداً إلكترونياً للتأكيد قريباً.</p>
+          <h1 className="text-3xl font-extrabold text-accent">{t("booking.confirmed")}</h1>
+          <p className="text-muted-foreground">{t("booking.confirmedDesc")}</p>
         </div>
       </Layout>
     );
   }
+
+  const fields = [
+    { label: t("booking.firstName"), type: "text", required: true },
+    { label: t("booking.lastName"), type: "text", required: true },
+    { label: t("booking.email"), type: "email", required: true },
+    { label: t("booking.phone"), type: "tel", required: true },
+  ];
 
   return (
     <Layout>
@@ -42,21 +52,15 @@ const BookingForm = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-3xl font-extrabold text-accent mb-8"
         >
-          أكمل حجزك
+          {t("booking.title")}
         </motion.h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Form */}
           <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-5">
             <div className="bg-card rounded-xl p-6 shadow-card border border-border/50 space-y-4">
-              <h2 className="font-semibold text-foreground text-lg">معلومات الضيف</h2>
+              <h2 className="font-semibold text-foreground text-lg">{t("booking.guestInfo")}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  { label: "الاسم الأول", type: "text", required: true },
-                  { label: "اسم العائلة", type: "text", required: true },
-                  { label: "البريد الإلكتروني", type: "email", required: true },
-                  { label: "رقم الهاتف", type: "tel", required: true },
-                ].map((field) => (
+                {fields.map((field) => (
                   <div key={field.label} className="space-y-1.5">
                     <label className="text-sm font-medium text-foreground">{field.label}</label>
                     <input
@@ -71,21 +75,21 @@ const BookingForm = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">تاريخ الوصول</label>
+                  <label className="text-sm font-medium text-foreground">{t("booking.checkIn")}</label>
                   <input type="date" required className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">تاريخ المغادرة</label>
+                  <label className="text-sm font-medium text-foreground">{t("booking.checkOut")}</label>
                   <input type="date" required className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground" />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">طلبات خاصة</label>
+                <label className="text-sm font-medium text-foreground">{t("booking.specialRequests")}</label>
                 <textarea
                   rows={3}
                   className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground resize-none focus:ring-2 focus:ring-primary/30 transition"
-                  placeholder="أي طلبات خاصة..."
+                  placeholder={t("booking.specialPlaceholder")}
                 />
               </div>
             </div>
@@ -94,39 +98,36 @@ const BookingForm = () => {
               type="submit"
               className="w-full gradient-cta text-primary-foreground py-3 rounded-xl font-semibold hover:opacity-90 transition-opacity"
             >
-              تأكيد الحجز
+              {t("booking.confirm")}
             </button>
           </form>
 
-          {/* Summary */}
           <div className="bg-card rounded-xl p-6 shadow-card border border-border/50 h-fit space-y-4">
-            <h2 className="font-semibold text-foreground text-lg">ملخص الحجز</h2>
+            <h2 className="font-semibold text-foreground text-lg">{t("booking.summary")}</h2>
             {hotel && room ? (
               <>
-                <img src={hotel.image} alt={hotel.name} className="w-full h-32 object-cover rounded-lg" />
+                <img src={hotel.image} alt={localizeHotelName(hotel.id, hotel.name)} className="w-full h-32 object-cover rounded-lg" />
                 <div>
-                  <h3 className="font-semibold text-foreground">{hotel.name}</h3>
-                  <p className="text-sm text-muted-foreground">{hotel.city}</p>
+                  <h3 className="font-semibold text-foreground">{localizeHotelName(hotel.id, hotel.name)}</h3>
+                  <p className="text-sm text-muted-foreground">{localizeCity(hotel.city)}</p>
                 </div>
                 <div className="border-t border-border pt-3 space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">نوع الغرفة</span>
-                    <span className="font-medium text-foreground">{room.type}</span>
+                    <span className="text-muted-foreground">{t("booking.roomType")}</span>
+                    <span className="font-medium text-foreground">{localizeRoomType(room.type)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">السعر/الليلة</span>
+                    <span className="text-muted-foreground">{t("booking.pricePerNight")}</span>
                     <span className="font-medium text-foreground" dir="ltr">${room.price}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">الضيوف</span>
-                    <span className="font-medium text-foreground">حتى {room.capacity}</span>
+                    <span className="text-muted-foreground">{t("booking.guestsLabel")}</span>
+                    <span className="font-medium text-foreground">{t("booking.upTo")} {room.capacity}</span>
                   </div>
                 </div>
               </>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                لم يتم اختيار غرفة. يرجى العودة واختيار غرفة.
-              </p>
+              <p className="text-sm text-muted-foreground">{t("booking.noRoom")}</p>
             )}
           </div>
         </div>

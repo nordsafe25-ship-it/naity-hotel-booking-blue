@@ -5,12 +5,15 @@ import { SlidersHorizontal } from "lucide-react";
 import { hotels, cities } from "@/lib/mockData";
 import HotelCard from "@/components/HotelCard";
 import Layout from "@/components/Layout";
+import { useI18n, useLocalizedHotelData } from "@/lib/i18n";
 
 const HotelsListing = () => {
   const [searchParams] = useSearchParams();
   const [city, setCity] = useState(searchParams.get("city") || "");
   const [minStars, setMinStars] = useState(0);
   const [maxPrice, setMaxPrice] = useState(500);
+  const { t } = useI18n();
+  const { localizeCity } = useLocalizedHotelData();
 
   const filtered = useMemo(
     () =>
@@ -31,11 +34,10 @@ const HotelsListing = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-3xl font-extrabold text-accent mb-8"
         >
-          تصفح الفنادق
+          {t("hotels.title")}
         </motion.h1>
 
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filters */}
           <motion.aside
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -43,40 +45,40 @@ const HotelsListing = () => {
           >
             <div className="flex items-center gap-2 text-foreground font-semibold">
               <SlidersHorizontal className="w-4 h-4 text-primary" />
-              التصفية
+              {t("hotels.filter")}
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">المدينة</label>
+              <label className="text-sm font-medium text-foreground">{t("hotels.city")}</label>
               <select
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 className="w-full bg-muted rounded-lg px-3 py-2 text-sm outline-none text-foreground"
               >
-                <option value="">جميع المدن</option>
+                <option value="">{t("hotels.allCities")}</option>
                 {cities.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                  <option key={c} value={c}>{localizeCity(c)}</option>
                 ))}
               </select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">الحد الأدنى للنجوم</label>
+              <label className="text-sm font-medium text-foreground">{t("hotels.minStars")}</label>
               <select
                 value={minStars}
                 onChange={(e) => setMinStars(Number(e.target.value))}
                 className="w-full bg-muted rounded-lg px-3 py-2 text-sm outline-none text-foreground"
               >
-                <option value={0}>الكل</option>
+                <option value={0}>{t("hotels.all")}</option>
                 {[3, 4, 5].map((s) => (
-                  <option key={s} value={s}>{s}+ نجوم</option>
+                  <option key={s} value={s}>{s}+ {t("hotels.stars")}</option>
                 ))}
               </select>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
-                الحد الأقصى للسعر: <span dir="ltr">${maxPrice}</span>
+                {t("hotels.maxPrice")}: <span dir="ltr">${maxPrice}</span>
               </label>
               <input
                 type="range"
@@ -89,12 +91,9 @@ const HotelsListing = () => {
             </div>
           </motion.aside>
 
-          {/* Results */}
           <div className="flex-1">
             {filtered.length === 0 ? (
-              <p className="text-muted-foreground text-center py-20">
-                لا توجد فنادق تطابق معايير البحث. حاول تعديل الفلاتر.
-              </p>
+              <p className="text-muted-foreground text-center py-20">{t("hotels.noResults")}</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filtered.map((hotel, i) => (

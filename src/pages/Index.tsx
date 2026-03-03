@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, MapPin, Calendar, Users, Shield, Zap, CheckCircle, ArrowLeft } from "lucide-react";
+import { Search, MapPin, Calendar, Users, Shield, Zap, CheckCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { hotels, cities } from "@/lib/mockData";
 import HotelCard from "@/components/HotelCard";
 import Layout from "@/components/Layout";
+import { useI18n, useLocalizedHotelData } from "@/lib/i18n";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -17,6 +18,9 @@ const fadeUp = {
 const Index = () => {
   const navigate = useNavigate();
   const [city, setCity] = useState("");
+  const { t, lang } = useI18n();
+  const { localizeCity } = useLocalizedHotelData();
+  const Arrow = lang === "ar" ? ArrowLeft : ArrowRight;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,16 +46,15 @@ const Index = () => {
               custom={0}
               className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-accent leading-tight"
             >
-              اعثر على إقامتك المثالية مع{" "}
-              <span className="text-primary">نايتي</span>
+              {t("hero.title")}{" "}
+              <span className="text-primary">Naity</span>
             </motion.h1>
             <motion.p
               variants={fadeUp}
               custom={1}
               className="text-lg text-muted-foreground max-w-lg mx-auto"
             >
-              احجز فنادق متصلة مباشرة بنظام حاجز لإدارة الفنادق.
-              توفر فوري. تأكيد لحظي.
+              {t("hero.subtitle")}
             </motion.p>
 
             {/* Search */}
@@ -68,9 +71,9 @@ const Index = () => {
                   onChange={(e) => setCity(e.target.value)}
                   className="w-full bg-transparent py-3 text-sm outline-none text-foreground"
                 >
-                  <option value="">أي مدينة</option>
+                  <option value="">{t("hero.anyCity")}</option>
                   {cities.map((c) => (
-                    <option key={c} value={c}>{c}</option>
+                    <option key={c} value={c}>{localizeCity(c)}</option>
                   ))}
                 </select>
               </div>
@@ -81,10 +84,10 @@ const Index = () => {
               <div className="flex items-center gap-2 px-3 bg-muted rounded-xl">
                 <Users className="w-4 h-4 text-primary shrink-0" />
                 <select className="bg-transparent py-3 text-sm outline-none text-foreground">
-                  <option>1 ضيف</option>
-                  <option>2 ضيوف</option>
-                  <option>3 ضيوف</option>
-                  <option>+4 ضيوف</option>
+                  <option>{t("hero.guest1")}</option>
+                  <option>{t("hero.guest2")}</option>
+                  <option>{t("hero.guest3")}</option>
+                  <option>{t("hero.guest4")}</option>
                 </select>
               </div>
               <button
@@ -92,7 +95,7 @@ const Index = () => {
                 className="gradient-cta text-primary-foreground px-6 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shrink-0"
               >
                 <Search className="w-4 h-4" />
-                بحث
+                {t("hero.search")}
               </button>
             </motion.form>
           </motion.div>
@@ -110,15 +113,10 @@ const Index = () => {
           >
             <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-medium">
               <Zap className="w-4 h-4" />
-              مدعوم بنظام حاجز
+              {t("hajiz.badge")}
             </div>
-            <h2 className="text-3xl font-bold text-foreground">
-              متصل مباشرة بالفنادق
-            </h2>
-            <p className="text-muted-foreground">
-              كل فندق على نايتي يستخدم نظام حاجز داخلياً.
-              هذا يعني أنك تحصل على توفر الغرف لحظياً، أسعار مباشرة، وتأكيد حجز فوري — بدون وسطاء.
-            </p>
+            <h2 className="text-3xl font-bold text-foreground">{t("hajiz.title")}</h2>
+            <p className="text-muted-foreground">{t("hajiz.desc")}</p>
           </motion.div>
         </div>
       </section>
@@ -127,12 +125,12 @@ const Index = () => {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-foreground">فنادق مميزة</h2>
+            <h2 className="text-2xl font-bold text-foreground">{t("featured.title")}</h2>
             <button
               onClick={() => navigate("/hotels")}
               className="text-primary text-sm font-medium flex items-center gap-1 hover:gap-2 transition-all"
             >
-              عرض الكل <ArrowLeft className="w-4 h-4" />
+              {t("featured.viewAll")} <Arrow className="w-4 h-4" />
             </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -155,25 +153,13 @@ const Index = () => {
       <section className="py-16 bg-muted/50">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl font-bold text-foreground text-center mb-10">
-            لماذا تحجز مع نايتي؟
+            {t("benefits.title")}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              {
-                icon: Zap,
-                title: "توفر لحظي",
-                desc: "بيانات الغرف تُجلب مباشرة من نظام حاجز الخاص بالفندق. ما تراه هو ما تحصل عليه.",
-              },
-              {
-                icon: CheckCircle,
-                title: "تأكيد فوري",
-                desc: "حجزك يُؤكد فوراً عبر واجهة حاجز البرمجية. لا انتظار، لا شك.",
-              },
-              {
-                icon: Shield,
-                title: "آمن وموثوق",
-                desc: "حجوزات مشفرة من البداية للنهاية مع نظام موثوق تستخدمه فنادق حول العالم.",
-              },
+              { icon: Zap, title: t("benefits.realtime.title"), desc: t("benefits.realtime.desc") },
+              { icon: CheckCircle, title: t("benefits.instant.title"), desc: t("benefits.instant.desc") },
+              { icon: Shield, title: t("benefits.secure.title"), desc: t("benefits.secure.desc") },
             ].map((item, i) => (
               <motion.div
                 key={i}

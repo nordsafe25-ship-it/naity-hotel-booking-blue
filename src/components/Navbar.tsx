@@ -1,26 +1,28 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Globe } from "lucide-react";
 import naityLogo from "@/assets/naity-logo.png";
-
-const navLinks = [
-  { to: "/", label: "الرئيسية" },
-  { to: "/hotels", label: "الفنادق" },
-  { to: "/how-it-works", label: "كيف يعمل" },
-  { to: "/about", label: "عن نايتي" },
-  { to: "/contact", label: "تواصل معنا" },
-];
+import { useI18n } from "@/lib/i18n";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const { t, lang, setLang } = useI18n();
+
+  const navLinks = [
+    { to: "/", label: t("nav.home") },
+    { to: "/hotels", label: t("nav.hotels") },
+    { to: "/how-it-works", label: t("nav.howItWorks") },
+    { to: "/about", label: t("nav.about") },
+    { to: "/contact", label: t("nav.contact") },
+  ];
 
   return (
     <nav className="sticky top-0 z-50 bg-card/90 backdrop-blur-md border-b border-border/50">
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         <Link to="/" className="flex items-center gap-2">
-          <img src={naityLogo} alt="نايتي" className="h-10 w-auto" />
-          <span className="text-xl font-bold text-accent">نايتي</span>
+          <img src={naityLogo} alt="Naity" className="h-10 w-auto" />
+          <span className="text-xl font-bold text-accent">Naity</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-1">
@@ -37,14 +39,29 @@ const Navbar = () => {
               {link.label}
             </Link>
           ))}
+          <button
+            onClick={() => setLang(lang === "ar" ? "en" : "ar")}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors ms-2"
+          >
+            <Globe className="w-4 h-4" />
+            {lang === "ar" ? "EN" : "عربي"}
+          </button>
         </div>
 
-        <button
-          className="md:hidden p-2 rounded-lg hover:bg-muted"
-          onClick={() => setOpen(!open)}
-        >
-          {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        <div className="md:hidden flex items-center gap-1">
+          <button
+            onClick={() => setLang(lang === "ar" ? "en" : "ar")}
+            className="p-2 rounded-lg hover:bg-muted text-sm font-medium text-muted-foreground"
+          >
+            {lang === "ar" ? "EN" : "عربي"}
+          </button>
+          <button
+            className="p-2 rounded-lg hover:bg-muted"
+            onClick={() => setOpen(!open)}
+          >
+            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
 
       {open && (
