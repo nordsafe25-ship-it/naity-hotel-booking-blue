@@ -151,6 +151,11 @@ const translations: Record<string, Record<Lang, string>> = {
   "footer.joinHajiz": { ar: "انضم إلى حاجز", en: "Join Hajiz" },
   "footer.copyright": { ar: "جميع الحقوق محفوظة. مدعوم بنظام حاجز.", en: "All rights reserved. Powered by Hajiz." },
 
+  // App download
+  "app.download": { ar: "حمّل التطبيق", en: "Download the App" },
+  "app.appStore": { ar: "App Store", en: "App Store" },
+  "app.googlePlay": { ar: "Google Play", en: "Google Play" },
+
   // 404
   "notFound.title": { ar: "الصفحة غير موجودة", en: "Page Not Found" },
   "notFound.desc": { ar: "عذراً! الصفحة غير موجودة", en: "Sorry! The page you're looking for doesn't exist." },
