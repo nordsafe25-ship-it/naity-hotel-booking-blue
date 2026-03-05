@@ -1,3 +1,4 @@
+// i18n module - direct hotel API connection
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from "react";
 
 type Lang = "ar" | "en";
