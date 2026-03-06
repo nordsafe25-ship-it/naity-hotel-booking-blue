@@ -18,8 +18,10 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminHotels from "./pages/admin/AdminHotels";
+import AdminRooms from "./pages/admin/AdminRooms";
 import AdminManagers from "./pages/admin/AdminManagers";
 import AdminBookings from "./pages/admin/AdminBookings";
+import AdminSync from "./pages/admin/AdminSync";
 import HotelPanel from "./pages/hotel/HotelPanel";
 
 const queryClient = new QueryClient();
@@ -49,8 +51,10 @@ const App = () => (
               {/* Admin */}
               <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
               <Route path="/admin/hotels" element={<ProtectedRoute requiredRole="admin"><AdminHotels /></ProtectedRoute>} />
+              <Route path="/admin/rooms" element={<ProtectedRoute requiredRole="admin"><AdminRooms /></ProtectedRoute>} />
               <Route path="/admin/managers" element={<ProtectedRoute requiredRole="admin"><AdminManagers /></ProtectedRoute>} />
               <Route path="/admin/bookings" element={<ProtectedRoute requiredRole="admin"><AdminBookings /></ProtectedRoute>} />
+              <Route path="/admin/sync" element={<ProtectedRoute requiredRole="admin"><AdminSync /></ProtectedRoute>} />
 
               {/* Hotel Manager */}
               <Route path="/hotel-panel" element={<ProtectedRoute requiredRole="hotel_manager"><HotelPanel /></ProtectedRoute>} />

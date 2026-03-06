@@ -1,22 +1,28 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useI18n } from "@/lib/i18n";
 import AdminLayout from "./AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, Star, MapPin, Pencil, Trash2 } from "lucide-react";
+import { Plus, Star, MapPin, Pencil, Trash2, Upload, Image, AlertTriangle } from "lucide-react";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 const AdminHotels = () => {
+  const { lang } = useI18n();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Tables<"hotels"> | null>(null);
+  const [galleryHotel, setGalleryHotel] = useState<Tables<"hotels"> | null>(null);
   const [form, setForm] = useState<Partial<TablesInsert<"hotels">>>({
     name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "",
+    contact_phone: "", contact_email: "",
   });
 
   const { data: hotels, isLoading } = useQuery({
@@ -40,7 +46,7 @@ const AdminHotels = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-hotels"] });
-      toast.success(editing ? "تم تحديث الفندق" : "تم إضافة الفندق");
+      toast.success(editing ? (lang === "ar" ? "تم تحديث الفندق" : "Hotel updated") : (lang === "ar" ? "تم إضافة الفندق" : "Hotel added"));
       setOpen(false);
       resetForm();
     },
@@ -54,12 +60,23 @@ const AdminHotels = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-hotels"] });
-      toast.success("تم حذف الفندق");
+      toast.success(lang === "ar" ? "تم حذف الفندق" : "Hotel deleted");
+    },
+  });
+
+  const toggleManualMode = useMutation({
+    mutationFn: async ({ id, manual_mode }: { id: string; manual_mode: boolean }) => {
+      const { error } = await supabase.from("hotels").update({ manual_mode }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-hotels"] });
+      toast.success(lang === "ar" ? "تم تحديث وضع التشغيل" : "Manual mode updated");
     },
   });
 
   const resetForm = () => {
-    setForm({ name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "" });
+    setForm({ name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "", contact_phone: "", contact_email: "" });
     setEditing(null);
   };
 
@@ -69,6 +86,7 @@ const AdminHotels = () => {
       name_en: hotel.name_en, name_ar: hotel.name_ar, city: hotel.city,
       stars: hotel.stars, description_en: hotel.description_en ?? "",
       description_ar: hotel.description_ar ?? "", address: hotel.address ?? "",
+      contact_phone: (hotel as any).contact_phone ?? "", contact_email: (hotel as any).contact_email ?? "",
     });
     setOpen(true);
   };
@@ -76,20 +94,22 @@ const AdminHotels = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">إدارة الفنادق</h1>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <h1 className="text-2xl font-bold text-foreground">
+            {lang === "ar" ? "إدارة الفنادق" : "Hotel Management"}
+          </h1>
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
             <DialogTrigger asChild>
-              <Button className="gradient-cta gap-2"><Plus className="w-4 h-4" /> إضافة فندق</Button>
+              <Button className="gradient-cta gap-2"><Plus className="w-4 h-4" /> {lang === "ar" ? "إضافة فندق" : "Add Hotel"}</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+            <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editing ? "تعديل الفندق" : "إضافة فندق جديد"}</DialogTitle>
+                <DialogTitle>{editing ? (lang === "ar" ? "تعديل الفندق" : "Edit Hotel") : (lang === "ar" ? "إضافة فندق جديد" : "Add New Hotel")}</DialogTitle>
               </DialogHeader>
               <form onSubmit={(e) => { e.preventDefault(); saveMutation.mutate(form); }} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>الاسم (عربي)</Label>
+                    <Label>{lang === "ar" ? "الاسم (عربي)" : "Name (Arabic)"}</Label>
                     <Input value={form.name_ar} onChange={(e) => setForm(f => ({ ...f, name_ar: e.target.value }))} required />
                   </div>
                   <div>
@@ -99,20 +119,30 @@ const AdminHotels = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>المدينة</Label>
+                    <Label>{lang === "ar" ? "المدينة" : "City"}</Label>
                     <Input value={form.city} onChange={(e) => setForm(f => ({ ...f, city: e.target.value }))} required />
                   </div>
                   <div>
-                    <Label>النجوم</Label>
+                    <Label>{lang === "ar" ? "النجوم" : "Stars"}</Label>
                     <Input type="number" min={1} max={5} value={form.stars} onChange={(e) => setForm(f => ({ ...f, stars: +e.target.value }))} />
                   </div>
                 </div>
                 <div>
-                  <Label>العنوان</Label>
+                  <Label>{lang === "ar" ? "العنوان" : "Address"}</Label>
                   <Input value={form.address ?? ""} onChange={(e) => setForm(f => ({ ...f, address: e.target.value }))} />
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>{lang === "ar" ? "هاتف التواصل" : "Contact Phone"}</Label>
+                    <Input value={(form as any).contact_phone ?? ""} onChange={(e) => setForm(f => ({ ...f, contact_phone: e.target.value }))} />
+                  </div>
+                  <div>
+                    <Label>{lang === "ar" ? "بريد التواصل" : "Contact Email"}</Label>
+                    <Input type="email" value={(form as any).contact_email ?? ""} onChange={(e) => setForm(f => ({ ...f, contact_email: e.target.value }))} />
+                  </div>
+                </div>
                 <div>
-                  <Label>الوصف (عربي)</Label>
+                  <Label>{lang === "ar" ? "الوصف (عربي)" : "Description (Arabic)"}</Label>
                   <Textarea value={form.description_ar ?? ""} onChange={(e) => setForm(f => ({ ...f, description_ar: e.target.value }))} />
                 </div>
                 <div>
@@ -120,12 +150,25 @@ const AdminHotels = () => {
                   <Textarea value={form.description_en ?? ""} onChange={(e) => setForm(f => ({ ...f, description_en: e.target.value }))} />
                 </div>
                 <Button type="submit" className="w-full gradient-cta" disabled={saveMutation.isPending}>
-                  {saveMutation.isPending ? "جاري الحفظ..." : editing ? "تحديث" : "إضافة"}
+                  {saveMutation.isPending ? "..." : editing ? (lang === "ar" ? "تحديث" : "Update") : (lang === "ar" ? "إضافة" : "Add")}
                 </Button>
               </form>
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* Gallery Modal */}
+        <Dialog open={!!galleryHotel} onOpenChange={(v) => { if (!v) setGalleryHotel(null); }}>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {lang === "ar" ? "معرض الصور — " : "Gallery — "}
+                {galleryHotel && (lang === "ar" ? galleryHotel.name_ar : galleryHotel.name_en)}
+              </DialogTitle>
+            </DialogHeader>
+            {galleryHotel && <GalleryManager hotelId={galleryHotel.id} />}
+          </DialogContent>
+        </Dialog>
 
         {isLoading ? (
           <div className="flex justify-center py-12">
@@ -134,42 +177,143 @@ const AdminHotels = () => {
         ) : (
           <div className="grid gap-4">
             {hotels?.map((hotel) => (
-              <div key={hotel.id} className="bg-card rounded-xl p-4 border border-border/50 shadow-card flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center">
-                    {hotel.cover_image ? (
-                      <img src={hotel.cover_image} alt="" className="w-full h-full object-cover rounded-lg" />
-                    ) : (
-                      <MapPin className="w-6 h-6 text-muted-foreground" />
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground">{hotel.name_ar}</h3>
-                    <p className="text-sm text-muted-foreground">{hotel.name_en} • {hotel.city}</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      {Array.from({ length: hotel.stars }).map((_, i) => (
-                        <Star key={i} className="w-3 h-3 fill-primary text-primary" />
-                      ))}
+              <div key={hotel.id} className="bg-card rounded-xl p-4 border border-border/50 shadow-card">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                      {hotel.cover_image ? (
+                        <img src={hotel.cover_image} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <MapPin className="w-6 h-6 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">{lang === "ar" ? hotel.name_ar : hotel.name_en}</h3>
+                      <p className="text-sm text-muted-foreground">{lang === "ar" ? hotel.name_en : hotel.name_ar} • {hotel.city}</p>
+                      <div className="flex items-center gap-1 mt-1">
+                        {Array.from({ length: hotel.stars }).map((_, i) => (
+                          <Star key={i} className="w-3 h-3 fill-primary text-primary" />
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={() => openEdit(hotel)}>
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                  <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(hotel.id)}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* Kill Switch */}
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted">
+                      <AlertTriangle className={`w-4 h-4 ${(hotel as any).manual_mode ? "text-destructive" : "text-muted-foreground"}`} />
+                      <span className="text-xs font-medium text-foreground">
+                        {lang === "ar" ? "وضع يدوي" : "Manual"}
+                      </span>
+                      <Switch
+                        checked={(hotel as any).manual_mode ?? false}
+                        onCheckedChange={(v) => toggleManualMode.mutate({ id: hotel.id, manual_mode: v })}
+                      />
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => setGalleryHotel(hotel)}>
+                      <Image className="w-4 h-4" />
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => openEdit(hotel)}>
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(hotel.id)}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
             {hotels?.length === 0 && (
-              <p className="text-center text-muted-foreground py-12">لا توجد فنادق. أضف فندقك الأول!</p>
+              <p className="text-center text-muted-foreground py-12">
+                {lang === "ar" ? "لا توجد فنادق. أضف فندقك الأول!" : "No hotels yet. Add your first hotel!"}
+              </p>
             )}
           </div>
         )}
       </div>
     </AdminLayout>
+  );
+};
+
+// Gallery Manager Component
+const GalleryManager = ({ hotelId }: { hotelId: string }) => {
+  const { lang } = useI18n();
+  const queryClient = useQueryClient();
+  const [uploading, setUploading] = useState(false);
+
+  const { data: photos } = useQuery({
+    queryKey: ["hotel-photos", hotelId],
+    queryFn: async () => {
+      const { data } = await supabase.from("hotel_photos").select("*").eq("hotel_id", hotelId).order("sort_order");
+      return data ?? [];
+    },
+  });
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length) return;
+    setUploading(true);
+
+    for (const file of Array.from(files)) {
+      const ext = file.name.split(".").pop();
+      const path = `${hotelId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("hotel-photos").upload(path, file);
+      if (uploadError) { toast.error(uploadError.message); continue; }
+
+      const { data: { publicUrl } } = supabase.storage.from("hotel-photos").getPublicUrl(path);
+      await supabase.from("hotel_photos").insert({ hotel_id: hotelId, url: publicUrl, sort_order: (photos?.length ?? 0) });
+    }
+
+    queryClient.invalidateQueries({ queryKey: ["hotel-photos"] });
+    setUploading(false);
+    toast.success(lang === "ar" ? "تم رفع الصور" : "Photos uploaded");
+  };
+
+  const deletePhoto = async (photo: Tables<"hotel_photos">) => {
+    const urlParts = photo.url.split("/hotel-photos/");
+    if (urlParts[1]) {
+      await supabase.storage.from("hotel-photos").remove([urlParts[1]]);
+    }
+    await supabase.from("hotel_photos").delete().eq("id", photo.id);
+    queryClient.invalidateQueries({ queryKey: ["hotel-photos"] });
+    toast.success(lang === "ar" ? "تم حذف الصورة" : "Photo deleted");
+  };
+
+  const setCoverImage = async (url: string) => {
+    await supabase.from("hotels").update({ cover_image: url }).eq("id", hotelId);
+    queryClient.invalidateQueries({ queryKey: ["admin-hotels"] });
+    toast.success(lang === "ar" ? "تم تعيين صورة الغلاف" : "Cover image set");
+  };
+
+  return (
+    <div className="space-y-4">
+      <label className="cursor-pointer">
+        <input type="file" accept="image/*" multiple className="hidden" onChange={handleUpload} disabled={uploading} />
+        <Button asChild className="gradient-cta gap-2 w-full" disabled={uploading}>
+          <span><Upload className="w-4 h-4" /> {uploading ? "..." : (lang === "ar" ? "رفع صور" : "Upload Photos")}</span>
+        </Button>
+      </label>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {photos?.map((photo) => (
+          <div key={photo.id} className="relative group rounded-lg overflow-hidden border border-border/50">
+            <img src={photo.url} alt="" className="w-full h-32 object-cover" />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+              <Button size="sm" variant="secondary" onClick={() => setCoverImage(photo.url)} className="text-xs">
+                {lang === "ar" ? "غلاف" : "Cover"}
+              </Button>
+              <Button size="sm" variant="destructive" onClick={() => deletePhoto(photo)}>
+                <Trash2 className="w-3 h-3" />
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+      {photos?.length === 0 && (
+        <p className="text-center text-muted-foreground py-6 text-sm">
+          {lang === "ar" ? "لا توجد صور" : "No photos yet"}
+        </p>
+      )}
+    </div>
   );
 };
 

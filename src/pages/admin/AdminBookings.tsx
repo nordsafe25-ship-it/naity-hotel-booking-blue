@@ -1,7 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useI18n } from "@/lib/i18n";
 import AdminLayout from "./AdminLayout";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { Search, Eye, CheckCircle, XCircle, Hash } from "lucide-react";
 
 const statusColors: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -10,24 +17,178 @@ const statusColors: Record<string, string> = {
   completed: "bg-blue-100 text-blue-800",
 };
 
+const syncColors: Record<string, string> = {
+  pending: "bg-yellow-100 text-yellow-800",
+  sent_to_local: "bg-green-100 text-green-800",
+  failed: "bg-red-100 text-red-800",
+};
+
 const AdminBookings = () => {
+  const { lang } = useI18n();
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [paymentFilter, setPaymentFilter] = useState("all");
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+
   const { data: bookings, isLoading } = useQuery({
-    queryKey: ["admin-bookings"],
+    queryKey: ["admin-bookings", statusFilter, paymentFilter],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("bookings")
         .select("*, hotels(name_ar, name_en), room_categories(name_ar, name_en)")
         .order("created_at", { ascending: false });
+      if (statusFilter !== "all") q = q.eq("status", statusFilter);
+      if (paymentFilter !== "all") q = q.eq("payment_status", paymentFilter);
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
   });
 
+  const updateStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
+      toast.success(lang === "ar" ? "تم تحديث الحالة" : "Status updated");
+    },
+  });
+
+  const filteredBookings = bookings?.filter((b) => {
+    if (!search) return true;
+    const s = search.toLowerCase();
+    return (
+      b.guest_first_name.toLowerCase().includes(s) ||
+      b.guest_last_name.toLowerCase().includes(s) ||
+      b.guest_email.toLowerCase().includes(s) ||
+      (b.passport_number && b.passport_number.toLowerCase().includes(s)) ||
+      (b.transaction_hash && b.transaction_hash.toLowerCase().includes(s))
+    );
+  });
+
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-foreground">الحجوزات</h1>
+        <h1 className="text-2xl font-bold text-foreground">
+          {lang === "ar" ? "سجل الحجوزات" : "Reservation Ledger"}
+        </h1>
 
+        {/* Filters */}
+        <div className="flex flex-wrap gap-3">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder={lang === "ar" ? "بحث بالاسم، البريد، جواز السفر..." : "Search by name, email, passport..."}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="ps-9"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{lang === "ar" ? "جميع الحالات" : "All Status"}</SelectItem>
+              <SelectItem value="pending">{lang === "ar" ? "قيد الانتظار" : "Pending"}</SelectItem>
+              <SelectItem value="confirmed">{lang === "ar" ? "مؤكد" : "Confirmed"}</SelectItem>
+              <SelectItem value="cancelled">{lang === "ar" ? "ملغي" : "Cancelled"}</SelectItem>
+              <SelectItem value="completed">{lang === "ar" ? "مكتمل" : "Completed"}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{lang === "ar" ? "جميع المدفوعات" : "All Payments"}</SelectItem>
+              <SelectItem value="unpaid">{lang === "ar" ? "غير مدفوع" : "Unpaid"}</SelectItem>
+              <SelectItem value="paid">{lang === "ar" ? "مدفوع" : "Paid"}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Booking Detail Modal */}
+        <Dialog open={!!selectedBooking} onOpenChange={(v) => { if (!v) setSelectedBooking(null); }}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>{lang === "ar" ? "تفاصيل الحجز" : "Booking Details"}</DialogTitle>
+            </DialogHeader>
+            {selectedBooking && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">{lang === "ar" ? "الضيف" : "Guest"}</p>
+                    <p className="font-medium text-foreground">{selectedBooking.guest_first_name} {selectedBooking.guest_last_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">{lang === "ar" ? "البريد" : "Email"}</p>
+                    <p className="font-medium text-foreground">{selectedBooking.guest_email}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">{lang === "ar" ? "جواز السفر" : "Passport"}</p>
+                    <p className="font-medium text-foreground">{selectedBooking.passport_number || "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">{lang === "ar" ? "الهاتف" : "Phone"}</p>
+                    <p className="font-medium text-foreground">{selectedBooking.guest_phone || "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">{lang === "ar" ? "الفندق" : "Hotel"}</p>
+                    <p className="font-medium text-foreground">{lang === "ar" ? (selectedBooking.hotels as any)?.name_ar : (selectedBooking.hotels as any)?.name_en}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">{lang === "ar" ? "الغرفة" : "Room"}</p>
+                    <p className="font-medium text-foreground">{lang === "ar" ? (selectedBooking.room_categories as any)?.name_ar : (selectedBooking.room_categories as any)?.name_en}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">{lang === "ar" ? "الوصول" : "Check-in"}</p>
+                    <p className="font-medium text-foreground">{selectedBooking.check_in}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">{lang === "ar" ? "المغادرة" : "Check-out"}</p>
+                    <p className="font-medium text-foreground">{selectedBooking.check_out}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">{lang === "ar" ? "المبلغ الكلي" : "Total"}</p>
+                    <p className="font-bold text-foreground text-lg">${selectedBooking.total_price}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">{lang === "ar" ? "العربون" : "Deposit"}</p>
+                    <p className="font-bold text-foreground">${selectedBooking.deposit_amount || 0}</p>
+                  </div>
+                </div>
+
+                {selectedBooking.transaction_hash && (
+                  <div className="bg-muted rounded-lg p-3 flex items-center gap-2">
+                    <Hash className="w-4 h-4 text-primary" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">{lang === "ar" ? "رمز المعاملة" : "Transaction Hash"}</p>
+                      <p className="font-mono text-sm text-foreground break-all">{selectedBooking.transaction_hash}</p>
+                    </div>
+                  </div>
+                )}
+
+                {selectedBooking.special_requests && (
+                  <div className="bg-muted rounded-lg p-3">
+                    <p className="text-xs text-muted-foreground mb-1">{lang === "ar" ? "طلبات خاصة" : "Special Requests"}</p>
+                    <p className="text-sm text-foreground">{selectedBooking.special_requests}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <Button size="sm" className="gradient-cta flex-1" onClick={() => { updateStatus.mutate({ id: selectedBooking.id, status: "confirmed" }); setSelectedBooking(null); }}>
+                    <CheckCircle className="w-4 h-4 me-1" /> {lang === "ar" ? "تأكيد" : "Confirm"}
+                  </Button>
+                  <Button size="sm" variant="destructive" className="flex-1" onClick={() => { updateStatus.mutate({ id: selectedBooking.id, status: "cancelled" }); setSelectedBooking(null); }}>
+                    <XCircle className="w-4 h-4 me-1" /> {lang === "ar" ? "إلغاء" : "Cancel"}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Table */}
         {isLoading ? (
           <div className="flex justify-center py-12">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -38,47 +199,55 @@ const AdminBookings = () => {
               <table className="w-full text-sm">
                 <thead className="bg-muted">
                   <tr>
-                    <th className="text-right p-3 font-medium text-muted-foreground">الضيف</th>
-                    <th className="text-right p-3 font-medium text-muted-foreground">الفندق</th>
-                    <th className="text-right p-3 font-medium text-muted-foreground">الغرفة</th>
-                    <th className="text-right p-3 font-medium text-muted-foreground">الوصول</th>
-                    <th className="text-right p-3 font-medium text-muted-foreground">المغادرة</th>
-                    <th className="text-right p-3 font-medium text-muted-foreground">المبلغ</th>
-                    <th className="text-right p-3 font-medium text-muted-foreground">الحالة</th>
-                    <th className="text-right p-3 font-medium text-muted-foreground">الدفع</th>
+                    <th className="text-start p-3 font-medium text-muted-foreground">{lang === "ar" ? "الضيف" : "Guest"}</th>
+                    <th className="text-start p-3 font-medium text-muted-foreground">{lang === "ar" ? "الفندق" : "Hotel"}</th>
+                    <th className="text-start p-3 font-medium text-muted-foreground">{lang === "ar" ? "الوصول" : "Check-in"}</th>
+                    <th className="text-start p-3 font-medium text-muted-foreground">{lang === "ar" ? "المبلغ" : "Total"}</th>
+                    <th className="text-start p-3 font-medium text-muted-foreground">{lang === "ar" ? "العربون" : "Deposit"}</th>
+                    <th className="text-start p-3 font-medium text-muted-foreground">{lang === "ar" ? "الحالة" : "Status"}</th>
+                    <th className="text-start p-3 font-medium text-muted-foreground">{lang === "ar" ? "المزامنة" : "Sync"}</th>
+                    <th className="text-start p-3 font-medium text-muted-foreground"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {bookings?.map((b) => (
+                  {filteredBookings?.map((b) => (
                     <tr key={b.id} className="hover:bg-muted/50">
                       <td className="p-3">
                         <div className="font-medium text-foreground">{b.guest_first_name} {b.guest_last_name}</div>
                         <div className="text-xs text-muted-foreground">{b.guest_email}</div>
                       </td>
-                      <td className="p-3 text-foreground">{(b.hotels as any)?.name_ar}</td>
-                      <td className="p-3 text-foreground">{(b.room_categories as any)?.name_ar}</td>
+                      <td className="p-3 text-foreground">{lang === "ar" ? (b.hotels as any)?.name_ar : (b.hotels as any)?.name_en}</td>
                       <td className="p-3 text-foreground">{b.check_in}</td>
-                      <td className="p-3 text-foreground">{b.check_out}</td>
-                      <td className="p-3 font-medium text-foreground">${b.total_price}</td>
+                      <td className="p-3 font-semibold text-foreground">${b.total_price}</td>
+                      <td className="p-3">
+                        <span className={`font-medium ${Number(b.deposit_amount) > 0 ? "text-green-700" : "text-muted-foreground"}`}>
+                          ${b.deposit_amount || 0}
+                        </span>
+                      </td>
                       <td className="p-3">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[b.status] || ""}`}>
                           {b.status}
                         </span>
                       </td>
                       <td className="p-3">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          b.payment_status === "paid" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
-                        }`}>
-                          {b.payment_status}
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${syncColors[b.sync_status || "pending"] || ""}`}>
+                          {b.sync_status || "pending"}
                         </span>
+                      </td>
+                      <td className="p-3">
+                        <Button variant="ghost" size="sm" onClick={() => setSelectedBooking(b)}>
+                          <Eye className="w-4 h-4" />
+                        </Button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            {bookings?.length === 0 && (
-              <p className="text-center text-muted-foreground py-12">لا توجد حجوزات حتى الآن</p>
+            {filteredBookings?.length === 0 && (
+              <p className="text-center text-muted-foreground py-12">
+                {lang === "ar" ? "لا توجد حجوزات" : "No bookings found"}
+              </p>
             )}
           </div>
         )}
