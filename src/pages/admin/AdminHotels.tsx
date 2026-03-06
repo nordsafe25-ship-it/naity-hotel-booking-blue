@@ -211,7 +211,7 @@ const AdminHotels = () => {
                       />
                     </div>
                     <Button variant="outline" size="sm" onClick={() => setGalleryHotel(hotel)}>
-                      <Image className="w-4 h-4" />
+                      <ImageIcon className="w-4 h-4" />
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => openEdit(hotel)}>
                       <Pencil className="w-4 h-4" />
