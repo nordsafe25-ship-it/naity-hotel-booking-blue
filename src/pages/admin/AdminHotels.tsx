@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
@@ -9,17 +10,18 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, Star, MapPin, Pencil, Trash2, Upload, Image, AlertTriangle } from "lucide-react";
+import { Plus, Star, MapPin, Pencil, Trash2, AlertTriangle, ChevronRight } from "lucide-react";
+import HeartbeatIndicator from "@/components/admin/HeartbeatIndicator";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 const AdminHotels = () => {
   const { lang } = useI18n();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Tables<"hotels"> | null>(null);
-  const [galleryHotel, setGalleryHotel] = useState<Tables<"hotels"> | null>(null);
+  
   const [form, setForm] = useState<Partial<TablesInsert<"hotels">>>({
     name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "",
     contact_phone: "", contact_email: "",
@@ -157,18 +159,6 @@ const AdminHotels = () => {
           </Dialog>
         </div>
 
-        {/* Gallery Modal */}
-        <Dialog open={!!galleryHotel} onOpenChange={(v) => { if (!v) setGalleryHotel(null); }}>
-          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {lang === "ar" ? "معرض الصور — " : "Gallery — "}
-                {galleryHotel && (lang === "ar" ? galleryHotel.name_ar : galleryHotel.name_en)}
-              </DialogTitle>
-            </DialogHeader>
-            {galleryHotel && <GalleryManager hotelId={galleryHotel.id} />}
-          </DialogContent>
-        </Dialog>
 
         {isLoading ? (
           <div className="flex justify-center py-12">
@@ -177,7 +167,7 @@ const AdminHotels = () => {
         ) : (
           <div className="grid gap-4">
             {hotels?.map((hotel) => (
-              <div key={hotel.id} className="bg-card rounded-xl p-4 border border-border/50 shadow-card">
+              <div key={hotel.id} className="bg-card rounded-xl p-4 border border-border/50 shadow-card hover:shadow-elevated transition-shadow cursor-pointer" onClick={() => navigate(`/admin/hotels/${hotel.id}`)}>
                 <div className="flex items-center justify-between flex-wrap gap-3">
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden">
@@ -188,7 +178,10 @@ const AdminHotels = () => {
                       )}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground">{lang === "ar" ? hotel.name_ar : hotel.name_en}</h3>
+                      <div className="flex items-center gap-2">
+                        <HeartbeatIndicator hotelId={hotel.id} />
+                        <h3 className="font-semibold text-foreground">{lang === "ar" ? hotel.name_ar : hotel.name_en}</h3>
+                      </div>
                       <p className="text-sm text-muted-foreground">{lang === "ar" ? hotel.name_en : hotel.name_ar} • {hotel.city}</p>
                       <div className="flex items-center gap-1 mt-1">
                         {Array.from({ length: hotel.stars }).map((_, i) => (
@@ -197,27 +190,25 @@ const AdminHotels = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
                     {/* Kill Switch */}
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted">
-                      <AlertTriangle className={`w-4 h-4 ${(hotel as any).manual_mode ? "text-destructive" : "text-muted-foreground"}`} />
+                      <AlertTriangle className={`w-4 h-4 ${hotel.manual_mode ? "text-destructive" : "text-muted-foreground"}`} />
                       <span className="text-xs font-medium text-foreground">
                         {lang === "ar" ? "وضع يدوي" : "Manual"}
                       </span>
                       <Switch
-                        checked={(hotel as any).manual_mode ?? false}
+                        checked={hotel.manual_mode ?? false}
                         onCheckedChange={(v) => toggleManualMode.mutate({ id: hotel.id, manual_mode: v })}
                       />
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => setGalleryHotel(hotel)}>
-                      <Image className="w-4 h-4" />
-                    </Button>
                     <Button variant="outline" size="sm" onClick={() => openEdit(hotel)}>
                       <Pencil className="w-4 h-4" />
                     </Button>
                     <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(hotel.id)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
+                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
                   </div>
                 </div>
               </div>
@@ -234,87 +225,5 @@ const AdminHotels = () => {
   );
 };
 
-// Gallery Manager Component
-const GalleryManager = ({ hotelId }: { hotelId: string }) => {
-  const { lang } = useI18n();
-  const queryClient = useQueryClient();
-  const [uploading, setUploading] = useState(false);
-
-  const { data: photos } = useQuery({
-    queryKey: ["hotel-photos", hotelId],
-    queryFn: async () => {
-      const { data } = await supabase.from("hotel_photos").select("*").eq("hotel_id", hotelId).order("sort_order");
-      return data ?? [];
-    },
-  });
-
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files?.length) return;
-    setUploading(true);
-
-    for (const file of Array.from(files)) {
-      const ext = file.name.split(".").pop();
-      const path = `${hotelId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from("hotel-photos").upload(path, file);
-      if (uploadError) { toast.error(uploadError.message); continue; }
-
-      const { data: { publicUrl } } = supabase.storage.from("hotel-photos").getPublicUrl(path);
-      await supabase.from("hotel_photos").insert({ hotel_id: hotelId, url: publicUrl, sort_order: (photos?.length ?? 0) });
-    }
-
-    queryClient.invalidateQueries({ queryKey: ["hotel-photos"] });
-    setUploading(false);
-    toast.success(lang === "ar" ? "تم رفع الصور" : "Photos uploaded");
-  };
-
-  const deletePhoto = async (photo: Tables<"hotel_photos">) => {
-    const urlParts = photo.url.split("/hotel-photos/");
-    if (urlParts[1]) {
-      await supabase.storage.from("hotel-photos").remove([urlParts[1]]);
-    }
-    await supabase.from("hotel_photos").delete().eq("id", photo.id);
-    queryClient.invalidateQueries({ queryKey: ["hotel-photos"] });
-    toast.success(lang === "ar" ? "تم حذف الصورة" : "Photo deleted");
-  };
-
-  const setCoverImage = async (url: string) => {
-    await supabase.from("hotels").update({ cover_image: url }).eq("id", hotelId);
-    queryClient.invalidateQueries({ queryKey: ["admin-hotels"] });
-    toast.success(lang === "ar" ? "تم تعيين صورة الغلاف" : "Cover image set");
-  };
-
-  return (
-    <div className="space-y-4">
-      <label className="cursor-pointer">
-        <input type="file" accept="image/*" multiple className="hidden" onChange={handleUpload} disabled={uploading} />
-        <Button asChild className="gradient-cta gap-2 w-full" disabled={uploading}>
-          <span><Upload className="w-4 h-4" /> {uploading ? "..." : (lang === "ar" ? "رفع صور" : "Upload Photos")}</span>
-        </Button>
-      </label>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        {photos?.map((photo) => (
-          <div key={photo.id} className="relative group rounded-lg overflow-hidden border border-border/50">
-            <img src={photo.url} alt="" className="w-full h-32 object-cover" />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-              <Button size="sm" variant="secondary" onClick={() => setCoverImage(photo.url)} className="text-xs">
-                {lang === "ar" ? "غلاف" : "Cover"}
-              </Button>
-              <Button size="sm" variant="destructive" onClick={() => deletePhoto(photo)}>
-                <Trash2 className="w-3 h-3" />
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-      {photos?.length === 0 && (
-        <p className="text-center text-muted-foreground py-6 text-sm">
-          {lang === "ar" ? "لا توجد صور" : "No photos yet"}
-        </p>
-      )}
-    </div>
-  );
-};
 
 export default AdminHotels;

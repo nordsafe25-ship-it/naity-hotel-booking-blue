@@ -27,6 +27,7 @@ export type Database = {
           guest_user_id: string | null
           hotel_id: string
           id: string
+          passport_image_url: string | null
           passport_number: string | null
           payment_status: string
           room_category_id: string
@@ -50,6 +51,7 @@ export type Database = {
           guest_user_id?: string | null
           hotel_id: string
           id?: string
+          passport_image_url?: string | null
           passport_number?: string | null
           payment_status?: string
           room_category_id: string
@@ -73,6 +75,7 @@ export type Database = {
           guest_user_id?: string | null
           hotel_id?: string
           id?: string
+          passport_image_url?: string | null
           passport_number?: string | null
           payment_status?: string
           room_category_id?: string
@@ -209,6 +212,7 @@ export type Database = {
           hotel_id: string
           id: string
           is_active: boolean | null
+          last_heartbeat_at: string | null
           last_sync_at: string | null
           secret_key: string | null
           updated_at: string
@@ -219,6 +223,7 @@ export type Database = {
           hotel_id: string
           id?: string
           is_active?: boolean | null
+          last_heartbeat_at?: string | null
           last_sync_at?: string | null
           secret_key?: string | null
           updated_at?: string
@@ -229,6 +234,7 @@ export type Database = {
           hotel_id?: string
           id?: string
           is_active?: boolean | null
+          last_heartbeat_at?: string | null
           last_sync_at?: string | null
           secret_key?: string | null
           updated_at?: string

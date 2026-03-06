@@ -18,6 +18,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminHotels from "./pages/admin/AdminHotels";
+import AdminHotelDetail from "./pages/admin/AdminHotelDetail";
 import AdminRooms from "./pages/admin/AdminRooms";
 import AdminManagers from "./pages/admin/AdminManagers";
 import AdminBookings from "./pages/admin/AdminBookings";
@@ -51,6 +52,7 @@ const App = () => (
               {/* Admin */}
               <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
               <Route path="/admin/hotels" element={<ProtectedRoute requiredRole="admin"><AdminHotels /></ProtectedRoute>} />
+              <Route path="/admin/hotels/:id" element={<ProtectedRoute requiredRole="admin"><AdminHotelDetail /></ProtectedRoute>} />
               <Route path="/admin/rooms" element={<ProtectedRoute requiredRole="admin"><AdminRooms /></ProtectedRoute>} />
               <Route path="/admin/managers" element={<ProtectedRoute requiredRole="admin"><AdminManagers /></ProtectedRoute>} />
               <Route path="/admin/bookings" element={<ProtectedRoute requiredRole="admin"><AdminBookings /></ProtectedRoute>} />
