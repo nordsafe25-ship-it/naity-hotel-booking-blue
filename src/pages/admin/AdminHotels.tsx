@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
@@ -9,9 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, Star, MapPin, Pencil, Trash2, Upload, Image, AlertTriangle } from "lucide-react";
+import { Plus, Star, MapPin, Pencil, Trash2, AlertTriangle, ChevronRight } from "lucide-react";
+import HeartbeatIndicator from "@/components/admin/HeartbeatIndicator";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 const AdminHotels = () => {
