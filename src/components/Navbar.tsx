@@ -9,6 +9,7 @@ const Navbar = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const { t, lang, setLang } = useI18n();
+  const { user, role } = useAuth();
 
   const navLinks = [
     { to: "/", label: t("nav.home") },
