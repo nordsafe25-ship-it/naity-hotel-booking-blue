@@ -52,6 +52,7 @@ const App = () => (
               {/* Admin */}
               <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
               <Route path="/admin/hotels" element={<ProtectedRoute requiredRole="admin"><AdminHotels /></ProtectedRoute>} />
+              <Route path="/admin/hotels/:id" element={<ProtectedRoute requiredRole="admin"><AdminHotelDetail /></ProtectedRoute>} />
               <Route path="/admin/rooms" element={<ProtectedRoute requiredRole="admin"><AdminRooms /></ProtectedRoute>} />
               <Route path="/admin/managers" element={<ProtectedRoute requiredRole="admin"><AdminManagers /></ProtectedRoute>} />
               <Route path="/admin/bookings" element={<ProtectedRoute requiredRole="admin"><AdminBookings /></ProtectedRoute>} />
