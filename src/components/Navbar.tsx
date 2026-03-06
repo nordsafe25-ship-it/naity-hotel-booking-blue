@@ -109,6 +109,9 @@ const Navbar = () => {
                 <LogIn className="w-4 h-4" /> {lang === "ar" ? "تسجيل الدخول" : "Login"}
               </Link>
             )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 };
