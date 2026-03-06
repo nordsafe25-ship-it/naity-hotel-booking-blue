@@ -17,6 +17,7 @@ import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 const AdminHotels = () => {
   const { lang } = useI18n();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Tables<"hotels"> | null>(null);
