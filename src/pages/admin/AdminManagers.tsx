@@ -56,27 +56,16 @@ const AdminManagers = () => {
 
   const createManager = useMutation({
     mutationFn: async () => {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { full_name: fullName } },
-      });
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("Failed to create user");
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) throw new Error("Not authenticated");
 
-      const { error: roleError } = await supabase.from("user_roles").insert({
-        user_id: authData.user.id,
-        role: "hotel_manager" as const,
+      const res = await supabase.functions.invoke("create-manager", {
+        body: { email, password, full_name: fullName, hotel_id: hotelId || null },
       });
-      if (roleError) throw roleError;
 
-      if (hotelId) {
-        const { error: hotelError } = await supabase
-          .from("hotels")
-          .update({ manager_id: authData.user.id })
-          .eq("id", hotelId);
-        if (hotelError) throw hotelError;
-      }
+      if (res.error) throw new Error(res.error.message);
+      if (res.data?.error) throw new Error(res.data.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-managers"] });
