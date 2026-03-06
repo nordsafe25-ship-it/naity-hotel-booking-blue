@@ -19,6 +19,7 @@ export type Database = {
           check_in: string
           check_out: string
           created_at: string
+          deposit_amount: number | null
           guest_email: string
           guest_first_name: string
           guest_last_name: string
@@ -26,18 +27,22 @@ export type Database = {
           guest_user_id: string | null
           hotel_id: string
           id: string
+          passport_number: string | null
           payment_status: string
           room_category_id: string
           special_requests: string | null
           status: string
           stripe_payment_id: string | null
+          sync_status: string | null
           total_price: number
+          transaction_hash: string | null
           updated_at: string
         }
         Insert: {
           check_in: string
           check_out: string
           created_at?: string
+          deposit_amount?: number | null
           guest_email: string
           guest_first_name: string
           guest_last_name: string
@@ -45,18 +50,22 @@ export type Database = {
           guest_user_id?: string | null
           hotel_id: string
           id?: string
+          passport_number?: string | null
           payment_status?: string
           room_category_id: string
           special_requests?: string | null
           status?: string
           stripe_payment_id?: string | null
+          sync_status?: string | null
           total_price: number
+          transaction_hash?: string | null
           updated_at?: string
         }
         Update: {
           check_in?: string
           check_out?: string
           created_at?: string
+          deposit_amount?: number | null
           guest_email?: string
           guest_first_name?: string
           guest_last_name?: string
@@ -64,12 +73,15 @@ export type Database = {
           guest_user_id?: string | null
           hotel_id?: string
           id?: string
+          passport_number?: string | null
           payment_status?: string
           room_category_id?: string
           special_requests?: string | null
           status?: string
           stripe_payment_id?: string | null
+          sync_status?: string | null
           total_price?: number
+          transaction_hash?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -129,6 +141,8 @@ export type Database = {
           address: string | null
           amenities: string[] | null
           city: string
+          contact_email: string | null
+          contact_phone: string | null
           cover_image: string | null
           created_at: string
           description_ar: string | null
@@ -138,6 +152,7 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           manager_id: string | null
+          manual_mode: boolean | null
           name_ar: string
           name_en: string
           stars: number
@@ -147,6 +162,8 @@ export type Database = {
           address?: string | null
           amenities?: string[] | null
           city: string
+          contact_email?: string | null
+          contact_phone?: string | null
           cover_image?: string | null
           created_at?: string
           description_ar?: string | null
@@ -156,6 +173,7 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           manager_id?: string | null
+          manual_mode?: boolean | null
           name_ar: string
           name_en: string
           stars?: number
@@ -165,6 +183,8 @@ export type Database = {
           address?: string | null
           amenities?: string[] | null
           city?: string
+          contact_email?: string | null
+          contact_phone?: string | null
           cover_image?: string | null
           created_at?: string
           description_ar?: string | null
@@ -174,12 +194,54 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           manager_id?: string | null
+          manual_mode?: boolean | null
           name_ar?: string
           name_en?: string
           stars?: number
           updated_at?: string
         }
         Relationships: []
+      }
+      local_sync_settings: {
+        Row: {
+          api_endpoint: string | null
+          created_at: string
+          hotel_id: string
+          id: string
+          is_active: boolean | null
+          last_sync_at: string | null
+          secret_key: string | null
+          updated_at: string
+        }
+        Insert: {
+          api_endpoint?: string | null
+          created_at?: string
+          hotel_id: string
+          id?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          secret_key?: string | null
+          updated_at?: string
+        }
+        Update: {
+          api_endpoint?: string | null
+          created_at?: string
+          hotel_id?: string
+          id?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          secret_key?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "local_sync_settings_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: true
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -284,6 +346,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      webhook_logs: {
+        Row: {
+          created_at: string
+          event_type: string
+          hotel_id: string
+          id: string
+          payload: Json | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          hotel_id: string
+          id?: string
+          payload?: Json | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          hotel_id?: string
+          id?: string
+          payload?: Json | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_logs_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
