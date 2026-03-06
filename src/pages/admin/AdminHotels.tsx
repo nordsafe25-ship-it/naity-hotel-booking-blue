@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Star, MapPin, Pencil, Trash2, AlertTriangle, ChevronRight } from "lucide-react";
+import { Plus, Star, MapPin, Pencil, Trash2, AlertTriangle, ChevronRight, Upload, Image as ImageIcon } from "lucide-react";
 import HeartbeatIndicator from "@/components/admin/HeartbeatIndicator";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
