@@ -179,7 +179,7 @@ const AdminHotels = () => {
         ) : (
           <div className="grid gap-4">
             {hotels?.map((hotel) => (
-              <div key={hotel.id} className="bg-card rounded-xl p-4 border border-border/50 shadow-card">
+              <div key={hotel.id} className="bg-card rounded-xl p-4 border border-border/50 shadow-card hover:shadow-elevated transition-shadow cursor-pointer" onClick={() => navigate(`/admin/hotels/${hotel.id}`)}>
                 <div className="flex items-center justify-between flex-wrap gap-3">
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden">
@@ -190,7 +190,10 @@ const AdminHotels = () => {
                       )}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground">{lang === "ar" ? hotel.name_ar : hotel.name_en}</h3>
+                      <div className="flex items-center gap-2">
+                        <HeartbeatIndicator hotelId={hotel.id} />
+                        <h3 className="font-semibold text-foreground">{lang === "ar" ? hotel.name_ar : hotel.name_en}</h3>
+                      </div>
                       <p className="text-sm text-muted-foreground">{lang === "ar" ? hotel.name_en : hotel.name_ar} • {hotel.city}</p>
                       <div className="flex items-center gap-1 mt-1">
                         {Array.from({ length: hotel.stars }).map((_, i) => (
@@ -199,27 +202,25 @@ const AdminHotels = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
                     {/* Kill Switch */}
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted">
-                      <AlertTriangle className={`w-4 h-4 ${(hotel as any).manual_mode ? "text-destructive" : "text-muted-foreground"}`} />
+                      <AlertTriangle className={`w-4 h-4 ${hotel.manual_mode ? "text-destructive" : "text-muted-foreground"}`} />
                       <span className="text-xs font-medium text-foreground">
                         {lang === "ar" ? "وضع يدوي" : "Manual"}
                       </span>
                       <Switch
-                        checked={(hotel as any).manual_mode ?? false}
+                        checked={hotel.manual_mode ?? false}
                         onCheckedChange={(v) => toggleManualMode.mutate({ id: hotel.id, manual_mode: v })}
                       />
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => setGalleryHotel(hotel)}>
-                      <ImageIcon className="w-4 h-4" />
-                    </Button>
                     <Button variant="outline" size="sm" onClick={() => openEdit(hotel)}>
                       <Pencil className="w-4 h-4" />
                     </Button>
                     <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(hotel.id)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
+                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
                   </div>
                 </div>
               </div>
