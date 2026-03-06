@@ -94,86 +94,12 @@ const AdminBookings = () => {
           </Select>
         </div>
 
-        {/* Booking Detail Modal */}
-        <Dialog open={!!selectedBooking} onOpenChange={(v) => { if (!v) setSelectedBooking(null); }}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>{lang === "ar" ? "تفاصيل الحجز" : "Booking Details"}</DialogTitle>
-            </DialogHeader>
-            {selectedBooking && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">{lang === "ar" ? "الضيف" : "Guest"}</p>
-                    <p className="font-medium text-foreground">{selectedBooking.guest_first_name} {selectedBooking.guest_last_name}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">{lang === "ar" ? "البريد" : "Email"}</p>
-                    <p className="font-medium text-foreground">{selectedBooking.guest_email}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">{lang === "ar" ? "جواز السفر" : "Passport"}</p>
-                    <p className="font-medium text-foreground">{selectedBooking.passport_number || "—"}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">{lang === "ar" ? "الهاتف" : "Phone"}</p>
-                    <p className="font-medium text-foreground">{selectedBooking.guest_phone || "—"}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">{lang === "ar" ? "الفندق" : "Hotel"}</p>
-                    <p className="font-medium text-foreground">{lang === "ar" ? (selectedBooking.hotels as any)?.name_ar : (selectedBooking.hotels as any)?.name_en}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">{lang === "ar" ? "الغرفة" : "Room"}</p>
-                    <p className="font-medium text-foreground">{lang === "ar" ? (selectedBooking.room_categories as any)?.name_ar : (selectedBooking.room_categories as any)?.name_en}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">{lang === "ar" ? "الوصول" : "Check-in"}</p>
-                    <p className="font-medium text-foreground">{selectedBooking.check_in}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">{lang === "ar" ? "المغادرة" : "Check-out"}</p>
-                    <p className="font-medium text-foreground">{selectedBooking.check_out}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">{lang === "ar" ? "المبلغ الكلي" : "Total"}</p>
-                    <p className="font-bold text-foreground text-lg">${selectedBooking.total_price}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">{lang === "ar" ? "العربون" : "Deposit"}</p>
-                    <p className="font-bold text-foreground">${selectedBooking.deposit_amount || 0}</p>
-                  </div>
-                </div>
-
-                {selectedBooking.transaction_hash && (
-                  <div className="bg-muted rounded-lg p-3 flex items-center gap-2">
-                    <Hash className="w-4 h-4 text-primary" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">{lang === "ar" ? "رمز المعاملة" : "Transaction Hash"}</p>
-                      <p className="font-mono text-sm text-foreground break-all">{selectedBooking.transaction_hash}</p>
-                    </div>
-                  </div>
-                )}
-
-                {selectedBooking.special_requests && (
-                  <div className="bg-muted rounded-lg p-3">
-                    <p className="text-xs text-muted-foreground mb-1">{lang === "ar" ? "طلبات خاصة" : "Special Requests"}</p>
-                    <p className="text-sm text-foreground">{selectedBooking.special_requests}</p>
-                  </div>
-                )}
-
-                <div className="flex gap-2">
-                  <Button size="sm" className="gradient-cta flex-1" onClick={() => { updateStatus.mutate({ id: selectedBooking.id, status: "confirmed" }); setSelectedBooking(null); }}>
-                    <CheckCircle className="w-4 h-4 me-1" /> {lang === "ar" ? "تأكيد" : "Confirm"}
-                  </Button>
-                  <Button size="sm" variant="destructive" className="flex-1" onClick={() => { updateStatus.mutate({ id: selectedBooking.id, status: "cancelled" }); setSelectedBooking(null); }}>
-                    <XCircle className="w-4 h-4 me-1" /> {lang === "ar" ? "إلغاء" : "Cancel"}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
+        {/* Reservation Detail */}
+        <ReservationDetail
+          booking={selectedBooking}
+          open={!!selectedBooking}
+          onClose={() => setSelectedBooking(null)}
+        />
 
         {/* Table */}
         {isLoading ? (
