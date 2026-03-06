@@ -23,12 +23,26 @@ const AdminManagers = () => {
   const { data: managers, isLoading } = useQuery({
     queryKey: ["admin-managers"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get hotel_manager roles
+      const { data: roles, error: rolesError } = await supabase
         .from("user_roles")
-        .select("*, profiles:user_id(full_name, email)")
+        .select("*")
         .eq("role", "hotel_manager");
-      if (error) throw error;
-      return data;
+      if (rolesError) throw rolesError;
+      if (!roles?.length) return [];
+
+      // Then fetch profiles for those user_ids
+      const userIds = roles.map(r => r.user_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email")
+        .in("user_id", userIds);
+
+      // Merge
+      return roles.map(r => ({
+        ...r,
+        profiles: profiles?.find(p => p.user_id === r.user_id) || null,
+      }));
     },
   });
 
