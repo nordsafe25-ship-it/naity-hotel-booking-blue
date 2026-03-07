@@ -9,6 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import HotelsListing from "./pages/HotelsListing";
+import SearchResults from "./pages/SearchResults";
 import HotelDetails from "./pages/HotelDetails";
 import BookingForm from "./pages/BookingForm";
 import HowItWorks from "./pages/HowItWorks";
@@ -39,6 +40,7 @@ const App = () => (
               {/* Public */}
               <Route path="/" element={<Index />} />
               <Route path="/hotels" element={<HotelsListing />} />
+              <Route path="/search" element={<SearchResults />} />
               <Route path="/hotels/:id" element={<HotelDetails />} />
               <Route path="/booking" element={<BookingForm />} />
               <Route path="/how-it-works" element={<HowItWorks />} />

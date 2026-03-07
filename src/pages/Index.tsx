@@ -1,10 +1,22 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Search, MapPin, Calendar, Users, Shield, Zap, CheckCircle, ArrowLeft, ArrowRight, Star } from "lucide-react";
+import { Search, MapPin, Calendar, Users, Shield, Zap, CheckCircle, ArrowLeft, ArrowRight, Star, Minus, Plus } from "lucide-react";
 import { motion } from "framer-motion";
+import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { useI18n } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarUI } from "@/components/ui/calendar";
+
+const SYRIAN_CITIES = [
+  { en: "Damascus", ar: "دمشق" },
+  { en: "Aleppo", ar: "حلب" },
+  { en: "Lattakia", ar: "اللاذقية" },
+  { en: "Homs", ar: "حمص" },
+  { en: "Tartus", ar: "طرطوس" },
+];
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -19,14 +31,16 @@ const Index = () => {
   const [city, setCity] = useState("");
   const { t, lang } = useI18n();
   const Arrow = lang === "ar" ? ArrowLeft : ArrowRight;
+  const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
 
   const [hotels, setHotels] = useState<any[]>([]);
-  const [allHotels, setAllHotels] = useState<any[]>([]);
-  const [cities, setCities] = useState<string[]>([]);
+  const [checkIn, setCheckIn] = useState<Date | undefined>();
+  const [checkOut, setCheckOut] = useState<Date | undefined>();
+  const [adults, setAdults] = useState(2);
+  const [children, setChildren] = useState(0);
 
   useEffect(() => {
     const load = async () => {
-      // Load active hotels with cover images for the hero section
       const { data: featuredData } = await supabase
         .from("hotels")
         .select("*")
@@ -34,22 +48,21 @@ const Index = () => {
         .not("cover_image", "is", null)
         .order("created_at", { ascending: false })
         .limit(6);
-      
-      // Load all active hotels for cities dropdown
-      const { data: allData } = await supabase
-        .from("hotels")
-        .select("city")
-        .eq("is_active", true);
 
       if (featuredData) setHotels(featuredData);
-      if (allData) setCities([...new Set(allData.map((h: any) => h.city))]);
     };
     load();
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate(`/hotels${city ? `?city=${city}` : ""}`);
+    const params = new URLSearchParams();
+    if (city) params.set("city", city);
+    if (checkIn) params.set("checkIn", format(checkIn, "yyyy-MM-dd"));
+    if (checkOut) params.set("checkOut", format(checkOut, "yyyy-MM-dd"));
+    params.set("adults", String(adults));
+    if (children > 0) params.set("children", String(children));
+    navigate(`/search?${params.toString()}`);
   };
 
   return (
@@ -61,7 +74,7 @@ const Index = () => {
           <div className="absolute bottom-10 left-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
         </div>
         <div className="container mx-auto px-4 py-20 md:py-32 relative">
-          <motion.div className="max-w-2xl mx-auto text-center space-y-6" initial="hidden" animate="visible">
+          <motion.div className="max-w-3xl mx-auto text-center space-y-6" initial="hidden" animate="visible">
             <motion.h1 variants={fadeUp} custom={0} className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-accent leading-tight">
               {t("hero.title")}{" "}<span className="text-primary">Naity</span>
             </motion.h1>
@@ -69,30 +82,101 @@ const Index = () => {
               {t("hero.subtitle")}
             </motion.p>
 
-            <motion.form variants={fadeUp} custom={2} onSubmit={handleSearch} className="bg-card rounded-2xl p-3 shadow-elevated flex flex-col md:flex-row gap-3 max-w-xl mx-auto">
-              <div className="flex items-center gap-2 flex-1 px-3 bg-muted rounded-xl">
-                <MapPin className="w-4 h-4 text-primary shrink-0" />
-                <select value={city} onChange={(e) => setCity(e.target.value)} className="w-full bg-transparent py-3 text-sm outline-none text-foreground">
-                  <option value="">{t("hero.anyCity")}</option>
-                  {cities.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+            {/* Upgraded Search Bar */}
+            <motion.form variants={fadeUp} custom={2} onSubmit={handleSearch} className="bg-card rounded-2xl p-4 shadow-elevated max-w-3xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                {/* City Select */}
+                <div className="flex items-center gap-2 px-3 bg-muted rounded-xl">
+                  <MapPin className="w-4 h-4 text-primary shrink-0" />
+                  <select value={city} onChange={(e) => setCity(e.target.value)} className="w-full bg-transparent py-3 text-sm outline-none text-foreground">
+                    <option value="">{tx("أي مدينة", "Any City")}</option>
+                    {SYRIAN_CITIES.map((c) => (
+                      <option key={c.en} value={c.en}>{lang === "ar" ? c.ar : c.en}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Check-in */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button type="button" className={cn("flex items-center gap-2 px-3 bg-muted rounded-xl py-3 text-sm text-start w-full", !checkIn && "text-muted-foreground")}>
+                      <Calendar className="w-4 h-4 text-primary shrink-0" />
+                      {checkIn ? format(checkIn, "dd/MM/yyyy") : tx("تاريخ الوصول", "Check-in")}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarUI
+                      mode="single"
+                      selected={checkIn}
+                      onSelect={setCheckIn}
+                      disabled={(date) => date < new Date()}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                {/* Check-out */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button type="button" className={cn("flex items-center gap-2 px-3 bg-muted rounded-xl py-3 text-sm text-start w-full", !checkOut && "text-muted-foreground")}>
+                      <Calendar className="w-4 h-4 text-primary shrink-0" />
+                      {checkOut ? format(checkOut, "dd/MM/yyyy") : tx("تاريخ المغادرة", "Check-out")}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarUI
+                      mode="single"
+                      selected={checkOut}
+                      onSelect={setCheckOut}
+                      disabled={(date) => date < (checkIn || new Date())}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                {/* Guests */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button type="button" className="flex items-center gap-2 px-3 bg-muted rounded-xl py-3 text-sm w-full">
+                      <Users className="w-4 h-4 text-primary shrink-0" />
+                      <span className="text-foreground">{adults} {tx("بالغ", "Adult")}{adults > 1 ? tx("ين", "s") : ""}{children > 0 ? `, ${children} ${tx("طفل", "Child")}${children > 1 ? tx("", "ren") : ""}` : ""}</span>
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-4 space-y-4" align="start">
+                    {/* Adults */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-foreground">{tx("بالغين", "Adults")}</span>
+                      <div className="flex items-center gap-3">
+                        <button type="button" onClick={() => setAdults(Math.max(1, adults - 1))} className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-muted transition">
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="text-sm font-semibold w-4 text-center">{adults}</span>
+                        <button type="button" onClick={() => setAdults(Math.min(10, adults + 1))} className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-muted transition">
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                    {/* Children */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-foreground">{tx("أطفال", "Children")}</span>
+                      <div className="flex items-center gap-3">
+                        <button type="button" onClick={() => setChildren(Math.max(0, children - 1))} className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-muted transition">
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="text-sm font-semibold w-4 text-center">{children}</span>
+                        <button type="button" onClick={() => setChildren(Math.min(6, children + 1))} className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-muted transition">
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
-              <div className="flex items-center gap-2 px-3 bg-muted rounded-xl">
-                <Calendar className="w-4 h-4 text-primary shrink-0" />
-                <input type="date" className="bg-transparent py-3 text-sm outline-none text-foreground" />
-              </div>
-              <div className="flex items-center gap-2 px-3 bg-muted rounded-xl">
-                <Users className="w-4 h-4 text-primary shrink-0" />
-                <select className="bg-transparent py-3 text-sm outline-none text-foreground">
-                  <option>{t("hero.guest1")}</option>
-                  <option>{t("hero.guest2")}</option>
-                  <option>{t("hero.guest3")}</option>
-                  <option>{t("hero.guest4")}</option>
-                </select>
-              </div>
-              <button type="submit" className="gradient-cta text-primary-foreground px-6 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shrink-0">
+
+              {/* Search Button */}
+              <button type="submit" className="w-full mt-3 gradient-cta text-primary-foreground px-6 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
                 <Search className="w-4 h-4" />
                 {t("hero.search")}
               </button>
@@ -120,7 +204,7 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl font-bold text-foreground">{t("featured.title")}</h2>
-            <button onClick={() => navigate("/hotels")} className="text-primary text-sm font-medium flex items-center gap-1 hover:gap-2 transition-all">
+            <button onClick={() => navigate("/search")} className="text-primary text-sm font-medium flex items-center gap-1 hover:gap-2 transition-all">
               {t("featured.viewAll")} <Arrow className="w-4 h-4" />
             </button>
           </div>
