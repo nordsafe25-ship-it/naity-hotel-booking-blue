@@ -27,11 +27,11 @@ const Index = () => {
   useEffect(() => {
     const load = async () => {
       // Load featured hotels for the hero section
-      const { data: featuredData } = await supabase
+      const { data: featuredData } = await (supabase
         .from("hotels")
-        .select("*")
+        .select("*") as any)
         .eq("is_active", true)
-        .eq("is_featured" as any, true)
+        .eq("is_featured", true)
         .order("created_at", { ascending: false })
         .limit(6);
       
