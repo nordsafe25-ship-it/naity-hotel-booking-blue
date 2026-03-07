@@ -77,6 +77,17 @@ const AdminHotels = () => {
     },
   });
 
+  const toggleFeatured = useMutation({
+    mutationFn: async ({ id, is_featured }: { id: string; is_featured: boolean }) => {
+      const { error } = await supabase.from("hotels").update({ is_featured } as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-hotels"] });
+      toast.success(lang === "ar" ? "تم تحديث حالة التمييز" : "Featured status updated");
+    },
+  });
+
   const resetForm = () => {
     setForm({ name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "", contact_phone: "", contact_email: "" });
     setEditing(null);
@@ -191,6 +202,17 @@ const AdminHotels = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
+                    {/* Featured Toggle */}
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted">
+                      <Star className={`w-4 h-4 ${(hotel as any).is_featured ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+                      <span className="text-xs font-medium text-foreground">
+                        {lang === "ar" ? "مميز" : "Featured"}
+                      </span>
+                      <Switch
+                        checked={(hotel as any).is_featured ?? false}
+                        onCheckedChange={(v) => toggleFeatured.mutate({ id: hotel.id, is_featured: v })}
+                      />
+                    </div>
                     {/* Kill Switch */}
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted">
                       <AlertTriangle className={`w-4 h-4 ${hotel.manual_mode ? "text-destructive" : "text-muted-foreground"}`} />
