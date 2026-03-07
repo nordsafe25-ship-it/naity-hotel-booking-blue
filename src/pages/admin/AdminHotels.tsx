@@ -191,6 +191,17 @@ const AdminHotels = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
+                    {/* Featured Toggle */}
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted">
+                      <Star className={`w-4 h-4 ${(hotel as any).is_featured ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+                      <span className="text-xs font-medium text-foreground">
+                        {lang === "ar" ? "مميز" : "Featured"}
+                      </span>
+                      <Switch
+                        checked={(hotel as any).is_featured ?? false}
+                        onCheckedChange={(v) => toggleFeatured.mutate({ id: hotel.id, is_featured: v })}
+                      />
+                    </div>
                     {/* Kill Switch */}
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted">
                       <AlertTriangle className={`w-4 h-4 ${hotel.manual_mode ? "text-destructive" : "text-muted-foreground"}`} />
