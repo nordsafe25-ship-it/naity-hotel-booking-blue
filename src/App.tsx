@@ -40,6 +40,7 @@ const App = () => (
               {/* Public */}
               <Route path="/" element={<Index />} />
               <Route path="/hotels" element={<HotelsListing />} />
+              <Route path="/search" element={<SearchResults />} />
               <Route path="/hotels/:id" element={<HotelDetails />} />
               <Route path="/booking" element={<BookingForm />} />
               <Route path="/how-it-works" element={<HowItWorks />} />
