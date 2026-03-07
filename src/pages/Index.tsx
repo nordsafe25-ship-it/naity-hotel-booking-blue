@@ -21,20 +21,28 @@ const Index = () => {
   const Arrow = lang === "ar" ? ArrowLeft : ArrowRight;
 
   const [hotels, setHotels] = useState<any[]>([]);
+  const [allHotels, setAllHotels] = useState<any[]>([]);
   const [cities, setCities] = useState<string[]>([]);
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase
+      // Load featured hotels for the hero section
+      const { data: featuredData } = await supabase
         .from("hotels")
         .select("*")
         .eq("is_active", true)
+        .eq("is_featured" as any, true)
         .order("created_at", { ascending: false })
         .limit(6);
-      if (data) {
-        setHotels(data);
-        setCities([...new Set(data.map((h: any) => h.city))]);
-      }
+      
+      // Load all active hotels for cities dropdown
+      const { data: allData } = await supabase
+        .from("hotels")
+        .select("city")
+        .eq("is_active", true);
+
+      if (featuredData) setHotels(featuredData);
+      if (allData) setCities([...new Set(allData.map((h: any) => h.city))]);
     };
     load();
   }, []);
