@@ -78,7 +78,7 @@ const Contact = () => {
 
             <div className="lg:col-span-2 space-y-6">
               {[
-                { icon: Mail, label: t("contact.emailLabel"), value: "help@naity.com" },
+                { icon: Mail, label: t("contact.emailLabel"), value: "support@naity.net" },
                 { icon: Phone, label: t("contact.phoneLabel"), value: "+1 800 NAITY" },
                 { icon: MapPin, label: t("contact.officeLabel"), value: t("contact.office") },
               ].map((item, i) => (

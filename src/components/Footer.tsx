@@ -32,7 +32,7 @@ const Footer = () => {
             <h4 className="font-semibold mb-3">{t("footer.support")}</h4>
             <div className="flex flex-col gap-2 text-sm text-accent-foreground/70">
               <Link to="/contact" className="hover:text-accent-foreground transition-colors">{t("nav.contact")}</Link>
-              <span>help@naity.com</span>
+              <span>support@naity.net</span>
               <span>{t("contact.office")}</span>
             </div>
           </div>
