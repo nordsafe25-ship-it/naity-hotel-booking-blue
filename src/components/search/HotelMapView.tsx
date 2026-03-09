@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { Link } from "react-router-dom";
 import { Star, MapPin } from "lucide-react";
@@ -35,13 +34,15 @@ const HotelMapView = ({ hotels, minPrices, lang }: Props) => {
         if (h.latitude && h.longitude) return [h.latitude, h.longitude];
         return CITY_COORDS[h.city] || [34.8, 36.5];
       })()
-    : [34.8, 36.5]; // Syria center
+    : [34.8, 36.5];
 
   return (
     <div className="h-[500px] md:h-[600px] rounded-xl overflow-hidden border border-border/50 shadow-card">
-      <MapContainer center={center} zoom={7} className="h-full w-full" scrollWheelZoom>
+      {/* @ts-ignore - react-leaflet v5 typing issue */}
+      <MapContainer center={center as any} zoom={7} className="h-full w-full" scrollWheelZoom={true as any}>
+        {/* @ts-ignore */}
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          {...{ attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' } as any}
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {hotels.map((hotel) => {
@@ -52,7 +53,8 @@ const HotelMapView = ({ hotels, minPrices, lang }: Props) => {
           const price = minPrices[hotel.id];
 
           return (
-            <Marker key={hotel.id} position={pos}>
+            // @ts-ignore
+            <Marker key={hotel.id} position={pos as any}>
               <Popup>
                 <div className="min-w-[180px] space-y-2">
                   {hotel.cover_image && (
@@ -60,17 +62,17 @@ const HotelMapView = ({ hotels, minPrices, lang }: Props) => {
                   )}
                   <div className="flex items-center gap-0.5">
                     {Array.from({ length: hotel.stars }).map((_, i) => (
-                      <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                      <Star key={i} className="w-3 h-3 fill-primary text-primary" />
                     ))}
                   </div>
                   <p className="font-semibold text-sm">{name}</p>
-                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <MapPin className="w-3 h-3" /> {hotel.city}
                   </p>
-                  {price && <p className="text-xs font-bold text-blue-600">${price}/night</p>}
+                  {price && <p className="text-xs font-bold text-primary">${price}/night</p>}
                   <Link
                     to={`/hotels/${hotel.id}`}
-                    className="block text-center text-xs bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition"
+                    className="block text-center text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-md hover:opacity-90 transition"
                   >
                     {lang === "ar" ? "عرض التفاصيل" : "View Details"}
                   </Link>

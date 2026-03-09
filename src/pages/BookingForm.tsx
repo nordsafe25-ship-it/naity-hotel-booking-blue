@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Upload, Shield, CreditCard, CheckCircle, FileText } from "lucide-react";
+import { ArrowLeft, ArrowRight, Upload, Shield, CreditCard, CheckCircle, FileText, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { toast } from "sonner";
@@ -11,6 +11,17 @@ import { QRCodeSVG } from "qrcode.react";
 const DEPOSIT_PERCENT = 10;
 
 type Step = "details" | "passport" | "payment" | "voucher";
+
+const isPeakSeason = (dateStr: string): boolean => {
+  if (!dateStr) return false;
+  const d = new Date(dateStr);
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  if (month === 6 && day >= 15) return true;
+  if (month === 7 || month === 8) return true;
+  if (month === 9 && day <= 15) return true;
+  return false;
+};
 
 const BookingForm = () => {
   const [searchParams] = useSearchParams();
@@ -35,6 +46,7 @@ const BookingForm = () => {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [specialRequests, setSpecialRequests] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Passport
   const [passportFile, setPassportFile] = useState<File | null>(null);
@@ -82,10 +94,8 @@ const BookingForm = () => {
     }
   };
 
-  // When entering passport step, trigger temporary hold webhook
   const enterPassportStep = async () => {
     setStep("passport");
-    // Send a webhook/hold signal
     try {
       await supabase.from("webhook_logs").insert({
         hotel_id: hotelId,
@@ -101,7 +111,6 @@ const BookingForm = () => {
   const handlePayment = async () => {
     setProcessing(true);
     try {
-      // Upload passport if provided
       let passportUrl: string | null = null;
       if (passportFile) {
         const ext = passportFile.name.split(".").pop();
@@ -113,10 +122,8 @@ const BookingForm = () => {
         }
       }
 
-      // Generate transaction hash
       const txHash = `NTY-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
-      // Create booking
       const { data: booking, error } = await supabase.from("bookings").insert({
         hotel_id: hotelId,
         room_category_id: roomId,
@@ -141,7 +148,6 @@ const BookingForm = () => {
 
       setBookingId(booking.id);
 
-      // Log payment webhook
       await supabase.from("webhook_logs").insert({
         hotel_id: hotelId,
         event_type: "booking_confirmed",
@@ -182,7 +188,6 @@ const BookingForm = () => {
   const hotelName = lang === "ar" ? hotel.name_ar : hotel.name_en;
   const roomName = lang === "ar" ? room.name_ar : room.name_en;
 
-  // Step indicators
   const steps: { key: Step; label: string; icon: any }[] = [
     { key: "details", label: tx("المعلومات", "Details"), icon: FileText },
     { key: "passport", label: tx("الجواز", "Passport"), icon: Shield },
@@ -260,6 +265,25 @@ const BookingForm = () => {
                   <label className="text-sm font-medium text-foreground">{t("booking.specialRequests")}</label>
                   <textarea rows={3} value={specialRequests} onChange={e => setSpecialRequests(e.target.value)} className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground resize-none focus:ring-2 focus:ring-primary/30 transition" placeholder={t("booking.specialPlaceholder")} />
                 </div>
+
+                {/* Terms checkbox */}
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input type="checkbox" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 accent-primary cursor-pointer shrink-0" />
+                  <span className="text-xs text-muted-foreground leading-relaxed">
+                    {tx("أوافق على ", "I agree to the ")}
+                    <Link to="/terms" target="_blank" className="text-primary underline underline-offset-2">
+                      {tx("الشروط والأحكام", "Terms & Conditions")}
+                    </Link>
+                    {tx(" وسياسة ", " and ")}
+                    <Link to="/privacy" target="_blank" className="text-primary underline underline-offset-2">
+                      {tx("الخصوصية", "Privacy Policy")}
+                    </Link>
+                    {tx("، بما فيها عدم الاسترداد في مواسم الذروة.",
+                        ", including the no-refund policy during peak seasons.")}
+                  </span>
+                </label>
+
                 <button
                   onClick={() => {
                     if (!firstName || !lastName || !email || !nationality || !checkIn || !checkOut) {
@@ -268,6 +292,10 @@ const BookingForm = () => {
                     }
                     if (new Date(checkOut) <= new Date(checkIn)) {
                       toast.error(tx("تاريخ المغادرة يجب أن يكون بعد الوصول", "Check-out must be after check-in"));
+                      return;
+                    }
+                    if (!termsAccepted) {
+                      toast.error(tx("يجب الموافقة على الشروط والأحكام أولاً", "You must accept the Terms & Conditions first"));
                       return;
                     }
                     enterPassportStep();
@@ -363,6 +391,27 @@ const BookingForm = () => {
                   </div>
                 </div>
 
+                {/* Peak season warning */}
+                {isPeakSeason(checkIn) && (
+                  <div className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <span className="text-xl">⚠️</span>
+                      <div className="space-y-1">
+                        <p className="text-sm font-bold text-foreground">
+                          {tx("تنبيه: موسم الذروة — لا استرداد", "Warning: Peak Season — No Refund")}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {tx("حجزك في موسم الصيف (15 يونيو – 15 سبتمبر). العربون (10%) غير قابل للاسترداد.",
+                              "Your booking is in Summer peak season (Jun 15 – Sep 15). The 10% deposit is non-refundable.")}
+                        </p>
+                        <Link to="/terms" target="_blank" className="text-xs text-primary underline underline-offset-2">
+                          {tx("اقرأ سياسة الإلغاء الكاملة", "Read full cancellation policy")}
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Placeholder payment form */}
                 <div className="space-y-4">
                   <div className="space-y-1.5">
@@ -455,6 +504,13 @@ const BookingForm = () => {
                   className="gradient-cta text-primary-foreground px-8 py-3 rounded-xl font-semibold hover:opacity-90 transition-opacity"
                 >
                   {tx("العودة للرئيسية", "Back to Home")}
+                </button>
+
+                <button
+                  onClick={() => navigate('/my-bookings')}
+                  className="text-sm text-primary underline underline-offset-2 hover:opacity-80 transition mt-2 block text-center w-full"
+                >
+                  {tx("تتبع جميع حجوزاتي بالبريد الإلكتروني", "Track all my bookings by email")}
                 </button>
               </motion.div>
             )}
