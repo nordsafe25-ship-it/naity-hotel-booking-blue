@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, MapPin, Calendar, Users, Minus, Plus, Shield, Zap, X } from "lucide-react";
+import { Search, MapPin, Calendar, Users, Minus, Plus, Shield, Zap, Mail } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -47,9 +47,9 @@ const HeroSection = () => {
   };
 
   const trustBadges = [
-    { icon: Shield, text: tx("أفضل الأسعار مضمونة", "Best Prices Guaranteed") },
-    { icon: Zap, text: tx("حجز فوري بدون عمولة", "Instant Booking, No Commission") },
-    { icon: X, text: tx("إلغاء مجاني في معظم الفنادق", "Free Cancellation at Most Hotels") },
+    { icon: Shield, text: tx("ادفع 10% فقط — الباقي عند الوصول", "Pay Only 10% — Rest on Arrival") },
+    { icon: Zap,    text: tx("تأكيد فوري مباشر من الفندق",       "Instant Direct Hotel Confirmation") },
+    { icon: Mail,   text: tx("تتبع حجزك بالبريد — بدون حساب",    "Track by Email — No Account Needed") },
   ];
 
   return (
@@ -60,16 +60,30 @@ const HeroSection = () => {
       </div>
       <div className="container mx-auto px-4 py-20 md:py-28 relative">
         <motion.div className="max-w-3xl mx-auto text-center space-y-6" initial="hidden" animate="visible">
-          <motion.h1 variants={fadeUp} custom={0} className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-accent leading-tight">
+          {/* Badge */}
+          <motion.div variants={fadeUp} custom={0} className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-xs font-semibold">
+            {tx("حجز مباشر · بدون وسيط · بدون حساب", "Direct Booking · No Middleman · No Account")}
+          </motion.div>
+
+          {/* Title */}
+          <motion.h1 variants={fadeUp} custom={1} className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-accent leading-tight">
             {tx("اعثر على إقامتك المثالية مع", "Find your perfect stay with")}{" "}
             <span className="text-primary">Naity</span>
           </motion.h1>
-          <motion.p variants={fadeUp} custom={1} className="text-lg text-muted-foreground max-w-lg mx-auto">
-            {tx("احجز فنادق سوريا مباشرة — توفر فوري وتأكيد لحظي", "Book Syria's hotels directly — instant availability & confirmation")}
+
+          {/* Slogan */}
+          <motion.p variants={fadeUp} custom={2} className="text-sm font-medium text-primary/80">
+            {tx("نيتي — نحن نجهّز إقامتك", "Naity — We Prepare Your Stay")}
+          </motion.p>
+
+          {/* Subtitle */}
+          <motion.p variants={fadeUp} custom={3} className="text-lg text-muted-foreground max-w-lg mx-auto">
+            {tx("حجز مباشر. ادفع 10% الآن والباقي 90% نقداً عند وصولك.",
+                "Book direct. Pay 10% now, 90% cash on arrival.")}
           </motion.p>
 
           {/* Search Bar */}
-          <motion.form variants={fadeUp} custom={2} onSubmit={handleSearch} className="bg-card rounded-2xl p-4 shadow-elevated max-w-3xl mx-auto">
+          <motion.form variants={fadeUp} custom={4} onSubmit={handleSearch} className="bg-card rounded-2xl p-4 shadow-elevated max-w-3xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
               {/* City */}
               <div className="flex items-center gap-2 px-3 bg-muted rounded-xl">
@@ -144,7 +158,7 @@ const HeroSection = () => {
           </motion.form>
 
           {/* Popular destinations quick links */}
-          <motion.div variants={fadeUp} custom={3} className="flex flex-wrap items-center justify-center gap-2 pt-2">
+          <motion.div variants={fadeUp} custom={5} className="flex flex-wrap items-center justify-center gap-2 pt-2">
             <span className="text-xs text-muted-foreground">{tx("وجهات شائعة:", "Popular:")}</span>
             {SYRIAN_CITIES.slice(0, 4).map((c) => (
               <button key={c.en} onClick={() => { setCity(c.en); navigate(`/search?city=${c.en}`); }}
@@ -155,7 +169,7 @@ const HeroSection = () => {
           </motion.div>
 
           {/* Trust indicators */}
-          <motion.div variants={fadeUp} custom={4} className="flex flex-wrap items-center justify-center gap-4 md:gap-6 pt-4">
+          <motion.div variants={fadeUp} custom={6} className="flex flex-wrap items-center justify-center gap-4 md:gap-6 pt-4">
             {trustBadges.map((badge, i) => (
               <div key={i} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <badge.icon className="w-3.5 h-3.5 text-primary" />

@@ -7,7 +7,7 @@ import Layout from "@/components/Layout";
 import { useI18n } from "@/lib/i18n";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const DEPOSIT_PERCENT = 30;
+const DEPOSIT_PERCENT = 10;
 
 const HotelDetails = () => {
   const { id } = useParams();

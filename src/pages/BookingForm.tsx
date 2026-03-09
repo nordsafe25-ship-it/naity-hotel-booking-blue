@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { QRCodeSVG } from "qrcode.react";
 
-const DEPOSIT_PERCENT = 30;
+const DEPOSIT_PERCENT = 10;
 
 type Step = "details" | "passport" | "payment" | "voucher";
 

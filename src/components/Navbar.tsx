@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { Menu, X, Globe, LogIn, LayoutDashboard } from "lucide-react";
+import { Menu, X, Globe, LogIn, LayoutDashboard, Ticket } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import naityLogo from "@/assets/naity-logo.png";
 import { useI18n } from "@/lib/i18n";
@@ -41,6 +41,18 @@ const Navbar = () => {
               {link.label}
             </Link>
           ))}
+          {/* My Bookings */}
+          <Link
+            to="/my-bookings"
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-semibold border transition-colors ms-1 ${
+              location.pathname === "/my-bookings"
+                ? "bg-primary/10 border-primary/30 text-primary"
+                : "bg-primary/5 border-primary/20 text-primary hover:bg-primary/10"
+            }`}
+          >
+            <Ticket className="w-4 h-4" />
+            {t("nav.myBookings")}
+          </Link>
           <button
             onClick={() => setLang(lang === "ar" ? "en" : "ar")}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors ms-2"
@@ -100,6 +112,10 @@ const Navbar = () => {
                 {link.label}
               </Link>
             ))}
+            <Link to="/my-bookings" onClick={() => setOpen(false)}
+              className="px-4 py-2.5 rounded-lg text-sm font-semibold bg-primary/5 border border-primary/20 text-primary flex items-center gap-2">
+              <Ticket className="w-4 h-4" /> {t("nav.myBookings")}
+            </Link>
             {user ? (
               <Link to="/dashboard" onClick={() => setOpen(false)} className="px-4 py-2.5 rounded-lg text-sm font-medium gradient-cta text-primary-foreground flex items-center gap-2 mt-1">
                 <LayoutDashboard className="w-4 h-4" /> {lang === "ar" ? "لوحة التحكم" : "Dashboard"}

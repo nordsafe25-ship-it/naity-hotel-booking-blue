@@ -17,6 +17,9 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import MyBookings from "./pages/MyBookings";
+import Terms from "./pages/Terms";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminHotels from "./pages/admin/AdminHotels";
 import AdminHotelDetail from "./pages/admin/AdminHotelDetail";
@@ -47,6 +50,9 @@ const App = () => (
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/my-bookings" element={<MyBookings />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
 
               {/* Dashboard redirect */}
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
