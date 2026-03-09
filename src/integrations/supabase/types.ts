@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           check_in: string
           check_out: string
+          check_out_processed: boolean | null
           created_at: string
           deposit_amount: number | null
           guest_email: string
@@ -25,11 +26,12 @@ export type Database = {
           guest_last_name: string
           guest_phone: string | null
           guest_user_id: string | null
+          guests_count: number
           hotel_id: string
           id: string
-          passport_image_url: string | null
-          passport_number: string | null
+          nationality: string | null
           payment_status: string
+          phone_country_code: string | null
           room_category_id: string
           special_requests: string | null
           status: string
@@ -42,6 +44,7 @@ export type Database = {
         Insert: {
           check_in: string
           check_out: string
+          check_out_processed?: boolean | null
           created_at?: string
           deposit_amount?: number | null
           guest_email: string
@@ -49,11 +52,12 @@ export type Database = {
           guest_last_name: string
           guest_phone?: string | null
           guest_user_id?: string | null
+          guests_count?: number
           hotel_id: string
           id?: string
-          passport_image_url?: string | null
-          passport_number?: string | null
+          nationality?: string | null
           payment_status?: string
+          phone_country_code?: string | null
           room_category_id: string
           special_requests?: string | null
           status?: string
@@ -66,6 +70,7 @@ export type Database = {
         Update: {
           check_in?: string
           check_out?: string
+          check_out_processed?: boolean | null
           created_at?: string
           deposit_amount?: number | null
           guest_email?: string
@@ -73,11 +78,12 @@ export type Database = {
           guest_last_name?: string
           guest_phone?: string | null
           guest_user_id?: string | null
+          guests_count?: number
           hotel_id?: string
           id?: string
-          passport_image_url?: string | null
-          passport_number?: string | null
+          nationality?: string | null
           payment_status?: string
+          phone_country_code?: string | null
           room_category_id?: string
           special_requests?: string | null
           status?: string
@@ -396,6 +402,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      expire_completed_bookings: { Args: never; Returns: undefined }
       get_manager_hotel_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {

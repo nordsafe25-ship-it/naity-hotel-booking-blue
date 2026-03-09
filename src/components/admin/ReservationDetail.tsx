@@ -63,26 +63,10 @@ const ReservationDetail = ({ booking, open, onClose }: ReservationDetailProps) =
             <InfoCell label={t("اسم العائلة", "Last Name")} value={booking.guest_last_name} />
             <InfoCell label={t("البريد الإلكتروني", "Email")} value={booking.guest_email} />
             <InfoCell label={t("الهاتف", "Phone")} value={booking.guest_phone || "—"} />
-            <InfoCell label={t("جواز السفر", "Passport #")} value={booking.passport_number || "—"} />
+            <InfoCell label={t("الجنسية", "Nationality")} value={booking.nationality || "—"} />
+            <InfoCell label={t("عدد الأشخاص", "Guests")} value={String(booking.guests_count ?? 1)} />
             <InfoCell label={t("الحالة", "Status")} value={booking.status} badge />
           </div>
-
-          {/* Passport Image Preview */}
-          {booking.passport_image_url && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                {t("صورة جواز السفر", "Passport Image")}
-              </p>
-              <div className="rounded-xl overflow-hidden border border-border/50 bg-muted">
-                <img
-                  src={booking.passport_image_url}
-                  alt="Passport"
-                  className="w-full max-h-64 object-contain"
-                />
-              </div>
-            </div>
-          )}
 
           {/* Booking Details */}
           <div className="bg-muted rounded-xl p-4 grid grid-cols-2 md:grid-cols-3 gap-4">

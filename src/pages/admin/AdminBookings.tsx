@@ -51,7 +51,7 @@ const AdminBookings = () => {
       b.guest_first_name.toLowerCase().includes(s) ||
       b.guest_last_name.toLowerCase().includes(s) ||
       b.guest_email.toLowerCase().includes(s) ||
-      (b.passport_number && b.passport_number.toLowerCase().includes(s)) ||
+      (b.nationality && b.nationality.toLowerCase().includes(s)) ||
       (b.transaction_hash && b.transaction_hash.toLowerCase().includes(s))
     );
   });
@@ -68,7 +68,7 @@ const AdminBookings = () => {
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder={lang === "ar" ? "بحث بالاسم، البريد، جواز السفر..." : "Search by name, email, passport..."}
+              placeholder={lang === "ar" ? "بحث بالاسم، البريد، الجنسية..." : "Search by name, email, nationality..."}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="ps-9"
