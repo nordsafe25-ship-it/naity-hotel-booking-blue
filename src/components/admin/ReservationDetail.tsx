@@ -66,6 +66,7 @@ const ReservationDetail = ({ booking, open, onClose }: ReservationDetailProps) =
             <InfoCell label={t("الجنسية", "Nationality")} value={booking.nationality || "—"} />
             <InfoCell label={t("عدد الأشخاص", "Guests")} value={String(booking.guests_count ?? 1)} />
             <InfoCell label={t("الحالة", "Status")} value={booking.status} badge />
+          </div>
 
           {/* Booking Details */}
           <div className="bg-muted rounded-xl p-4 grid grid-cols-2 md:grid-cols-3 gap-4">
