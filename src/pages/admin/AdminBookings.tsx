@@ -51,7 +51,7 @@ const AdminBookings = () => {
       b.guest_first_name.toLowerCase().includes(s) ||
       b.guest_last_name.toLowerCase().includes(s) ||
       b.guest_email.toLowerCase().includes(s) ||
-      (b.passport_number && b.passport_number.toLowerCase().includes(s)) ||
+      (b.nationality && b.nationality.toLowerCase().includes(s)) ||
       (b.transaction_hash && b.transaction_hash.toLowerCase().includes(s))
     );
   });

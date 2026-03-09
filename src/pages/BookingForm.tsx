@@ -1,25 +1,90 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Upload, Shield, CreditCard, CheckCircle, FileText, AlertTriangle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Users, CreditCard,
+         CheckCircle, FileText, Phone, Mail,
+         Globe, Shield, Calendar, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { QRCodeSVG } from "qrcode.react";
+import { format } from "date-fns";
 
 const DEPOSIT_PERCENT = 10;
 
-type Step = "details" | "passport" | "payment" | "voucher";
+type Step = "details" | "payment" | "voucher";
+
+const PHONE_CODES = [
+  { code: "+963", flag: "🇸🇾", name: "Syria", nameAr: "سوريا" },
+  { code: "+90",  flag: "🇹🇷", name: "Turkey", nameAr: "تركيا" },
+  { code: "+49",  flag: "🇩🇪", name: "Germany", nameAr: "ألمانيا" },
+  { code: "+46",  flag: "🇸🇪", name: "Sweden", nameAr: "السويد" },
+  { code: "+47",  flag: "🇳🇴", name: "Norway", nameAr: "النرويج" },
+  { code: "+971", flag: "🇦🇪", name: "UAE", nameAr: "الإمارات" },
+  { code: "+966", flag: "🇸🇦", name: "Saudi Arabia", nameAr: "السعودية" },
+  { code: "+962", flag: "🇯🇴", name: "Jordan", nameAr: "الأردن" },
+  { code: "+961", flag: "🇱🇧", name: "Lebanon", nameAr: "لبنان" },
+  { code: "+964", flag: "🇮🇶", name: "Iraq", nameAr: "العراق" },
+  { code: "+20",  flag: "🇪🇬", name: "Egypt", nameAr: "مصر" },
+  { code: "+212", flag: "🇲🇦", name: "Morocco", nameAr: "المغرب" },
+  { code: "+216", flag: "🇹🇳", name: "Tunisia", nameAr: "تونس" },
+  { code: "+213", flag: "🇩🇿", name: "Algeria", nameAr: "الجزائر" },
+  { code: "+33",  flag: "🇫🇷", name: "France", nameAr: "فرنسا" },
+  { code: "+44",  flag: "🇬🇧", name: "UK", nameAr: "المملكة المتحدة" },
+  { code: "+1",   flag: "🇺🇸", name: "USA / Canada", nameAr: "أمريكا / كندا" },
+  { code: "+31",  flag: "🇳🇱", name: "Netherlands", nameAr: "هولندا" },
+  { code: "+32",  flag: "🇧🇪", name: "Belgium", nameAr: "بلجيكا" },
+  { code: "+41",  flag: "🇨🇭", name: "Switzerland", nameAr: "سويسرا" },
+  { code: "+43",  flag: "🇦🇹", name: "Austria", nameAr: "النمسا" },
+  { code: "+39",  flag: "🇮🇹", name: "Italy", nameAr: "إيطاليا" },
+  { code: "+34",  flag: "🇪🇸", name: "Spain", nameAr: "إسبانيا" },
+  { code: "+30",  flag: "🇬🇷", name: "Greece", nameAr: "اليونان" },
+  { code: "+7",   flag: "🇷🇺", name: "Russia", nameAr: "روسيا" },
+  { code: "+86",  flag: "🇨🇳", name: "China", nameAr: "الصين" },
+  { code: "+81",  flag: "🇯🇵", name: "Japan", nameAr: "اليابان" },
+  { code: "+82",  flag: "🇰🇷", name: "South Korea", nameAr: "كوريا الجنوبية" },
+];
+
+const NATIONALITIES = [
+  { value: "Syrian",       labelAr: "سوري / سورية",       labelEn: "Syrian" },
+  { value: "Turkish",      labelAr: "تركي / تركية",        labelEn: "Turkish" },
+  { value: "German",       labelAr: "ألماني / ألمانية",    labelEn: "German" },
+  { value: "Swedish",      labelAr: "سويدي / سويدية",      labelEn: "Swedish" },
+  { value: "Norwegian",    labelAr: "نرويجي / نرويجية",    labelEn: "Norwegian" },
+  { value: "Emirati",      labelAr: "إماراتي / إماراتية",  labelEn: "Emirati" },
+  { value: "Saudi",        labelAr: "سعودي / سعودية",      labelEn: "Saudi" },
+  { value: "Jordanian",    labelAr: "أردني / أردنية",      labelEn: "Jordanian" },
+  { value: "Lebanese",     labelAr: "لبناني / لبنانية",    labelEn: "Lebanese" },
+  { value: "Iraqi",        labelAr: "عراقي / عراقية",      labelEn: "Iraqi" },
+  { value: "Egyptian",     labelAr: "مصري / مصرية",        labelEn: "Egyptian" },
+  { value: "Moroccan",     labelAr: "مغربي / مغربية",      labelEn: "Moroccan" },
+  { value: "Tunisian",     labelAr: "تونسي / تونسية",      labelEn: "Tunisian" },
+  { value: "Algerian",     labelAr: "جزائري / جزائرية",    labelEn: "Algerian" },
+  { value: "French",       labelAr: "فرنسي / فرنسية",      labelEn: "French" },
+  { value: "British",      labelAr: "بريطاني / بريطانية",  labelEn: "British" },
+  { value: "American",     labelAr: "أمريكي / أمريكية",    labelEn: "American" },
+  { value: "Dutch",        labelAr: "هولندي / هولندية",    labelEn: "Dutch" },
+  { value: "Belgian",      labelAr: "بلجيكي / بلجيكية",    labelEn: "Belgian" },
+  { value: "Swiss",        labelAr: "سويسري / سويسرية",    labelEn: "Swiss" },
+  { value: "Austrian",     labelAr: "نمساوي / نمساوية",    labelEn: "Austrian" },
+  { value: "Italian",      labelAr: "إيطالي / إيطالية",    labelEn: "Italian" },
+  { value: "Spanish",      labelAr: "إسباني / إسبانية",    labelEn: "Spanish" },
+  { value: "Russian",      labelAr: "روسي / روسية",        labelEn: "Russian" },
+  { value: "Chinese",      labelAr: "صيني / صينية",        labelEn: "Chinese" },
+  { value: "Japanese",     labelAr: "ياباني / يابانية",    labelEn: "Japanese" },
+  { value: "Korean",       labelAr: "كوري / كورية",        labelEn: "Korean" },
+  { value: "Other",        labelAr: "أخرى",                labelEn: "Other" },
+];
 
 const isPeakSeason = (dateStr: string): boolean => {
   if (!dateStr) return false;
   const d = new Date(dateStr);
-  const month = d.getMonth() + 1;
+  const m = d.getMonth() + 1;
   const day = d.getDate();
-  if (month === 6 && day >= 15) return true;
-  if (month === 7 || month === 8) return true;
-  if (month === 9 && day <= 15) return true;
+  if (m === 6 && day >= 15) return true;
+  if (m === 7 || m === 8) return true;
+  if (m === 9 && day <= 15) return true;
   return false;
 };
 
@@ -41,22 +106,20 @@ const BookingForm = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [phoneCode, setPhoneCode] = useState("+963");
   const [phone, setPhone] = useState("");
   const [nationality, setNationality] = useState("");
+  const [guests, setGuests] = useState(1);
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [specialRequests, setSpecialRequests] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
 
-  // Passport
-  const [passportFile, setPassportFile] = useState<File | null>(null);
-  const [passportPreview, setPassportPreview] = useState<string | null>(null);
-  const [passportNumber, setPassportNumber] = useState("");
-  const [uploading, setUploading] = useState(false);
-
   // Payment / Voucher
   const [processing, setProcessing] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
+
+  const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     if (!hotelId || !roomId) return;
@@ -72,94 +135,70 @@ const BookingForm = () => {
     load();
   }, [hotelId, roomId]);
 
+  // Detect Stripe return
+  useEffect(() => {
+    const sessionId = new URLSearchParams(window.location.search).get("session_id");
+    if (sessionId && step !== "voucher") {
+      const fetchBooking = async () => {
+        setLoading(true);
+        const { data } = await supabase
+          .from("bookings")
+          .select("*, hotels(*), room_categories(*)")
+          .eq("stripe_payment_id", sessionId)
+          .maybeSingle();
+
+        if (data) {
+          setBookingId(data.id);
+          setHotel(data.hotels);
+          setRoom(data.room_categories);
+          setFirstName(data.guest_first_name);
+          setLastName(data.guest_last_name);
+          setEmail(data.guest_email);
+          setCheckIn(data.check_in);
+          setCheckOut(data.check_out);
+          setStep("voucher");
+        }
+        setLoading(false);
+      };
+      fetchBooking();
+    }
+  }, []);
+
   const nights = checkIn && checkOut ? Math.max(1, Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000)) : 1;
   const totalPrice = room ? room.price_per_night * nights : 0;
   const depositAmount = Math.round(totalPrice * DEPOSIT_PERCENT / 100);
   const balanceDue = totalPrice - depositAmount;
 
-  const handlePassportDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith("image/")) {
-      setPassportFile(file);
-      setPassportPreview(URL.createObjectURL(file));
-    }
-  }, []);
-
-  const handlePassportSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setPassportFile(file);
-      setPassportPreview(URL.createObjectURL(file));
-    }
-  };
-
-  const enterPassportStep = async () => {
-    setStep("passport");
-    try {
-      await supabase.from("webhook_logs").insert({
-        hotel_id: hotelId,
-        event_type: "temporary_hold",
-        payload: { room_category_id: roomId, check_in: checkIn, check_out: checkOut, guest_name: `${firstName} ${lastName}` },
-        status: "sent",
-      });
-    } catch (err) {
-      console.error("Hold webhook failed:", err);
-    }
-  };
-
-  const handlePayment = async () => {
+  const handleStripeCheckout = async () => {
     setProcessing(true);
     try {
-      let passportUrl: string | null = null;
-      if (passportFile) {
-        const ext = passportFile.name.split(".").pop();
-        const path = `passports/${hotelId}/${Date.now()}.${ext}`;
-        const { error: uploadErr } = await supabase.storage.from("hotel-photos").upload(path, passportFile);
-        if (!uploadErr) {
-          const { data: urlData } = supabase.storage.from("hotel-photos").getPublicUrl(path);
-          passportUrl = urlData.publicUrl;
-        }
-      }
-
-      const txHash = `NTY-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-
-      const { data: booking, error } = await supabase.from("bookings").insert({
-        hotel_id: hotelId,
-        room_category_id: roomId,
-        guest_first_name: firstName,
-        guest_last_name: lastName,
-        guest_email: email,
-        guest_phone: phone || null,
-        check_in: checkIn,
-        check_out: checkOut,
-        total_price: totalPrice,
-        deposit_amount: depositAmount,
-        special_requests: specialRequests || null,
-        passport_number: passportNumber || null,
-        passport_image_url: passportUrl,
-        transaction_hash: txHash,
-        payment_status: "deposit_paid",
-        status: "confirmed",
-        sync_status: "pending",
-      }).select("id").single();
-
-      if (error) throw error;
-
-      setBookingId(booking.id);
-
-      await supabase.from("webhook_logs").insert({
-        hotel_id: hotelId,
-        event_type: "booking_confirmed",
-        payload: { booking_id: booking.id, transaction_hash: txHash, deposit_amount: depositAmount },
-        status: "sent",
+      const fullPhone = `${phoneCode}${phone}`;
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: {
+          hotel_id: hotelId,
+          room_category_id: roomId,
+          guest_first_name: firstName,
+          guest_last_name: lastName,
+          guest_email: email,
+          guest_phone: fullPhone,
+          nationality,
+          guests_count: guests,
+          check_in: checkIn,
+          check_out: checkOut,
+          nights,
+          total_price: totalPrice,
+          deposit_amount: depositAmount,
+          special_requests: specialRequests || null,
+          hotel_name: lang === "ar" ? hotel?.name_ar : hotel?.name_en,
+          room_name: lang === "ar" ? room?.name_ar : room?.name_en,
+        },
       });
 
-      setStep("voucher");
-      toast.success(tx("تم الدفع بنجاح!", "Payment successful!"));
+      if (error) throw error;
+      if (!data?.url) throw new Error("No checkout URL");
+      window.location.href = data.url;
     } catch (err: any) {
       toast.error(err.message || tx("حدث خطأ", "An error occurred"));
-    } finally {
       setProcessing(false);
     }
   };
@@ -190,7 +229,6 @@ const BookingForm = () => {
 
   const steps: { key: Step; label: string; icon: any }[] = [
     { key: "details", label: tx("المعلومات", "Details"), icon: FileText },
-    { key: "passport", label: tx("الجواز", "Passport"), icon: Shield },
     { key: "payment", label: tx("الدفع", "Payment"), icon: CreditCard },
     { key: "voucher", label: tx("القسيمة", "Voucher"), icon: CheckCircle },
   ];
@@ -202,8 +240,7 @@ const BookingForm = () => {
         {/* Back button */}
         <button onClick={() => {
           if (step === "details") navigate(-1);
-          else if (step === "passport") setStep("details");
-          else if (step === "payment") setStep("passport");
+          else if (step === "payment") setStep("details");
         }} className={`flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4 ${step === "voucher" ? "invisible" : ""}`}>
           <BackArrow className="w-4 h-4" />
           {tx("رجوع", "Back")}
@@ -229,44 +266,149 @@ const BookingForm = () => {
             {step === "details" && (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bg-card rounded-xl p-6 shadow-card border border-border/50 space-y-5">
                 <h2 className="font-semibold text-foreground text-lg">{t("booking.guestInfo")}</h2>
+
+                {/* A) Name row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium text-foreground">{t("booking.firstName")} *</label>
-                    <input value={firstName} onChange={e => setFirstName(e.target.value)} required className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition" />
+                    <input value={firstName} onChange={e => setFirstName(e.target.value)} required
+                      className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium text-foreground">{t("booking.lastName")} *</label>
-                    <input value={lastName} onChange={e => setLastName(e.target.value)} required className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition" />
+                    <input value={lastName} onChange={e => setLastName(e.target.value)} required
+                      className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition" />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-foreground">{t("booking.email")} *</label>
-                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-foreground">{t("booking.phone")}</label>
-                    <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-foreground">{tx("الجنسية", "Nationality")} *</label>
-                    <input value={nationality} onChange={e => setNationality(e.target.value)} required className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition" placeholder={tx("مثال: سوري", "e.g. Syrian")} />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-foreground">{t("booking.checkIn")} *</label>
-                    <input type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} required className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-foreground">{t("booking.checkOut")} *</label>
-                    <input type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} required className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground" />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">{t("booking.specialRequests")}</label>
-                  <textarea rows={3} value={specialRequests} onChange={e => setSpecialRequests(e.target.value)} className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground resize-none focus:ring-2 focus:ring-primary/30 transition" placeholder={t("booking.specialPlaceholder")} />
                 </div>
 
-                {/* Terms checkbox */}
+                {/* B) Contact row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Email */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      <Mail className="w-3.5 h-3.5 text-primary" />
+                      {tx("البريد الإلكتروني", "Email Address")} *
+                    </label>
+                    <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition"
+                      dir="ltr" />
+                    <p className="text-[10px] text-muted-foreground">
+                      {tx("ستصلك قسيمة الحجز والتأكيد على هذا البريد",
+                          "Your booking voucher and confirmation will be sent here")}
+                    </p>
+                  </div>
+
+                  {/* Phone with country code */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-primary" />
+                      {tx("رقم الهاتف", "Phone Number")} *
+                    </label>
+                    <div className="flex gap-2">
+                      <select value={phoneCode} onChange={e => setPhoneCode(e.target.value)}
+                        className="bg-muted rounded-lg px-2 py-2.5 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition w-32 shrink-0 cursor-pointer"
+                        dir="ltr">
+                        {PHONE_CODES.map(c => (
+                          <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
+                        ))}
+                      </select>
+                      <input type="tel" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, ""))}
+                        placeholder="912345678"
+                        className="flex-1 bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition"
+                        dir="ltr" />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      {tx("رقم للتواصل في حالة الطوارئ أو تغييرات الحجز",
+                          "For emergency contact or booking changes")}
+                    </p>
+                  </div>
+                </div>
+
+                {/* C) Nationality + D) Guests */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      <Globe className="w-3.5 h-3.5 text-primary" />
+                      {tx("الجنسية", "Nationality")} *
+                    </label>
+                    <select value={nationality} onChange={e => setNationality(e.target.value)}
+                      className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition cursor-pointer">
+                      <option value="">{tx("اختر جنسيتك", "Select your nationality")}</option>
+                      {NATIONALITIES.map(n => (
+                        <option key={n.value} value={n.value}>
+                          {lang === "ar" ? n.labelAr : n.labelEn}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      <Users className="w-3.5 h-3.5 text-primary" />
+                      {tx("عدد الأشخاص", "Number of Guests")} *
+                    </label>
+                    <div className="flex items-center gap-3 bg-muted rounded-lg px-3 py-2">
+                      <button type="button" onClick={() => setGuests(Math.max(1, guests - 1))}
+                        className="w-9 h-9 rounded-full border border-border flex items-center justify-center hover:bg-card text-foreground font-bold text-lg transition shrink-0">
+                        −
+                      </button>
+                      <span className="flex-1 text-center text-sm font-medium text-foreground">
+                        {guests} {tx(guests === 1 ? "شخص" : "أشخاص", guests === 1 ? "Guest" : "Guests")}
+                      </span>
+                      <button type="button" onClick={() => setGuests(Math.min(room?.max_guests ?? 6, guests + 1))}
+                        className="w-9 h-9 rounded-full border border-border flex items-center justify-center hover:bg-card text-foreground font-bold text-lg transition shrink-0">
+                        +
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      {tx(`الحد الأقصى لهذه الغرفة: ${room?.max_guests ?? "—"} أشخاص`,
+                          `Max for this room: ${room?.max_guests ?? "—"} guests`)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* E) Dates */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-primary" />
+                      {tx("تاريخ الوصول", "Check-in Date")} *
+                    </label>
+                    <input type="date" value={checkIn} min={today}
+                      onChange={e => {
+                        setCheckIn(e.target.value);
+                        if (checkOut && checkOut <= e.target.value) setCheckOut("");
+                      }}
+                      className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-primary" />
+                      {tx("تاريخ المغادرة", "Check-out Date")} *
+                    </label>
+                    <input type="date" value={checkOut} min={checkIn || today}
+                      onChange={e => setCheckOut(e.target.value)}
+                      className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground" />
+                  </div>
+                </div>
+
+                {checkIn && checkOut && (
+                  <div className="flex items-center justify-between bg-primary/5 rounded-lg px-4 py-2 border border-primary/20">
+                    <span className="text-sm text-muted-foreground">{tx("عدد الليالي", "Number of nights")}</span>
+                    <span className="font-bold text-primary">{nights} {tx("ليالي", nights === 1 ? "night" : "nights")}</span>
+                  </div>
+                )}
+
+                {/* F) Special Requests */}
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-foreground">{t("booking.specialRequests")}</label>
+                  <textarea rows={3} value={specialRequests} onChange={e => setSpecialRequests(e.target.value)}
+                    className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground resize-none focus:ring-2 focus:ring-primary/30 transition"
+                    placeholder={t("booking.specialPlaceholder")} />
+                </div>
+
+                {/* G) Terms checkbox */}
                 <label className="flex items-start gap-2 cursor-pointer">
                   <input type="checkbox" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)}
                     className="mt-0.5 w-4 h-4 accent-primary cursor-pointer shrink-0" />
@@ -284,10 +426,27 @@ const BookingForm = () => {
                   </span>
                 </label>
 
+                {/* H) Next button */}
                 <button
                   onClick={() => {
-                    if (!firstName || !lastName || !email || !nationality || !checkIn || !checkOut) {
-                      toast.error(tx("يرجى تعبئة جميع الحقول المطلوبة", "Please fill all required fields"));
+                    if (!firstName || !lastName) {
+                      toast.error(tx("الرجاء إدخال الاسم الأول والأخير", "Please enter first and last name"));
+                      return;
+                    }
+                    if (!email || !email.includes("@")) {
+                      toast.error(tx("الرجاء إدخال بريد إلكتروني صحيح", "Please enter a valid email"));
+                      return;
+                    }
+                    if (!phone || phone.length < 7) {
+                      toast.error(tx("الرجاء إدخال رقم هاتف صحيح", "Please enter a valid phone number"));
+                      return;
+                    }
+                    if (!nationality) {
+                      toast.error(tx("الرجاء اختيار الجنسية", "Please select your nationality"));
+                      return;
+                    }
+                    if (!checkIn || !checkOut) {
+                      toast.error(tx("الرجاء تحديد تواريخ الإقامة", "Please select check-in and check-out dates"));
                       return;
                     }
                     if (new Date(checkOut) <= new Date(checkIn)) {
@@ -295,66 +454,11 @@ const BookingForm = () => {
                       return;
                     }
                     if (!termsAccepted) {
-                      toast.error(tx("يجب الموافقة على الشروط والأحكام أولاً", "You must accept the Terms & Conditions first"));
+                      toast.error(tx("يجب الموافقة على الشروط والأحكام", "You must accept the Terms & Conditions"));
                       return;
                     }
-                    enterPassportStep();
+                    setStep("payment");
                   }}
-                  className="w-full gradient-cta text-primary-foreground py-3 rounded-xl font-semibold hover:opacity-90 transition-opacity"
-                >
-                  {tx("التالي: تحميل الجواز", "Next: Upload Passport")}
-                </button>
-              </motion.div>
-            )}
-
-            {/* Step 2: Passport Upload */}
-            {step === "passport" && (
-              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bg-card rounded-xl p-6 shadow-card border border-border/50 space-y-5">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Shield className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="font-semibold text-foreground text-lg">{tx("تحميل جواز السفر", "Passport Upload")}</h2>
-                    <p className="text-xs text-muted-foreground">{tx("متطلب حكومي إلزامي", "Government Requirement")}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">{tx("رقم الجواز", "Passport Number")}</label>
-                  <input value={passportNumber} onChange={e => setPassportNumber(e.target.value)} className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition" placeholder={tx("مثال: N12345678", "e.g. N12345678")} />
-                </div>
-
-                <div
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={handlePassportDrop}
-                  className="border-2 border-dashed border-border rounded-xl p-8 text-center space-y-3 hover:border-primary/50 transition-colors cursor-pointer"
-                  onClick={() => document.getElementById("passport-input")?.click()}
-                >
-                  {passportPreview ? (
-                    <div className="space-y-3">
-                      <img src={passportPreview} alt="Passport" className="max-h-48 mx-auto rounded-lg shadow-card" />
-                      <p className="text-sm text-primary font-medium">{tx("تم التحميل - انقر للتغيير", "Uploaded - click to change")}</p>
-                    </div>
-                  ) : (
-                    <>
-                      <Upload className="w-10 h-10 text-muted-foreground mx-auto" />
-                      <p className="text-sm text-muted-foreground">{tx("اسحب وأفلت صورة الجواز هنا", "Drag & drop your passport image here")}</p>
-                      <p className="text-xs text-muted-foreground">{tx("أو انقر للاختيار", "or click to browse")}</p>
-                    </>
-                  )}
-                  <input id="passport-input" type="file" accept="image/*" onChange={handlePassportSelect} className="hidden" />
-                </div>
-
-                <div className="bg-muted/50 rounded-lg p-3 border border-border/30">
-                  <p className="text-xs text-muted-foreground flex items-start gap-2">
-                    <Shield className="w-4 h-4 shrink-0 text-primary mt-0.5" />
-                    {tx("بياناتك محمية ومشفرة. يتم استخدام صورة الجواز للتحقق من الهوية فقط وفقاً للمتطلبات الحكومية.", "Your data is protected and encrypted. Passport image is used for identity verification only per government requirements.")}
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => setStep("payment")}
                   className="w-full gradient-cta text-primary-foreground py-3 rounded-xl font-semibold hover:opacity-90 transition-opacity"
                 >
                   {tx("التالي: الدفع", "Next: Payment")}
@@ -362,7 +466,7 @@ const BookingForm = () => {
               </motion.div>
             )}
 
-            {/* Step 3: Payment */}
+            {/* Step 2: Payment */}
             {step === "payment" && (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bg-card rounded-xl p-6 shadow-card border border-border/50 space-y-5">
                 <div className="flex items-center gap-3">
@@ -391,6 +495,15 @@ const BookingForm = () => {
                   </div>
                 </div>
 
+                {/* Stripe info */}
+                <div className="bg-primary/5 rounded-lg p-3 border border-primary/20">
+                  <p className="text-xs text-primary font-medium flex items-start gap-2">
+                    <Shield className="w-4 h-4 shrink-0 mt-0.5" />
+                    {tx("الدفع الآمن عبر Stripe. لا نخزن بيانات بطاقتك. المبلغ المطلوب هو العربون فقط.",
+                        "Secure payment via Stripe. We never store your card details. Only the deposit is charged.")}
+                  </p>
+                </div>
+
                 {/* Peak season warning */}
                 {isPeakSeason(checkIn) && (
                   <div className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-xl p-4">
@@ -412,42 +525,17 @@ const BookingForm = () => {
                   </div>
                 )}
 
-                {/* Placeholder payment form */}
-                <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-foreground">{tx("رقم البطاقة", "Card Number")}</label>
-                    <input placeholder="4242 4242 4242 4242" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground focus:ring-2 focus:ring-primary/30 transition" dir="ltr" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-medium text-foreground">{tx("تاريخ الانتهاء", "Expiry")}</label>
-                      <input placeholder="MM/YY" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground" dir="ltr" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-medium text-foreground">CVC</label>
-                      <input placeholder="123" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground" dir="ltr" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-primary/5 rounded-lg p-3 border border-primary/20">
-                  <p className="text-xs text-primary font-medium flex items-start gap-2">
-                    <Shield className="w-4 h-4 shrink-0 mt-0.5" />
-                    {tx("المبلغ المطلوب دفعه الآن هو العربون فقط. الباقي يُدفع عند الوصول للفندق.", "Only the deposit amount is charged now. The balance is due upon check-in at the hotel.")}
-                  </p>
-                </div>
-
                 <button
-                  onClick={handlePayment}
+                  onClick={handleStripeCheckout}
                   disabled={processing}
                   className="w-full gradient-cta text-primary-foreground py-3 rounded-xl font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
-                  {processing ? tx("جاري المعالجة...", "Processing...") : tx(`ادفع $${depositAmount} عربون`, `Pay $${depositAmount} Deposit`)}
+                  {processing ? tx("جاري المعالجة...", "Processing...") : tx(`ادفع $${depositAmount} عربون عبر Stripe`, `Pay $${depositAmount} Deposit via Stripe`)}
                 </button>
               </motion.div>
             )}
 
-            {/* Step 4: Voucher */}
+            {/* Step 3: Voucher */}
             {step === "voucher" && bookingId && (
               <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-card rounded-xl p-8 shadow-card border border-border/50 text-center space-y-6">
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}>
@@ -499,17 +587,13 @@ const BookingForm = () => {
 
                 <p className="text-xs text-muted-foreground">{tx("احفظ هذه القسيمة على هاتفك وأظهرها عند تسجيل الوصول", "Save this voucher to your phone and present it at check-in")}</p>
 
-                <button
-                  onClick={() => navigate("/")}
-                  className="gradient-cta text-primary-foreground px-8 py-3 rounded-xl font-semibold hover:opacity-90 transition-opacity"
-                >
+                <button onClick={() => navigate("/")}
+                  className="gradient-cta text-primary-foreground px-8 py-3 rounded-xl font-semibold hover:opacity-90 transition-opacity">
                   {tx("العودة للرئيسية", "Back to Home")}
                 </button>
 
-                <button
-                  onClick={() => navigate('/my-bookings')}
-                  className="text-sm text-primary underline underline-offset-2 hover:opacity-80 transition mt-2 block text-center w-full"
-                >
+                <button onClick={() => navigate('/my-bookings')}
+                  className="text-sm text-primary underline underline-offset-2 hover:opacity-80 transition mt-2 block text-center w-full">
                   {tx("تتبع جميع حجوزاتي بالبريد الإلكتروني", "Track all my bookings by email")}
                 </button>
               </motion.div>
@@ -552,7 +636,7 @@ const BookingForm = () => {
                 )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t("booking.guestsLabel")}</span>
-                  <span className="font-medium text-foreground">{t("booking.upTo")} {room.max_guests}</span>
+                  <span className="font-medium text-foreground">{guests} / {room.max_guests}</span>
                 </div>
               </div>
             </div>
