@@ -189,7 +189,7 @@ export default function MyBookings() {
       });
       if (error) throw error;
       const bookingsData = data?.bookings ?? [];
-      setBookings(data ?? []);
+      setBookings(bookingsData);
     } catch (err: any) {
       toast.error(err.message ?? tx("حدث خطأ", "An error occurred"));
     } finally { setLoading(false); }
