@@ -37,7 +37,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
               {lang === "ar" ? "لوحة الإدارة" : "Admin Panel"}
             </span>
           </div>
-        </div>
+        </Link>
       </div>
       <nav className="flex-1 p-3 space-y-1">
         {navItems.map((item) => (
