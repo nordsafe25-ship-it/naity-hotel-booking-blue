@@ -1,5 +1,6 @@
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
   apiVersion: "2024-06-20",
@@ -10,6 +11,30 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_URL") ?? "",
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
 );
+
+async function sendEmail(to: string, subject: string, html: string) {
+  const client = new SMTPClient({
+    connection: {
+      hostname: Deno.env.get("SMTP_HOST") ?? "naity.net",
+      port: Number(Deno.env.get("SMTP_PORT") ?? "465"),
+      tls: true,
+      auth: {
+        username: Deno.env.get("SMTP_USER") ?? "",
+        password: Deno.env.get("SMTP_PASS") ?? "",
+      },
+    },
+  });
+
+  await client.send({
+    from: "Naity Bookings <no-replay@naity.net>",
+    to,
+    subject,
+    content: "auto",
+    html,
+  });
+
+  await client.close();
+}
 
 Deno.serve(async (req) => {
   const sig = req.headers.get("stripe-signature") ?? "";
@@ -60,11 +85,9 @@ Deno.serve(async (req) => {
     const checkOutFmt = new Date(booking.check_out).toLocaleDateString("en-GB");
     const balance = booking.total_price - booking.deposit_amount;
     const APP_URL = Deno.env.get("APP_URL") ?? "https://naity.com";
-    const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 
-    if (RESEND_KEY) {
-      // Guest confirmation email
-      const guestEmailHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#ffffff;font-family:Arial,sans-serif">
+    // Guest confirmation email
+    const guestEmailHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#ffffff;font-family:Arial,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto">
 <tr><td style="background:#1a1a2e;padding:24px;text-align:center">
 <h1 style="color:#ffffff;margin:0;font-size:24px">Naity</h1>
@@ -110,24 +133,20 @@ Deno.serve(async (req) => {
 </table>
 </body></html>`;
 
-      await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${RESEND_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: "Naity Bookings <bookings@naity.com>",
-          to: [guestEmail],
-          subject: `✅ Confirmed: ${hotelName} · ${checkInFmt} → ${checkOutFmt} | Naity`,
-          html: guestEmailHtml,
-        }),
-      });
+    try {
+      await sendEmail(
+        guestEmail!,
+        `✅ Confirmed: ${hotelName} · ${checkInFmt} → ${checkOutFmt} | Naity`,
+        guestEmailHtml
+      );
+    } catch (emailErr) {
+      console.error("Guest email failed:", emailErr);
+    }
 
-      // Hotel notification email
-      const hotelEmail = booking.hotels?.contact_email;
-      if (hotelEmail) {
-        const hotelEmailHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#ffffff;font-family:Arial,sans-serif">
+    // Hotel notification email
+    const hotelEmail = booking.hotels?.contact_email;
+    if (hotelEmail) {
+      const hotelEmailHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#ffffff;font-family:Arial,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto">
 <tr><td style="background:#1a1a2e;padding:24px;text-align:center">
 <h1 style="color:#ffffff;margin:0;font-size:24px">Naity</h1>
@@ -172,19 +191,14 @@ ${booking.special_requests ? `<tr><td style="color:#999;font-size:12px">Special 
 </table>
 </body></html>`;
 
-        await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${RESEND_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: "Naity System <bookings@naity.com>",
-            to: [hotelEmail],
-            subject: `🔔 New Booking: ${booking.guest_first_name} ${booking.guest_last_name} · ${checkInFmt} → ${checkOutFmt}`,
-            html: hotelEmailHtml,
-          }),
-        });
+      try {
+        await sendEmail(
+          hotelEmail,
+          `🔔 New Booking: ${booking.guest_first_name} ${booking.guest_last_name} · ${checkInFmt} → ${checkOutFmt}`,
+          hotelEmailHtml
+        );
+      } catch (emailErr) {
+        console.error("Hotel email failed:", emailErr);
       }
     }
   }
