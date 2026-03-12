@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Star, MapPin, Pencil, Trash2, AlertTriangle, ChevronRight } from "lucide-react";
+import { Plus, Star, MapPin, Pencil, Trash2, AlertTriangle, ChevronRight, Clock } from "lucide-react";
 import HeartbeatIndicator from "@/components/admin/HeartbeatIndicator";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
@@ -34,6 +34,14 @@ const AdminHotels = () => {
       const { data, error } = await supabase.from("hotels").select("*").order("created_at", { ascending: false });
       if (error) throw error;
       return data;
+    },
+  });
+
+  const { data: syncSettings } = useQuery({
+    queryKey: ["admin-hotels-sync-timestamps"],
+    queryFn: async () => {
+      const { data } = await supabase.from("local_sync_settings").select("hotel_id, last_sync_at, is_active");
+      return data ?? [];
     },
   });
 
@@ -190,6 +198,10 @@ const AdminHotels = () => {
           <div className="grid gap-4">
             {hotels?.map((hotel) => {
               const isApartment = (hotel as any).property_type === "apartment";
+              const syncInfo = syncSettings?.find(s => s.hotel_id === hotel.id);
+              const lastSync = syncInfo?.last_sync_at;
+              const isStale = lastSync && (Date.now() - new Date(lastSync).getTime()) > 24 * 60 * 60 * 1000;
+
               return (
                 <div key={hotel.id} className="bg-card rounded-xl p-4 border border-border/50 shadow-card hover:shadow-elevated transition-shadow cursor-pointer" onClick={() => navigate(`/admin/hotels/${hotel.id}`)}>
                   <div className="flex items-center justify-between flex-wrap gap-3">
@@ -210,10 +222,26 @@ const AdminHotels = () => {
                           </span>
                         </div>
                         <p className="text-sm text-muted-foreground">{lang === "ar" ? hotel.name_en : hotel.name_ar} • {hotel.city}</p>
-                        <div className="flex items-center gap-1 mt-1">
-                          {Array.from({ length: hotel.stars }).map((_, i) => (
-                            <Star key={i} className="w-3 h-3 fill-primary text-primary" />
-                          ))}
+                        <div className="flex items-center gap-3 mt-1">
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: hotel.stars }).map((_, i) => (
+                              <Star key={i} className="w-3 h-3 fill-primary text-primary" />
+                            ))}
+                          </div>
+                          {/* Last Synced timestamp */}
+                          {lastSync ? (
+                            <span className={`flex items-center gap-1 text-[10px] font-medium ${isStale ? "text-destructive" : "text-muted-foreground"}`}>
+                              <Clock className="w-3 h-3" />
+                              {tx("آخر مزامنة:", "Synced:")}{" "}
+                              {new Date(lastSync).toLocaleString(lang === "ar" ? "ar-SY" : "en-GB", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                              {isStale && <span className="text-destructive ml-1">⚠️</span>}
+                            </span>
+                          ) : syncInfo ? (
+                            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <Clock className="w-3 h-3" />
+                              {tx("لم تتم المزامنة بعد", "Never synced")}
+                            </span>
+                          ) : null}
                         </div>
                       </div>
                     </div>
