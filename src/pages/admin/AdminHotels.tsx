@@ -37,6 +37,14 @@ const AdminHotels = () => {
     },
   });
 
+  const { data: syncSettings } = useQuery({
+    queryKey: ["admin-hotels-sync-timestamps"],
+    queryFn: async () => {
+      const { data } = await supabase.from("local_sync_settings").select("hotel_id, last_sync_at, is_active");
+      return data ?? [];
+    },
+  });
+
   const saveMutation = useMutation({
     mutationFn: async (data: Partial<TablesInsert<"hotels">>) => {
       if (editing) {
