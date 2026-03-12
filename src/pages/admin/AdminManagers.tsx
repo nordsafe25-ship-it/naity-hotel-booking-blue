@@ -61,15 +61,18 @@ const AdminManagers = () => {
 
   const createManager = useMutation({
     mutationFn: async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw new Error(sessionError.message);
+
       const token = sessionData?.session?.access_token;
-      if (!token) throw new Error("Not authenticated");
+      if (!token) throw new Error(lang === "ar" ? "انتهت الجلسة، يرجى تسجيل الدخول مجددًا" : "Session expired. Please sign in again.");
 
       const res = await supabase.functions.invoke("create-manager", {
         body: { email, password, full_name: fullName, hotel_id: hotelId || null },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (res.error) throw new Error(res.error.message);
+      if (res.error) throw new Error(res.error.message || (lang === "ar" ? "فشل إنشاء المدير" : "Failed to create manager"));
       if (res.data?.error) throw new Error(res.data.error);
     },
     onSuccess: () => {
