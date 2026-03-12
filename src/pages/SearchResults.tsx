@@ -18,14 +18,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 const HotelMapView = lazy(() => import("@/components/search/HotelMapView"));
 
-const SYRIAN_CITIES = [
-  { en: "Damascus",  ar: "دمشق" },
-  { en: "Aleppo",    ar: "حلب" },
-  { en: "Homs",      ar: "حمص" },
-  { en: "Hama",      ar: "حماة" },
-  { en: "Lattakia",  ar: "اللاذقية" },
-  { en: "Tartus",    ar: "طرطوس" },
-];
+import { SYRIAN_MAIN_CITIES, ALLOWED_CITY_NAMES } from "@/lib/cities";
 
 const AMENITY_OPTIONS = [
   { key: "wifi", label_en: "High-speed Wi-Fi", label_ar: "واي فاي عالي السرعة", icon: Wifi },
@@ -43,7 +36,7 @@ const SearchResults = () => {
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
   const isMobile = useIsMobile();
 
-  const ALLOWED_CITY_NAMES = SYRIAN_CITIES.map(c => c.en);
+  const ALLOWED = ALLOWED_CITY_NAMES;
   const rawCity = searchParams.get("city") || "";
   const initialCity = ALLOWED_CITY_NAMES.includes(rawCity) ? rawCity : "";
 

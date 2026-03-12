@@ -8,14 +8,7 @@ import { useI18n } from "@/lib/i18n";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarUI } from "@/components/ui/calendar";
 
-const SYRIAN_CITIES = [
-  { en: "Damascus",  ar: "دمشق" },
-  { en: "Aleppo",    ar: "حلب" },
-  { en: "Homs",      ar: "حمص" },
-  { en: "Hama",      ar: "حماة" },
-  { en: "Lattakia",  ar: "اللاذقية" },
-  { en: "Tartus",    ar: "طرطوس" },
-];
+import { SYRIAN_MAIN_CITIES } from "@/lib/cities";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -91,7 +84,7 @@ const HeroSection = () => {
                 <MapPin className="w-4 h-4 text-primary shrink-0" />
                 <select value={city} onChange={(e) => setCity(e.target.value)} className="w-full bg-transparent py-3 text-sm outline-none text-foreground">
                   <option value="">{tx("أي مدينة", "Any City")}</option>
-                  {SYRIAN_CITIES.map((c) => (
+                  {SYRIAN_MAIN_CITIES.map((c) => (
                     <option key={c.en} value={c.en}>{lang === "ar" ? c.ar : c.en}</option>
                   ))}
                 </select>
@@ -161,7 +154,7 @@ const HeroSection = () => {
           {/* Popular destinations quick links */}
           <motion.div variants={fadeUp} custom={5} className="flex flex-wrap items-center justify-center gap-2 pt-2">
             <span className="text-xs text-muted-foreground">{tx("وجهات شائعة:", "Popular:")}</span>
-            {SYRIAN_CITIES.map((c) => (
+            {SYRIAN_MAIN_CITIES.map((c) => (
               <button key={c.en} onClick={() => { setCity(c.en); navigate(`/search?city=${c.en}`); }}
                 className="text-xs bg-card/80 backdrop-blur-sm border border-border/50 text-foreground px-3 py-1.5 rounded-full hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all">
                 {lang === "ar" ? c.ar : c.en}
