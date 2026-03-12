@@ -36,9 +36,8 @@ const SearchResults = () => {
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
   const isMobile = useIsMobile();
 
-  const ALLOWED = ALLOWED_CITY_NAMES;
   const rawCity = searchParams.get("city") || "";
-  const initialCity = ALLOWED_CITY_NAMES.includes(rawCity) ? rawCity : "";
+  const initialCity = (ALLOWED_CITY_NAMES as readonly string[]).includes(rawCity) ? rawCity : "";
 
   const [hotels, setHotels] = useState<any[]>([]);
   const [minPrices, setMinPrices] = useState<Record<string, number>>({});
