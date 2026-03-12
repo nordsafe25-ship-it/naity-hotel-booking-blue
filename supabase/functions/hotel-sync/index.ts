@@ -59,6 +59,8 @@ Deno.serve(async (req) => {
           price_per_night: room.price_per_night ?? null,
           occupied_check_in: room.check_in ?? null,
           occupied_check_out: room.check_out ?? null,
+          sham_soft_room_id: room.sham_soft_room_id ?? null,
+          room_kind: room.room_kind ?? null,
           last_updated_by_hotel: now,
           updated_at: now,
         }, {
