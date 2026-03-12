@@ -56,6 +56,7 @@ Deno.serve(async (req) => {
         payment_status: "pending",
         status: "pending",
         sync_status: "pending",
+        room_number: body.room_number ?? null,
       })
       .select("id")
       .single();
