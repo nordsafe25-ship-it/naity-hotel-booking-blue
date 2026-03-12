@@ -73,10 +73,46 @@ Deno.serve(async (req) => {
         stripe_payment_id: session.id,
       })
       .eq("id", bookingId)
-      .select("*, hotels(name_ar,name_en,city,address,contact_email), room_categories(name_ar,name_en)")
+      .select("*, hotels(name_ar,name_en,city,address,contact_email,property_type), room_categories(name_ar,name_en)")
       .single();
 
     if (!booking) return new Response("Booking not found", { status: 404 });
+
+    // ── Post-payment: block dates for apartments ──────────
+    const isApartment = booking.hotels?.property_type === "apartment";
+    if (isApartment) {
+      const startDate = new Date(booking.check_in);
+      const endDate = new Date(booking.check_out);
+      const datesToBlock: { hotel_id: string; blocked_date: string; note: string }[] = [];
+      for (let d = new Date(startDate); d < endDate; d.setDate(d.getDate() + 1)) {
+        datesToBlock.push({
+          hotel_id: booking.hotel_id,
+          blocked_date: d.toISOString().split("T")[0],
+          note: `Auto-blocked by booking ${bookingId}`,
+        });
+      }
+      if (datesToBlock.length > 0) {
+        // Insert blocked dates, ignore if they already exist
+        for (const bd of datesToBlock) {
+          await supabase.from("blocked_dates").insert(bd).select().maybeSingle();
+        }
+      }
+    }
+
+    // ── Post-payment: mark room_availability as occupied ──
+    if (booking.room_number) {
+      await supabase
+        .from("room_availability")
+        .update({
+          status: "occupied",
+          occupied_check_in: booking.check_in,
+          occupied_check_out: booking.check_out,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("hotel_id", booking.hotel_id)
+        .eq("room_number", booking.room_number);
+    }
+    // ── End post-payment updates ──────────────────────────
 
     const nights = Math.ceil((new Date(booking.check_out).getTime() - new Date(booking.check_in).getTime()) / 86400000);
     const hotelName = booking.hotels?.name_en ?? booking.hotels?.name_ar ?? "Hotel";
