@@ -27,12 +27,16 @@ export type Database = {
           guest_phone: string | null
           guest_user_id: string | null
           guests_count: number
+          hotel_booking_id: string | null
           hotel_id: string
+          hotel_notification_status: string | null
+          hotel_notified_at: string | null
           id: string
           nationality: string | null
           payment_status: string
           phone_country_code: string | null
           room_category_id: string
+          room_number: string | null
           special_requests: string | null
           status: string
           stripe_payment_id: string | null
@@ -53,12 +57,16 @@ export type Database = {
           guest_phone?: string | null
           guest_user_id?: string | null
           guests_count?: number
+          hotel_booking_id?: string | null
           hotel_id: string
+          hotel_notification_status?: string | null
+          hotel_notified_at?: string | null
           id?: string
           nationality?: string | null
           payment_status?: string
           phone_country_code?: string | null
           room_category_id: string
+          room_number?: string | null
           special_requests?: string | null
           status?: string
           stripe_payment_id?: string | null
@@ -79,12 +87,16 @@ export type Database = {
           guest_phone?: string | null
           guest_user_id?: string | null
           guests_count?: number
+          hotel_booking_id?: string | null
           hotel_id?: string
+          hotel_notification_status?: string | null
+          hotel_notified_at?: string | null
           id?: string
           nationality?: string | null
           payment_status?: string
           phone_country_code?: string | null
           room_category_id?: string
+          room_number?: string | null
           special_requests?: string | null
           status?: string
           stripe_payment_id?: string | null
@@ -329,6 +341,66 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      room_availability: {
+        Row: {
+          category_name: string | null
+          created_at: string
+          hotel_id: string
+          id: string
+          last_updated_by_hotel: string | null
+          occupied_check_in: string | null
+          occupied_check_out: string | null
+          price_per_night: number | null
+          room_category_id: string | null
+          room_number: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          category_name?: string | null
+          created_at?: string
+          hotel_id: string
+          id?: string
+          last_updated_by_hotel?: string | null
+          occupied_check_in?: string | null
+          occupied_check_out?: string | null
+          price_per_night?: number | null
+          room_category_id?: string | null
+          room_number: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          category_name?: string | null
+          created_at?: string
+          hotel_id?: string
+          id?: string
+          last_updated_by_hotel?: string | null
+          occupied_check_in?: string | null
+          occupied_check_out?: string | null
+          price_per_night?: number | null
+          room_category_id?: string | null
+          room_number?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_availability_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_availability_room_category_id_fkey"
+            columns: ["room_category_id"]
+            isOneToOne: false
+            referencedRelation: "room_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       room_categories: {
         Row: {

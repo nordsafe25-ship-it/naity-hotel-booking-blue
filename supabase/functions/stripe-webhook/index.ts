@@ -330,6 +330,24 @@ Deno.serve(async (req) => {
 
     // Hotel notification email
     const hotelEmail = booking.hotels?.contact_email;
+    // ── Notify Hotel Local System ──────────────────────────
+    const APP_SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
+    try {
+      await fetch(`${APP_SUPABASE_URL}/functions/v1/send-booking-to-hotel`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${SERVICE_KEY}`,
+        },
+        body: JSON.stringify({ booking_id: bookingId }),
+      });
+    } catch (hotelNotifyErr) {
+      console.error("Hotel system notification failed:", hotelNotifyErr);
+    }
+    // ── End Hotel Notification ───────────────────────────
+
     if (hotelEmail) {
       const hotelEmailHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#ffffff;font-family:Arial,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto">

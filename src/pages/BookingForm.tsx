@@ -93,6 +93,9 @@ const BookingForm = () => {
   const navigate = useNavigate();
   const hotelId = searchParams.get("hotel") || "";
   const roomId = searchParams.get("room") || "";
+  const roomNumberParam = searchParams.get("room_number") || "";
+  const checkInParam = searchParams.get("check_in") || "";
+  const checkOutParam = searchParams.get("check_out") || "";
   const { t, lang } = useI18n();
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
   const BackArrow = lang === "ar" ? ArrowRight : ArrowLeft;
@@ -110,8 +113,8 @@ const BookingForm = () => {
   const [phone, setPhone] = useState("");
   const [nationality, setNationality] = useState("");
   const [guests, setGuests] = useState(1);
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
+  const [checkIn, setCheckIn] = useState(checkInParam);
+  const [checkOut, setCheckOut] = useState(checkOutParam);
   const [specialRequests, setSpecialRequests] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
 
@@ -189,6 +192,7 @@ const BookingForm = () => {
           total_price: totalPrice,
           deposit_amount: depositAmount,
           special_requests: specialRequests || null,
+          room_number: roomNumberParam || null,
           hotel_name: lang === "ar" ? hotel?.name_ar : hotel?.name_en,
           room_name: lang === "ar" ? room?.name_ar : room?.name_en,
         },
@@ -558,6 +562,12 @@ const BookingForm = () => {
                       <span className="text-muted-foreground">{tx("الفندق", "Hotel")}</span>
                       <span className="font-medium text-foreground">{hotelName}</span>
                     </div>
+                    {roomNumberParam && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">{tx("رقم الغرفة", "Room No.")}</span>
+                        <span className="font-medium text-foreground">#{roomNumberParam}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{tx("الغرفة", "Room")}</span>
                       <span className="font-medium text-foreground">{roomName}</span>
@@ -614,6 +624,12 @@ const BookingForm = () => {
                   <span className="text-muted-foreground">{t("booking.roomType")}</span>
                   <span className="font-medium text-foreground">{roomName}</span>
                 </div>
+                {roomNumberParam && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{tx("رقم الغرفة", "Room No.")}</span>
+                    <span className="font-medium text-foreground">#{roomNumberParam}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t("booking.pricePerNight")}</span>
                   <span className="font-medium text-foreground" dir="ltr">${room.price_per_night}</span>

@@ -20,6 +20,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const body = await req.json();
     const {
       hotel_id, room_category_id,
       guest_first_name, guest_last_name, guest_email, guest_phone,
@@ -28,7 +29,7 @@ Deno.serve(async (req) => {
       total_price, deposit_amount,
       special_requests,
       hotel_name, room_name,
-    } = await req.json();
+    } = body;
 
     const APP_URL = Deno.env.get("APP_URL") ?? "https://naity.com";
 
@@ -56,6 +57,7 @@ Deno.serve(async (req) => {
         payment_status: "pending",
         status: "pending",
         sync_status: "pending",
+        room_number: body.room_number ?? null,
       })
       .select("id")
       .single();

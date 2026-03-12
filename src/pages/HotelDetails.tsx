@@ -1,7 +1,7 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Star, MapPin, Users, Check, ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { Star, MapPin, Users, Check, ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Calendar, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { useI18n } from "@/lib/i18n";
@@ -19,7 +19,15 @@ const HotelDetails = () => {
   const [loading, setLoading] = useState(true);
   const [galleryIdx, setGalleryIdx] = useState(0);
 
+  // Date-based availability
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
+  const [availableRooms, setAvailableRooms] = useState<any[]>([]);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
+  const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     if (!id) return;
@@ -37,6 +45,27 @@ const HotelDetails = () => {
     };
     load();
   }, [id]);
+
+  // Fetch available rooms when dates change
+  useEffect(() => {
+    if (!checkIn || !checkOut || !hotel?.id) return;
+
+    const fetchAvailableRooms = async () => {
+      setAvailabilityLoading(true);
+      // Get rooms that are available (not occupied during selected dates)
+      const { data } = await supabase
+        .from("room_availability")
+        .select("*")
+        .eq("hotel_id", hotel.id)
+        .eq("status", "available");
+
+      setAvailableRooms(data ?? []);
+      setHasSearched(true);
+      setAvailabilityLoading(false);
+    };
+
+    fetchAvailableRooms();
+  }, [checkIn, checkOut, hotel?.id]);
 
   if (loading) {
     return (
@@ -65,6 +94,14 @@ const HotelDetails = () => {
   const allImages = photos.length > 0 ? photos.map((p: any) => p.url) : (hotel.cover_image ? [hotel.cover_image] : ["https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80"]);
   const BackArrow = lang === "ar" ? ArrowRight : ArrowLeft;
   const minPrice = rooms.length > 0 ? Math.min(...rooms.map((r: any) => r.price_per_night)) : null;
+
+  // Group available rooms by category
+  const availableByCategory: Record<string, any[]> = {};
+  for (const ar of availableRooms) {
+    const cat = ar.category_name ?? "other";
+    if (!availableByCategory[cat]) availableByCategory[cat] = [];
+    availableByCategory[cat].push(ar);
+  }
 
   return (
     <Layout>
@@ -156,6 +193,57 @@ const HotelDetails = () => {
           </div>
         )}
 
+        {/* Date Picker for Availability */}
+        <div className="bg-card rounded-xl p-6 shadow-card border border-border/50 space-y-4">
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+            <Search className="w-5 h-5 text-primary" />
+            {tx("ابحث عن غرف متاحة", "Search Available Rooms")}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-primary" />
+                {tx("تاريخ الوصول", "Check-in")} *
+              </label>
+              <input
+                type="date"
+                value={checkIn}
+                min={today}
+                onChange={e => {
+                  setCheckIn(e.target.value);
+                  if (checkOut && checkOut <= e.target.value) setCheckOut("");
+                  setHasSearched(false);
+                }}
+                className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-primary" />
+                {tx("تاريخ المغادرة", "Check-out")} *
+              </label>
+              <input
+                type="date"
+                value={checkOut}
+                min={checkIn || today}
+                onChange={e => {
+                  setCheckOut(e.target.value);
+                  setHasSearched(false);
+                }}
+                className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground"
+              />
+            </div>
+          </div>
+
+          {hasSearched && !availabilityLoading && (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="bg-primary/10 text-primary px-3 py-1 rounded-full font-medium">
+                {availableRooms.length} {tx("غرفة متاحة", "rooms available")}
+              </span>
+            </div>
+          )}
+        </div>
+
         {/* Room Categories with Pricing Table */}
         <div>
           <h2 className="text-xl font-bold text-foreground mb-4">{t("hotel.rooms")}</h2>
@@ -167,6 +255,15 @@ const HotelDetails = () => {
                 const roomName = lang === "ar" ? room.name_ar : room.name_en;
                 const deposit = Math.round(room.price_per_night * DEPOSIT_PERCENT / 100);
                 const balance = room.price_per_night - deposit;
+
+                // Find available rooms in this category
+                const categoryAvailable = hasSearched
+                  ? availableRooms.filter(ar =>
+                      ar.room_category_id === room.id ||
+                      ar.category_name?.toLowerCase() === room.name_en?.toLowerCase()
+                    )
+                  : [];
+
                 return (
                   <motion.div
                     key={room.id}
@@ -179,7 +276,19 @@ const HotelDetails = () => {
                     <div className="p-5 space-y-4">
                       <div className="flex items-center justify-between">
                         <h3 className="font-semibold text-foreground text-lg">{roomName}</h3>
-                        <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-md font-medium">{t("hotel.available")}</span>
+                        {hasSearched ? (
+                          <span className={`text-xs px-2 py-1 rounded-md font-medium ${
+                            categoryAvailable.length > 0
+                              ? "bg-primary/10 text-primary"
+                              : "bg-destructive/10 text-destructive"
+                          }`}>
+                            {categoryAvailable.length > 0
+                              ? `${categoryAvailable.length} ${tx("متاحة", "available")}`
+                              : tx("غير متاحة", "Unavailable")}
+                          </span>
+                        ) : (
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-md font-medium">{t("hotel.available")}</span>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -215,12 +324,44 @@ const HotelDetails = () => {
                         </div>
                       </div>
 
-                      <button
-                        onClick={() => navigate(`/booking?hotel=${hotel.id}&room=${room.id}`)}
-                        className="w-full gradient-cta text-primary-foreground py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity"
-                      >
-                        {t("hotel.bookNow")}
-                      </button>
+                      {/* Available room numbers */}
+                      {hasSearched && categoryAvailable.length > 0 && (
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-semibold text-muted-foreground">
+                            {tx("اختر غرفة:", "Select a room:")}
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {categoryAvailable.map((ar: any) => (
+                              <button
+                                key={ar.id}
+                                onClick={() => navigate(`/booking?hotel=${hotel.id}&room=${room.id}&room_number=${ar.room_number}&check_in=${checkIn}&check_out=${checkOut}`)}
+                                className="px-3 py-1.5 text-sm rounded-lg border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition font-medium"
+                              >
+                                #{ar.room_number}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Book now button (when no availability data or fallback) */}
+                      {(!hasSearched || categoryAvailable.length === 0) && (
+                        <button
+                          onClick={() => {
+                            if (hasSearched && categoryAvailable.length === 0) return;
+                            const params = new URLSearchParams({ hotel: hotel.id, room: room.id });
+                            if (checkIn) params.set("check_in", checkIn);
+                            if (checkOut) params.set("check_out", checkOut);
+                            navigate(`/booking?${params.toString()}`);
+                          }}
+                          disabled={hasSearched && categoryAvailable.length === 0}
+                          className="w-full gradient-cta text-primary-foreground py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {hasSearched && categoryAvailable.length === 0
+                            ? tx("غير متاحة في هذه التواريخ", "Unavailable for selected dates")
+                            : t("hotel.bookNow")}
+                        </button>
+                      )}
                     </div>
                   </motion.div>
                 );
