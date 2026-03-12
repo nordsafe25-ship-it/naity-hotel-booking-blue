@@ -312,6 +312,10 @@ const HotelDetails = () => {
                     )
                   : [];
 
+                // For apartments or properties without room_availability, allow direct booking
+                const hasNoSyncRooms = hasSearched && availableRooms.length === 0 && !isDateBlocked;
+                const canDirectBook = hasNoSyncRooms && isApartment;
+
                 return (
                   <motion.div
                     key={room.id}
@@ -326,15 +330,17 @@ const HotelDetails = () => {
                         <h3 className="font-semibold text-foreground text-lg">{roomName}</h3>
                         {hasSearched ? (
                           <span className={`text-xs px-2 py-1 rounded-md font-medium ${
-                            categoryAvailable.length > 0 && !isDateBlocked
+                            (categoryAvailable.length > 0 || canDirectBook) && !isDateBlocked
                               ? "bg-primary/10 text-primary"
                               : "bg-destructive/10 text-destructive"
                           }`}>
                             {isDateBlocked
                               ? tx("محجوزة", "Blocked")
-                              : categoryAvailable.length > 0
-                                ? `${categoryAvailable.length} ${tx("متاحة", "available")}`
-                                : tx("غير متاحة", "Unavailable")}
+                              : canDirectBook
+                                ? tx("متاحة", "Available")
+                                : categoryAvailable.length > 0
+                                  ? `${categoryAvailable.length} ${tx("متاحة", "available")}`
+                                  : tx("غير متاحة", "Unavailable")}
                           </span>
                         ) : (
                           <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-md font-medium">{t("hotel.available")}</span>
@@ -374,7 +380,7 @@ const HotelDetails = () => {
                         </div>
                       </div>
 
-                      {/* Available room numbers */}
+                      {/* Available room numbers (from API sync) */}
                       {hasSearched && categoryAvailable.length > 0 && !isDateBlocked && (
                         <div className="space-y-2">
                           <h4 className="text-xs font-semibold text-muted-foreground">
@@ -394,23 +400,21 @@ const HotelDetails = () => {
                         </div>
                       )}
 
-                      {/* Book now button (when no availability data or fallback) */}
-                      {(!hasSearched || (categoryAvailable.length === 0 && !isDateBlocked)) && (
+                      {/* Direct booking for apartments / non-sync properties */}
+                      {hasSearched && canDirectBook && (
                         <button
-                          onClick={() => {
-                            if (hasSearched && categoryAvailable.length === 0) return;
-                            const params = new URLSearchParams({ hotel: hotel.id, room: room.id });
-                            if (checkIn) params.set("check_in", checkIn);
-                            if (checkOut) params.set("check_out", checkOut);
-                            navigate(`/booking?${params.toString()}`);
-                          }}
-                          disabled={hasSearched && categoryAvailable.length === 0}
-                          className="w-full gradient-cta text-primary-foreground py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={() => navigate(`/booking?hotel=${hotel.id}&room=${room.id}&check_in=${checkIn}&check_out=${checkOut}`)}
+                          className="w-full gradient-cta text-primary-foreground py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity text-sm"
                         >
-                          {hasSearched && categoryAvailable.length === 0
-                            ? tx("غير متاحة في هذه التواريخ", "Unavailable for selected dates")
-                            : t("hotel.bookNow")}
+                          {tx("احجز الآن", "Book Now")}
                         </button>
+                      )}
+
+                      {/* Fallback: no dates selected yet */}
+                      {!hasSearched && (
+                        <p className="text-xs text-muted-foreground text-center py-1">
+                          {tx("اختر التواريخ أعلاه لعرض الغرف المتاحة", "Select dates above to check availability")}
+                        </p>
                       )}
                     </div>
                   </motion.div>
