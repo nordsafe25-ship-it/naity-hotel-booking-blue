@@ -21,10 +21,11 @@ const AdminHotels = () => {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Tables<"hotels"> | null>(null);
-  
-  const [form, setForm] = useState<Partial<TablesInsert<"hotels">>>({
+  const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
+
+  const [form, setForm] = useState<Partial<TablesInsert<"hotels">> & { property_type?: string }>({
     name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "",
-    contact_phone: "", contact_email: "",
+    contact_phone: "", contact_email: "", property_type: "hotel",
   });
 
   const { data: hotels, isLoading } = useQuery({
@@ -48,7 +49,7 @@ const AdminHotels = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-hotels"] });
-      toast.success(editing ? (lang === "ar" ? "تم تحديث الفندق" : "Hotel updated") : (lang === "ar" ? "تم إضافة الفندق" : "Hotel added"));
+      toast.success(editing ? tx("تم تحديث الفندق", "Hotel updated") : tx("تم إضافة الفندق", "Hotel added"));
       setOpen(false);
       resetForm();
     },
@@ -62,7 +63,7 @@ const AdminHotels = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-hotels"] });
-      toast.success(lang === "ar" ? "تم حذف الفندق" : "Hotel deleted");
+      toast.success(tx("تم حذف الفندق", "Hotel deleted"));
     },
   });
 
@@ -73,13 +74,12 @@ const AdminHotels = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-hotels"] });
-      toast.success(lang === "ar" ? "تم تحديث وضع التشغيل" : "Manual mode updated");
+      toast.success(tx("تم تحديث وضع التشغيل", "Manual mode updated"));
     },
   });
 
-
   const resetForm = () => {
-    setForm({ name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "", contact_phone: "", contact_email: "" });
+    setForm({ name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "", contact_phone: "", contact_email: "", property_type: "hotel" });
     setEditing(null);
   };
 
@@ -89,7 +89,8 @@ const AdminHotels = () => {
       name_en: hotel.name_en, name_ar: hotel.name_ar, city: hotel.city,
       stars: hotel.stars, description_en: hotel.description_en ?? "",
       description_ar: hotel.description_ar ?? "", address: hotel.address ?? "",
-      contact_phone: (hotel as any).contact_phone ?? "", contact_email: (hotel as any).contact_email ?? "",
+      contact_phone: hotel.contact_phone ?? "", contact_email: hotel.contact_email ?? "",
+      property_type: (hotel as any).property_type ?? "hotel",
     });
     setOpen(true);
   };
@@ -99,20 +100,41 @@ const AdminHotels = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h1 className="text-2xl font-bold text-foreground">
-            {lang === "ar" ? "إدارة الفنادق" : "Hotel Management"}
+            {tx("إدارة الفنادق", "Hotel Management")}
           </h1>
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
             <DialogTrigger asChild>
-              <Button className="gradient-cta gap-2"><Plus className="w-4 h-4" /> {lang === "ar" ? "إضافة فندق" : "Add Hotel"}</Button>
+              <Button className="gradient-cta gap-2"><Plus className="w-4 h-4" /> {tx("إضافة فندق", "Add Hotel")}</Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editing ? (lang === "ar" ? "تعديل الفندق" : "Edit Hotel") : (lang === "ar" ? "إضافة فندق جديد" : "Add New Hotel")}</DialogTitle>
+                <DialogTitle>{editing ? tx("تعديل الفندق", "Edit Hotel") : tx("إضافة فندق جديد", "Add New Hotel")}</DialogTitle>
               </DialogHeader>
-              <form onSubmit={(e) => { e.preventDefault(); saveMutation.mutate(form); }} className="space-y-4">
+              <form onSubmit={(e) => { e.preventDefault(); saveMutation.mutate(form as any); }} className="space-y-4">
+                {/* Property Type */}
+                <div className="space-y-2">
+                  <Label>{tx("نوع العقار", "Property Type")}</Label>
+                  <div className="flex items-center gap-4">
+                    {[
+                      { val: "hotel", ar: "🏨 فندق", en: "🏨 Hotel" },
+                      { val: "apartment", ar: "🏠 شقة سياحية", en: "🏠 Apartment" },
+                    ].map(opt => (
+                      <label key={opt.val} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="property_type_form"
+                          checked={form.property_type === opt.val}
+                          onChange={() => setForm(f => ({ ...f, property_type: opt.val }))}
+                          className="accent-primary w-4 h-4"
+                        />
+                        <span className="text-sm text-foreground">{lang === "ar" ? opt.ar : opt.en}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>{lang === "ar" ? "الاسم (عربي)" : "Name (Arabic)"}</Label>
+                    <Label>{tx("الاسم (عربي)", "Name (Arabic)")}</Label>
                     <Input value={form.name_ar} onChange={(e) => setForm(f => ({ ...f, name_ar: e.target.value }))} required />
                   </div>
                   <div>
@@ -122,30 +144,30 @@ const AdminHotels = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>{lang === "ar" ? "المدينة" : "City"}</Label>
+                    <Label>{tx("المدينة", "City")}</Label>
                     <Input value={form.city} onChange={(e) => setForm(f => ({ ...f, city: e.target.value }))} required />
                   </div>
                   <div>
-                    <Label>{lang === "ar" ? "النجوم" : "Stars"}</Label>
+                    <Label>{tx("النجوم", "Stars")}</Label>
                     <Input type="number" min={1} max={5} value={form.stars} onChange={(e) => setForm(f => ({ ...f, stars: +e.target.value }))} />
                   </div>
                 </div>
                 <div>
-                  <Label>{lang === "ar" ? "العنوان" : "Address"}</Label>
+                  <Label>{tx("العنوان", "Address")}</Label>
                   <Input value={form.address ?? ""} onChange={(e) => setForm(f => ({ ...f, address: e.target.value }))} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>{lang === "ar" ? "هاتف التواصل" : "Contact Phone"}</Label>
+                    <Label>{tx("هاتف التواصل", "Contact Phone")}</Label>
                     <Input value={(form as any).contact_phone ?? ""} onChange={(e) => setForm(f => ({ ...f, contact_phone: e.target.value }))} />
                   </div>
                   <div>
-                    <Label>{lang === "ar" ? "بريد التواصل" : "Contact Email"}</Label>
+                    <Label>{tx("بريد التواصل", "Contact Email")}</Label>
                     <Input type="email" value={(form as any).contact_email ?? ""} onChange={(e) => setForm(f => ({ ...f, contact_email: e.target.value }))} />
                   </div>
                 </div>
                 <div>
-                  <Label>{lang === "ar" ? "الوصف (عربي)" : "Description (Arabic)"}</Label>
+                  <Label>{tx("الوصف (عربي)", "Description (Arabic)")}</Label>
                   <Textarea value={form.description_ar ?? ""} onChange={(e) => setForm(f => ({ ...f, description_ar: e.target.value }))} />
                 </div>
                 <div>
@@ -153,13 +175,12 @@ const AdminHotels = () => {
                   <Textarea value={form.description_en ?? ""} onChange={(e) => setForm(f => ({ ...f, description_en: e.target.value }))} />
                 </div>
                 <Button type="submit" className="w-full gradient-cta" disabled={saveMutation.isPending}>
-                  {saveMutation.isPending ? "..." : editing ? (lang === "ar" ? "تحديث" : "Update") : (lang === "ar" ? "إضافة" : "Add")}
+                  {saveMutation.isPending ? "..." : editing ? tx("تحديث", "Update") : tx("إضافة", "Add")}
                 </Button>
               </form>
             </DialogContent>
           </Dialog>
         </div>
-
 
         {isLoading ? (
           <div className="flex justify-center py-12">
@@ -167,56 +188,61 @@ const AdminHotels = () => {
           </div>
         ) : (
           <div className="grid gap-4">
-            {hotels?.map((hotel) => (
-              <div key={hotel.id} className="bg-card rounded-xl p-4 border border-border/50 shadow-card hover:shadow-elevated transition-shadow cursor-pointer" onClick={() => navigate(`/admin/hotels/${hotel.id}`)}>
-                <div className="flex items-center justify-between flex-wrap gap-3">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden">
-                      {hotel.cover_image ? (
-                        <img src={hotel.cover_image} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <MapPin className="w-6 h-6 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <HeartbeatIndicator hotelId={hotel.id} />
-                        <h3 className="font-semibold text-foreground">{lang === "ar" ? hotel.name_ar : hotel.name_en}</h3>
+            {hotels?.map((hotel) => {
+              const isApartment = (hotel as any).property_type === "apartment";
+              return (
+                <div key={hotel.id} className="bg-card rounded-xl p-4 border border-border/50 shadow-card hover:shadow-elevated transition-shadow cursor-pointer" onClick={() => navigate(`/admin/hotels/${hotel.id}`)}>
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                        {hotel.cover_image ? (
+                          <img src={hotel.cover_image} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <MapPin className="w-6 h-6 text-muted-foreground" />
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground">{lang === "ar" ? hotel.name_en : hotel.name_ar} • {hotel.city}</p>
-                      <div className="flex items-center gap-1 mt-1">
-                        {Array.from({ length: hotel.stars }).map((_, i) => (
-                          <Star key={i} className="w-3 h-3 fill-primary text-primary" />
-                        ))}
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <HeartbeatIndicator hotelId={hotel.id} />
+                          <h3 className="font-semibold text-foreground">{lang === "ar" ? hotel.name_ar : hotel.name_en}</h3>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${isApartment ? "bg-blue-100 text-blue-700" : "bg-muted text-muted-foreground"}`}>
+                            {isApartment ? tx("🏠 شقة", "🏠 Apartment") : tx("🏨 فندق", "🏨 Hotel")}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{lang === "ar" ? hotel.name_en : hotel.name_ar} • {hotel.city}</p>
+                        <div className="flex items-center gap-1 mt-1">
+                          {Array.from({ length: hotel.stars }).map((_, i) => (
+                            <Star key={i} className="w-3 h-3 fill-primary text-primary" />
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
-                    {/* Kill Switch */}
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted">
-                      <AlertTriangle className={`w-4 h-4 ${hotel.manual_mode ? "text-destructive" : "text-muted-foreground"}`} />
-                      <span className="text-xs font-medium text-foreground">
-                        {lang === "ar" ? "وضع يدوي" : "Manual"}
-                      </span>
-                      <Switch
-                        checked={hotel.manual_mode ?? false}
-                        onCheckedChange={(v) => toggleManualMode.mutate({ id: hotel.id, manual_mode: v })}
-                      />
+                    <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted">
+                        <AlertTriangle className={`w-4 h-4 ${hotel.manual_mode ? "text-destructive" : "text-muted-foreground"}`} />
+                        <span className="text-xs font-medium text-foreground">
+                          {tx("وضع يدوي", "Manual")}
+                        </span>
+                        <Switch
+                          checked={hotel.manual_mode ?? false}
+                          onCheckedChange={(v) => toggleManualMode.mutate({ id: hotel.id, manual_mode: v })}
+                        />
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => openEdit(hotel)}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(hotel.id)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                      <ChevronRight className="w-5 h-5 text-muted-foreground" />
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => openEdit(hotel)}>
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(hotel.id)}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {hotels?.length === 0 && (
               <p className="text-center text-muted-foreground py-12">
-                {lang === "ar" ? "لا توجد فنادق. أضف فندقك الأول!" : "No hotels yet. Add your first hotel!"}
+                {tx("لا توجد فنادق. أضف فندقك الأول!", "No hotels yet. Add your first hotel!")}
               </p>
             )}
           </div>
@@ -225,6 +251,5 @@ const AdminHotels = () => {
     </AdminLayout>
   );
 };
-
 
 export default AdminHotels;

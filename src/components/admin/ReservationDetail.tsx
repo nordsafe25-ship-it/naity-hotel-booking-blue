@@ -4,7 +4,7 @@ import { useI18n } from "@/lib/i18n";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { CheckCircle, XCircle, Hash, FileText, LogIn } from "lucide-react";
+import { CheckCircle, XCircle, Hash, LogIn } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
 interface ReservationDetailProps {
@@ -21,6 +21,17 @@ const ReservationDetail = ({ booking, open, onClose }: ReservationDetailProps) =
     mutationFn: async (status: string) => {
       const { error } = await supabase.from("bookings").update({ status }).eq("id", booking.id);
       if (error) throw error;
+
+      // If cancelling, notify the hotel system
+      if (status === "cancelled") {
+        try {
+          await supabase.functions.invoke("send-cancellation-to-hotel", {
+            body: { booking_id: booking.id },
+          });
+        } catch (e) {
+          console.error("Hotel cancellation notification failed:", e);
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
@@ -31,7 +42,6 @@ const ReservationDetail = ({ booking, open, onClose }: ReservationDetailProps) =
 
   const confirmCheckin = useMutation({
     mutationFn: async () => {
-      // Update status to checked_in and set sync_status to send signal to desktop app
       const { error } = await supabase.from("bookings").update({
         status: "checked_in",
         sync_status: "pending",
@@ -72,6 +82,9 @@ const ReservationDetail = ({ booking, open, onClose }: ReservationDetailProps) =
           <div className="bg-muted rounded-xl p-4 grid grid-cols-2 md:grid-cols-3 gap-4">
             <InfoCell label={t("الفندق", "Hotel")} value={lang === "ar" ? booking.hotels?.name_ar : booking.hotels?.name_en} />
             <InfoCell label={t("الغرفة", "Room")} value={lang === "ar" ? booking.room_categories?.name_ar : booking.room_categories?.name_en} />
+            {booking.room_number && (
+              <InfoCell label={t("رقم الغرفة", "Room No.")} value={`#${booking.room_number}`} />
+            )}
             <InfoCell label={t("تسجيل الوصول", "Check-in")} value={booking.check_in} />
             <InfoCell label={t("تسجيل المغادرة", "Check-out")} value={booking.check_out} />
             <InfoCell label={t("المبلغ الكلي", "Total")} value={`$${booking.total_price}`} bold />

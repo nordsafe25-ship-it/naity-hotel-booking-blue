@@ -9,8 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import naityLogo from "@/assets/naity-logo.png";
-import { DollarSign, BookOpen, LogOut, Plus, Trash2, Upload, Pencil, Globe, ImagePlus, Star } from "lucide-react";
+import { DollarSign, BookOpen, LogOut, Plus, Trash2, Upload, Pencil, Globe, ImagePlus, Star, Calendar as CalendarIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { format, getDaysInMonth, getDay, endOfMonth } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
 
 const HotelPanel = () => {
@@ -30,6 +31,16 @@ const HotelPanel = () => {
     enabled: !!user,
   });
 
+  // Check if hotel has active sync
+  const { data: syncSetting } = useQuery({
+    queryKey: ["my-hotel-sync", hotel?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("local_sync_settings").select("is_active").eq("hotel_id", hotel!.id).maybeSingle();
+      return data;
+    },
+    enabled: !!hotel?.id,
+  });
+
   if (hotelLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -46,6 +57,8 @@ const HotelPanel = () => {
       </div>
     );
   }
+
+  const showCalendar = (hotel as any).property_type === "apartment" || !syncSetting?.is_active;
 
   return (
     <div className="min-h-screen bg-background" dir={lang === "ar" ? "rtl" : "ltr"}>
@@ -73,6 +86,9 @@ const HotelPanel = () => {
             <TabsTrigger value="rooms" className="gap-2"><DollarSign className="w-4 h-4" /> {t("الغرف والأسعار", "Rooms & Pricing")}</TabsTrigger>
             <TabsTrigger value="photos" className="gap-2"><ImagePlus className="w-4 h-4" /> {t("الصور", "Photos")}</TabsTrigger>
             <TabsTrigger value="bookings" className="gap-2"><BookOpen className="w-4 h-4" /> {t("الحجوزات", "Reservations")}</TabsTrigger>
+            {showCalendar && (
+              <TabsTrigger value="calendar" className="gap-2"><CalendarIcon className="w-4 h-4" /> {t("التقويم", "Calendar")}</TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="rooms">
@@ -84,12 +100,184 @@ const HotelPanel = () => {
           <TabsContent value="bookings">
             <HotelBookings hotelId={hotel.id} />
           </TabsContent>
+          {showCalendar && (
+            <TabsContent value="calendar">
+              <AvailabilityCalendar hotelId={hotel.id} />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>
   );
 };
 
+// ── Availability Calendar ────────────────────────────────
+const AvailabilityCalendar = ({ hotelId }: { hotelId: string }) => {
+  const { lang } = useI18n();
+  const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
+  const queryClient = useQueryClient();
+
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
+
+  const { data: blockedDates = [] } = useQuery({
+    queryKey: ["blocked-dates", hotelId, currentMonth.toISOString()],
+    queryFn: async () => {
+      const start = format(currentMonth, "yyyy-MM-dd");
+      const end = format(endOfMonth(currentMonth), "yyyy-MM-dd");
+      const { data } = await supabase
+        .from("blocked_dates")
+        .select("blocked_date")
+        .eq("hotel_id", hotelId)
+        .gte("blocked_date", start)
+        .lte("blocked_date", end);
+      return data?.map(d => d.blocked_date) ?? [];
+    },
+  });
+
+  const { data: bookedDates = [] } = useQuery({
+    queryKey: ["booked-dates", hotelId, currentMonth.toISOString()],
+    queryFn: async () => {
+      const start = format(currentMonth, "yyyy-MM-dd");
+      const end = format(endOfMonth(currentMonth), "yyyy-MM-dd");
+      const { data } = await supabase
+        .from("bookings")
+        .select("check_in, check_out")
+        .eq("hotel_id", hotelId)
+        .in("status", ["confirmed", "active"])
+        .lte("check_in", end)
+        .gte("check_out", start);
+      const dates: string[] = [];
+      data?.forEach(b => {
+        const d = new Date(b.check_in);
+        const out = new Date(b.check_out);
+        while (d < out) {
+          dates.push(format(d, "yyyy-MM-dd"));
+          d.setDate(d.getDate() + 1);
+        }
+      });
+      return dates;
+    },
+  });
+
+  const toggleDate = async (dateStr: string) => {
+    if (isBlocked(dateStr)) {
+      await supabase.from("blocked_dates").delete().eq("hotel_id", hotelId).eq("blocked_date", dateStr);
+    } else {
+      await supabase.from("blocked_dates").insert({ hotel_id: hotelId, blocked_date: dateStr });
+    }
+    queryClient.invalidateQueries({ queryKey: ["blocked-dates", hotelId] });
+  };
+
+  const isBlocked = (dateStr: string) => blockedDates.includes(dateStr);
+  const isBooked = (dateStr: string) => bookedDates.includes(dateStr);
+  const isPast = (dateStr: string) => dateStr < format(new Date(), "yyyy-MM-dd");
+
+  const daysInMonth = getDaysInMonth(currentMonth);
+  const firstDayOfWeek = getDay(currentMonth);
+  const days: (string | null)[] = [];
+  for (let i = 0; i < firstDayOfWeek; i++) days.push(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    days.push(format(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), d), "yyyy-MM-dd"));
+  }
+
+  return (
+    <div className="max-w-xl mx-auto space-y-6">
+      <div className="space-y-2">
+        <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+          <CalendarIcon className="w-5 h-5 text-primary" />
+          {tx("تقويم الإتاحة", "Availability Calendar")}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          {tx(
+            "انقر على أي يوم لتحديده كمشغول (أحمر) أو متاح (أخضر). الأيام المحجوزة من الزبائن تظهر باللون البرتقالي.",
+            "Click any day to mark it as occupied (red) or available (green). Days booked by guests appear in orange."
+          )}
+        </p>
+      </div>
+
+      {/* Month navigation */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
+          className="p-2 rounded-lg hover:bg-muted transition text-foreground"
+        >
+          ‹
+        </button>
+        <span className="font-semibold text-foreground">
+          {format(currentMonth, "MMMM yyyy")}
+        </span>
+        <button
+          onClick={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
+          className="p-2 rounded-lg hover:bg-muted transition text-foreground"
+        >
+          ›
+        </button>
+      </div>
+
+      {/* Day names header */}
+      <div className="grid grid-cols-7 gap-1 text-center">
+        {(lang === "ar"
+          ? ["أح", "إث", "ثل", "أر", "خم", "جم", "سب"]
+          : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        ).map(d => (
+          <div key={d} className="text-xs font-medium text-muted-foreground py-2">{d}</div>
+        ))}
+      </div>
+
+      {/* Calendar grid */}
+      <div className="grid grid-cols-7 gap-1">
+        {days.map((dateStr, idx) => {
+          if (!dateStr) return <div key={`empty-${idx}`} />;
+          const past = isPast(dateStr);
+          const booked = isBooked(dateStr);
+          const blocked = isBlocked(dateStr);
+          const day = new Date(dateStr).getDate();
+
+          let bgClass = "bg-green-100 hover:bg-green-200 text-green-800 border border-green-300";
+          if (past) bgClass = "bg-muted text-muted-foreground opacity-40 cursor-not-allowed border border-border/30";
+          if (booked) bgClass = "bg-orange-100 text-orange-700 border border-orange-300 cursor-default";
+          if (blocked) bgClass = "bg-red-100 hover:bg-red-200 text-red-700 border border-red-300";
+
+          return (
+            <button
+              key={dateStr}
+              onClick={() => !past && !booked && toggleDate(dateStr)}
+              className={`rounded-lg py-2 text-sm font-medium transition-all ${bgClass}`}
+              title={booked ? tx("محجوز من زبون", "Booked by guest") : blocked ? tx("مشغول", "Occupied") : tx("متاح", "Available")}
+            >
+              {day}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Legend */}
+      <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded bg-green-200 border border-green-300" />
+          {tx("متاح", "Available")}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded bg-red-200 border border-red-300" />
+          {tx("مشغول (يدوي)", "Blocked (manual)")}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded bg-orange-200 border border-orange-300" />
+          {tx("محجوز من زبون", "Guest booking")}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded bg-muted border border-border/30" />
+          {tx("ماضي", "Past")}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Room Categories ────────────────────────────────
 const RoomCategories = ({ hotelId }: { hotelId: string }) => {
   const { lang } = useI18n();
   const queryClient = useQueryClient();
@@ -197,6 +385,7 @@ const RoomCategories = ({ hotelId }: { hotelId: string }) => {
   );
 };
 
+// ── Hotel Photos ────────────────────────────────
 const HotelPhotos = ({ hotelId }: { hotelId: string }) => {
   const { lang } = useI18n();
   const queryClient = useQueryClient();
@@ -255,7 +444,6 @@ const HotelPhotos = ({ hotelId }: { hotelId: string }) => {
     <div className="space-y-4">
       <h2 className="text-xl font-bold text-foreground">{t("صور الفندق", "Hotel Photos")}</h2>
 
-      {/* Drop Zone */}
       <div
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
@@ -308,6 +496,7 @@ const HotelPhotos = ({ hotelId }: { hotelId: string }) => {
   );
 };
 
+// ── Hotel Bookings ────────────────────────────────
 const HotelBookings = ({ hotelId }: { hotelId: string }) => {
   const { lang } = useI18n();
 

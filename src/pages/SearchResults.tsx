@@ -21,9 +21,38 @@ const HotelMapView = lazy(() => import("@/components/search/HotelMapView"));
 const SYRIAN_CITIES = [
   { en: "Damascus", ar: "دمشق" },
   { en: "Aleppo", ar: "حلب" },
-  { en: "Lattakia", ar: "اللاذقية" },
   { en: "Homs", ar: "حمص" },
+  { en: "Hama", ar: "حماة" },
+  { en: "Lattakia", ar: "اللاذقية" },
   { en: "Tartus", ar: "طرطوس" },
+  { en: "Deir ez-Zor", ar: "دير الزور" },
+  { en: "Al-Hasakah", ar: "الحسكة" },
+  { en: "Raqqa", ar: "الرقة" },
+  { en: "Idlib", ar: "إدلب" },
+  { en: "Daraa", ar: "درعا" },
+  { en: "As-Suwayda", ar: "السويداء" },
+  { en: "Quneitra", ar: "القنيطرة" },
+  { en: "Baniyas", ar: "بانياس" },
+  { en: "Jableh", ar: "جبلة" },
+  { en: "Masyaf", ar: "مصياف" },
+  { en: "Safita", ar: "صافيتا" },
+  { en: "Kassab", ar: "كسب" },
+  { en: "Slunfeh", ar: "صلنفة" },
+  { en: "Bludan", ar: "بلودان" },
+  { en: "Zabadani", ar: "الزبداني" },
+  { en: "Maaloula", ar: "معلولا" },
+  { en: "Bosra", ar: "بصرى" },
+  { en: "Palmyra", ar: "تدمر" },
+  { en: "Al-Qamishli", ar: "القامشلي" },
+  { en: "Abu Kamal", ar: "البوكمال" },
+  { en: "Al-Bab", ar: "الباب" },
+  { en: "Afrin", ar: "عفرين" },
+  { en: "Azaz", ar: "أعزاز" },
+  { en: "Jaramana", ar: "جرمانا" },
+  { en: "Douma", ar: "دوما" },
+  { en: "Harasta", ar: "حرستا" },
+  { en: "Qatana", ar: "قطنا" },
+  { en: "Sednaya", ar: "صيدنايا" },
 ];
 
 const AMENITY_OPTIONS = [
@@ -42,10 +71,8 @@ const SearchResults = () => {
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
   const isMobile = useIsMobile();
 
-  // Search params from homepage
   const initialCity = searchParams.get("city") || "";
 
-  // State
   const [hotels, setHotels] = useState<any[]>([]);
   const [minPrices, setMinPrices] = useState<Record<string, number>>({});
   const [syncStatuses, setSyncStatuses] = useState<Record<string, boolean>>({});
@@ -53,15 +80,15 @@ const SearchResults = () => {
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
-  // Filters
   const [city, setCity] = useState(initialCity);
   const [priceRange, setPriceRange] = useState([0, 500]);
   const [starFilters, setStarFilters] = useState<number[]>([]);
   const [amenityFilters, setAmenityFilters] = useState<string[]>([]);
   const [instantOnly, setInstantOnly] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("recommended");
+  const [propertyTypeFilter, setPropertyTypeFilter] = useState<"all" | "hotel" | "apartment">("all");
 
-  const hasActiveFilters = city !== "" || starFilters.length > 0 || amenityFilters.length > 0 || instantOnly || priceRange[0] > 0 || priceRange[1] < 500;
+  const hasActiveFilters = city !== "" || starFilters.length > 0 || amenityFilters.length > 0 || instantOnly || priceRange[0] > 0 || priceRange[1] < 500 || propertyTypeFilter !== "all";
 
   useEffect(() => {
     const load = async () => {
@@ -87,7 +114,7 @@ const SearchResults = () => {
         syncRes.data.forEach((s: any) => {
           if (s.is_active && s.last_heartbeat_at) {
             const diff = Date.now() - new Date(s.last_heartbeat_at).getTime();
-            statuses[s.hotel_id] = diff < 5 * 60 * 1000; // Active if heartbeat < 5min
+            statuses[s.hotel_id] = diff < 5 * 60 * 1000;
           }
         });
         setSyncStatuses(statuses);
@@ -100,6 +127,7 @@ const SearchResults = () => {
   const filtered = useMemo(() => {
     let result = hotels.filter((h) => {
       if (city && h.city !== city) return false;
+      if (propertyTypeFilter !== "all" && (h as any).property_type !== propertyTypeFilter) return false;
       if (starFilters.length > 0 && !starFilters.includes(h.stars)) return false;
       if (instantOnly && !syncStatuses[h.id]) return false;
       const price = minPrices[h.id];
@@ -114,7 +142,6 @@ const SearchResults = () => {
       return true;
     });
 
-    // Sorting
     switch (sortBy) {
       case "price_low":
         result.sort((a, b) => (minPrices[a.id] || 9999) - (minPrices[b.id] || 9999));
@@ -126,14 +153,13 @@ const SearchResults = () => {
         result.sort((a, b) => b.stars - a.stars);
         break;
       default:
-        // recommended: featured first, then by stars
         result.sort((a, b) => {
           if (a.is_featured !== b.is_featured) return a.is_featured ? -1 : 1;
           return b.stars - a.stars;
         });
     }
     return result;
-  }, [hotels, city, starFilters, amenityFilters, instantOnly, priceRange, sortBy, minPrices, syncStatuses]);
+  }, [hotels, city, propertyTypeFilter, starFilters, amenityFilters, instantOnly, priceRange, sortBy, minPrices, syncStatuses]);
 
   const clearAllFilters = () => {
     setCity("");
@@ -142,6 +168,7 @@ const SearchResults = () => {
     setInstantOnly(false);
     setPriceRange([0, 500]);
     setSortBy("recommended");
+    setPropertyTypeFilter("all");
   };
 
   const toggleStar = (s: number) => {
@@ -154,6 +181,29 @@ const SearchResults = () => {
 
   const FilterContent = () => (
     <div className="space-y-6">
+      {/* Property Type */}
+      <div className="space-y-2">
+        <label className="text-sm font-semibold text-foreground">{tx("نوع العقار", "Property Type")}</label>
+        <div className="flex flex-col gap-2">
+          {[
+            { val: "all" as const, ar: "الكل", en: "All" },
+            { val: "hotel" as const, ar: "فندق", en: "Hotel" },
+            { val: "apartment" as const, ar: "شقة سياحية", en: "Apartment" },
+          ].map(opt => (
+            <label key={opt.val} className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="propertyType"
+                checked={propertyTypeFilter === opt.val}
+                onChange={() => setPropertyTypeFilter(opt.val)}
+                className="accent-primary w-4 h-4"
+              />
+              <span className="text-sm text-foreground">{lang === "ar" ? opt.ar : opt.en}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
       {/* City */}
       <div className="space-y-2">
         <label className="text-sm font-semibold text-foreground">{tx("المدينة", "City")}</label>
@@ -258,7 +308,6 @@ const SearchResults = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Sort */}
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
               <SelectTrigger className="w-44 bg-card border-border/50">
                 <ArrowUpDown className="w-3.5 h-3.5 me-1.5" />
@@ -272,7 +321,6 @@ const SearchResults = () => {
               </SelectContent>
             </Select>
 
-            {/* View Toggle */}
             <div className="flex bg-muted rounded-lg p-0.5">
               <button
                 onClick={() => setViewMode("list")}
@@ -336,6 +384,7 @@ const SearchResults = () => {
                     const name = lang === "ar" ? hotel.name_ar : hotel.name_en;
                     const price = minPrices[hotel.id];
                     const isOnline = syncStatuses[hotel.id];
+                    const isApartment = (hotel as any).property_type === "apartment";
                     return (
                       <motion.div
                         key={hotel.id}
@@ -368,10 +417,15 @@ const SearchResults = () => {
                             )}
                           </div>
                           <div className="p-4 space-y-2">
-                            <div className="flex items-center gap-1">
-                              {Array.from({ length: hotel.stars }).map((_, i) => (
-                                <Star key={i} className="w-3.5 h-3.5 fill-primary text-primary" />
-                              ))}
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1">
+                                {Array.from({ length: hotel.stars }).map((_, i) => (
+                                  <Star key={i} className="w-3.5 h-3.5 fill-primary text-primary" />
+                                ))}
+                              </div>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${isApartment ? "bg-blue-100 text-blue-700" : "bg-muted text-muted-foreground"}`}>
+                                {isApartment ? tx("🏠 شقة", "🏠 Apartment") : tx("🏨 فندق", "🏨 Hotel")}
+                              </span>
                             </div>
                             <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{name}</h3>
                             <div className="flex items-center gap-1 text-sm text-muted-foreground">

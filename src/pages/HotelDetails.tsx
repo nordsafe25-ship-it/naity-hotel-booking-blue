@@ -1,4 +1,4 @@
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Star, MapPin, Users, Check, ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Calendar, Search } from "lucide-react";
@@ -19,12 +19,12 @@ const HotelDetails = () => {
   const [loading, setLoading] = useState(true);
   const [galleryIdx, setGalleryIdx] = useState(0);
 
-  // Date-based availability
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [availableRooms, setAvailableRooms] = useState<any[]>([]);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [isDateBlocked, setIsDateBlocked] = useState(false);
 
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
   const today = new Date().toISOString().split("T")[0];
@@ -52,7 +52,25 @@ const HotelDetails = () => {
 
     const fetchAvailableRooms = async () => {
       setAvailabilityLoading(true);
-      // Get rooms that are available (not occupied during selected dates)
+      setIsDateBlocked(false);
+
+      // Check blocked dates for apartments
+      if ((hotel as any).property_type === "apartment") {
+        const { data: blocked } = await supabase
+          .from("blocked_dates")
+          .select("blocked_date")
+          .eq("hotel_id", hotel.id)
+          .gte("blocked_date", checkIn)
+          .lt("blocked_date", checkOut);
+        if ((blocked?.length ?? 0) > 0) {
+          setIsDateBlocked(true);
+          setAvailableRooms([]);
+          setHasSearched(true);
+          setAvailabilityLoading(false);
+          return;
+        }
+      }
+
       const { data } = await supabase
         .from("room_availability")
         .select("*")
@@ -94,6 +112,7 @@ const HotelDetails = () => {
   const allImages = photos.length > 0 ? photos.map((p: any) => p.url) : (hotel.cover_image ? [hotel.cover_image] : ["https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80"]);
   const BackArrow = lang === "ar" ? ArrowRight : ArrowLeft;
   const minPrice = rooms.length > 0 ? Math.min(...rooms.map((r: any) => r.price_per_night)) : null;
+  const isApartment = (hotel as any).property_type === "apartment";
 
   // Group available rooms by category
   const availableByCategory: Record<string, any[]> = {};
@@ -134,10 +153,15 @@ const HotelDetails = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-accent/70 to-transparent pointer-events-none" />
         <div className="absolute bottom-6 left-0 right-0 container mx-auto px-4">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="flex items-center gap-1 mb-2">
-              {Array.from({ length: hotel.stars }).map((_, i) => (
-                <Star key={i} className="w-4 h-4 fill-primary text-primary" />
-              ))}
+            <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-1">
+                {Array.from({ length: hotel.stars }).map((_, i) => (
+                  <Star key={i} className="w-4 h-4 fill-primary text-primary" />
+                ))}
+              </div>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${isApartment ? "bg-blue-500/80 text-white" : "bg-card/80 text-foreground"}`}>
+                {isApartment ? tx("🏠 شقة سياحية", "🏠 Apartment") : tx("🏨 فندق", "🏨 Hotel")}
+              </span>
             </div>
             <h1 className="text-3xl md:text-4xl font-extrabold text-accent-foreground">{name}</h1>
             <div className="flex items-center gap-2 text-accent-foreground/80 mt-1">
@@ -213,6 +237,7 @@ const HotelDetails = () => {
                   setCheckIn(e.target.value);
                   if (checkOut && checkOut <= e.target.value) setCheckOut("");
                   setHasSearched(false);
+                  setIsDateBlocked(false);
                 }}
                 className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground"
               />
@@ -229,13 +254,25 @@ const HotelDetails = () => {
                 onChange={e => {
                   setCheckOut(e.target.value);
                   setHasSearched(false);
+                  setIsDateBlocked(false);
                 }}
                 className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground"
               />
             </div>
           </div>
 
-          {hasSearched && !availabilityLoading && (
+          {/* Blocked date alert */}
+          {isDateBlocked && (
+            <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-lg p-4">
+              <span className="text-2xl">🚫</span>
+              <p className="text-sm text-red-700 font-medium">
+                {tx("هذه الشقة غير متاحة في التواريخ المختارة. يرجى اختيار تواريخ أخرى.",
+                    "This apartment is not available for the selected dates. Please choose different dates.")}
+              </p>
+            </div>
+          )}
+
+          {hasSearched && !availabilityLoading && !isDateBlocked && (
             <div className="flex items-center gap-2 text-sm">
               <span className="bg-primary/10 text-primary px-3 py-1 rounded-full font-medium">
                 {availableRooms.length} {tx("غرفة متاحة", "rooms available")}
@@ -256,7 +293,6 @@ const HotelDetails = () => {
                 const deposit = Math.round(room.price_per_night * DEPOSIT_PERCENT / 100);
                 const balance = room.price_per_night - deposit;
 
-                // Find available rooms in this category
                 const categoryAvailable = hasSearched
                   ? availableRooms.filter(ar =>
                       ar.room_category_id === room.id ||
@@ -278,13 +314,15 @@ const HotelDetails = () => {
                         <h3 className="font-semibold text-foreground text-lg">{roomName}</h3>
                         {hasSearched ? (
                           <span className={`text-xs px-2 py-1 rounded-md font-medium ${
-                            categoryAvailable.length > 0
+                            categoryAvailable.length > 0 && !isDateBlocked
                               ? "bg-primary/10 text-primary"
                               : "bg-destructive/10 text-destructive"
                           }`}>
-                            {categoryAvailable.length > 0
-                              ? `${categoryAvailable.length} ${tx("متاحة", "available")}`
-                              : tx("غير متاحة", "Unavailable")}
+                            {isDateBlocked
+                              ? tx("محجوزة", "Blocked")
+                              : categoryAvailable.length > 0
+                                ? `${categoryAvailable.length} ${tx("متاحة", "available")}`
+                                : tx("غير متاحة", "Unavailable")}
                           </span>
                         ) : (
                           <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-md font-medium">{t("hotel.available")}</span>
@@ -325,7 +363,7 @@ const HotelDetails = () => {
                       </div>
 
                       {/* Available room numbers */}
-                      {hasSearched && categoryAvailable.length > 0 && (
+                      {hasSearched && categoryAvailable.length > 0 && !isDateBlocked && (
                         <div className="space-y-2">
                           <h4 className="text-xs font-semibold text-muted-foreground">
                             {tx("اختر غرفة:", "Select a room:")}
@@ -345,7 +383,7 @@ const HotelDetails = () => {
                       )}
 
                       {/* Book now button (when no availability data or fallback) */}
-                      {(!hasSearched || categoryAvailable.length === 0) && (
+                      {(!hasSearched || (categoryAvailable.length === 0 && !isDateBlocked)) && (
                         <button
                           onClick={() => {
                             if (hasSearched && categoryAvailable.length === 0) return;

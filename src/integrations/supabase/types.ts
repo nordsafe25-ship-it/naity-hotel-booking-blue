@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      blocked_dates: {
+        Row: {
+          blocked_date: string
+          created_at: string
+          hotel_id: string
+          id: string
+          note: string | null
+        }
+        Insert: {
+          blocked_date: string
+          created_at?: string
+          hotel_id: string
+          id?: string
+          note?: string | null
+        }
+        Update: {
+          blocked_date?: string
+          created_at?: string
+          hotel_id?: string
+          id?: string
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_dates_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           check_in: string
@@ -219,6 +251,7 @@ export type Database = {
           manual_mode: boolean | null
           name_ar: string
           name_en: string
+          property_type: string
           stars: number
           updated_at: string
         }
@@ -241,6 +274,7 @@ export type Database = {
           manual_mode?: boolean | null
           name_ar: string
           name_en: string
+          property_type?: string
           stars?: number
           updated_at?: string
         }
@@ -263,6 +297,7 @@ export type Database = {
           manual_mode?: boolean | null
           name_ar?: string
           name_en?: string
+          property_type?: string
           stars?: number
           updated_at?: string
         }

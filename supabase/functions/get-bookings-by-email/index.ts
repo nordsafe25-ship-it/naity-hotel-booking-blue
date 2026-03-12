@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
       .from("bookings")
       .select(`id, check_in, check_out, total_price, deposit_amount,
                status, payment_status, transaction_hash, special_requests,
-               guest_first_name, guest_last_name, guest_phone, created_at,
+               guest_first_name, guest_last_name, guest_phone, room_number, created_at,
                hotels ( name_ar, name_en, city, address, cover_image, stars ),
                room_categories ( name_ar, name_en )`)
       .eq("guest_email", trimmed)

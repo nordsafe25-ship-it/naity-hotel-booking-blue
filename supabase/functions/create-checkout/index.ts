@@ -94,8 +94,8 @@ Deno.serve(async (req) => {
         nationality: nationality ?? "",
         guests_count: String(guests_count ?? 1),
       },
-      success_url: `${APP_URL}/booking?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${APP_URL}/booking?hotel=${hotel_id}&room=${room_category_id}`,
+      success_url: `${APP_URL}/booking?session_id={CHECKOUT_SESSION_ID}&room_number=${encodeURIComponent(body.room_number ?? "")}&check_in=${check_in}&check_out=${check_out}`,
+      cancel_url: `${APP_URL}/booking?hotel=${hotel_id}&room=${room_category_id}&room_number=${encodeURIComponent(body.room_number ?? "")}&check_in=${check_in}&check_out=${check_out}`,
     });
 
     await supabase.from("bookings")
