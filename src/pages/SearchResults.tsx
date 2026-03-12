@@ -36,7 +36,7 @@ const SearchResults = () => {
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
   const isMobile = useIsMobile();
 
-  const ALLOWED_CITY_NAMES = SYRIAN_CITIES.map(c => c.en);
+  const ALLOWED = ALLOWED_CITY_NAMES;
   const rawCity = searchParams.get("city") || "";
   const initialCity = ALLOWED_CITY_NAMES.includes(rawCity) ? rawCity : "";
 
