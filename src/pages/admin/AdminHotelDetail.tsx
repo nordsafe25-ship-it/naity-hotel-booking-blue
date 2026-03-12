@@ -10,6 +10,7 @@ import { ChevronLeft } from "lucide-react";
 import HotelGeneralTab from "./hotel-detail/HotelGeneralTab";
 import HotelGalleryTab from "./hotel-detail/HotelGalleryTab";
 import HotelRoomsTab from "./hotel-detail/HotelRoomsTab";
+import HotelConnectivityTab from "./hotel-detail/HotelConnectivityTab";
 
 const AdminHotelDetail = () => {
   const { id } = useParams();
@@ -72,6 +73,9 @@ const AdminHotelDetail = () => {
             <TabsTrigger value="rooms" className="rounded-lg">
               {lang === "ar" ? "الغرف" : "Rooms"}
             </TabsTrigger>
+            <TabsTrigger value="connectivity" className="rounded-lg">
+              {lang === "ar" ? "الاتصال" : "Connectivity"}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="general" className="mt-6">
@@ -84,6 +88,10 @@ const AdminHotelDetail = () => {
 
           <TabsContent value="rooms" className="mt-6">
             <HotelRoomsTab hotelId={hotel.id} />
+          </TabsContent>
+
+          <TabsContent value="connectivity" className="mt-6">
+            <HotelConnectivityTab hotelId={hotel.id} />
           </TabsContent>
         </Tabs>
       </div>
