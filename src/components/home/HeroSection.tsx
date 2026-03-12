@@ -9,11 +9,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarUI } from "@/components/ui/calendar";
 
 const SYRIAN_CITIES = [
-  { en: "Damascus", ar: "دمشق" },
-  { en: "Aleppo", ar: "حلب" },
-  { en: "Lattakia", ar: "اللاذقية" },
-  { en: "Homs", ar: "حمص" },
-  { en: "Tartus", ar: "طرطوس" },
+  { en: "Damascus",  ar: "دمشق" },
+  { en: "Aleppo",    ar: "حلب" },
+  { en: "Homs",      ar: "حمص" },
+  { en: "Hama",      ar: "حماة" },
+  { en: "Lattakia",  ar: "اللاذقية" },
+  { en: "Tartus",    ar: "طرطوس" },
 ];
 
 const fadeUp = {
@@ -160,7 +161,7 @@ const HeroSection = () => {
           {/* Popular destinations quick links */}
           <motion.div variants={fadeUp} custom={5} className="flex flex-wrap items-center justify-center gap-2 pt-2">
             <span className="text-xs text-muted-foreground">{tx("وجهات شائعة:", "Popular:")}</span>
-            {SYRIAN_CITIES.slice(0, 4).map((c) => (
+            {SYRIAN_CITIES.map((c) => (
               <button key={c.en} onClick={() => { setCity(c.en); navigate(`/search?city=${c.en}`); }}
                 className="text-xs bg-card/80 backdrop-blur-sm border border-border/50 text-foreground px-3 py-1.5 rounded-full hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all">
                 {lang === "ar" ? c.ar : c.en}

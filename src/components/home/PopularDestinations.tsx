@@ -12,11 +12,11 @@ import tartusImg from "@/assets/cities/tartus.jpg";
 import homsImg from "@/assets/cities/homs.jpg";
 
 const CITIES = [
-  { en: "Damascus", ar: "دمشق", img: damascusImg },
-  { en: "Aleppo", ar: "حلب", img: aleppoImg },
-  { en: "Lattakia", ar: "اللاذقية", img: lattakiaImg },
-  { en: "Tartus", ar: "طرطوس", img: tartusImg },
-  { en: "Homs", ar: "حمص", img: homsImg },
+  { en: "Damascus",  ar: "دمشق",      img: damascusImg },
+  { en: "Aleppo",    ar: "حلب",       img: aleppoImg },
+  { en: "Homs",      ar: "حمص",       img: homsImg },
+  { en: "Lattakia",  ar: "اللاذقية",   img: lattakiaImg },
+  { en: "Tartus",    ar: "طرطوس",     img: tartusImg },
 ];
 
 const PopularDestinations = () => {
