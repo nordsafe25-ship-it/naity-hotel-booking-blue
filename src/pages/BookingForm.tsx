@@ -93,6 +93,9 @@ const BookingForm = () => {
   const navigate = useNavigate();
   const hotelId = searchParams.get("hotel") || "";
   const roomId = searchParams.get("room") || "";
+  const roomNumberParam = searchParams.get("room_number") || "";
+  const checkInParam = searchParams.get("check_in") || "";
+  const checkOutParam = searchParams.get("check_out") || "";
   const { t, lang } = useI18n();
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
   const BackArrow = lang === "ar" ? ArrowRight : ArrowLeft;
