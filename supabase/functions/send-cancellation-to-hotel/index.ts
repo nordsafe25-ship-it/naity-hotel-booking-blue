@@ -1,0 +1,105 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const supabase = createClient(
+  Deno.env.get("SUPABASE_URL") ?? "",
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+);
+
+const isPeakSeason = (dateStr: string): boolean => {
+  const d = new Date(dateStr);
+  const m = d.getMonth() + 1;
+  const day = d.getDate();
+  if (m === 6 && day >= 15) return true;
+  if (m === 7 || m === 8) return true;
+  if (m === 9 && day <= 15) return true;
+  return false;
+};
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const { booking_id } = await req.json();
+
+    const { data: booking } = await supabase
+      .from("bookings")
+      .select("*, hotels(*)")
+      .eq("id", booking_id)
+      .single();
+
+    if (!booking) throw new Error("Booking not found");
+
+    const { data: syncSetting } = await supabase
+      .from("local_sync_settings")
+      .select("api_endpoint, secret_key, is_active")
+      .eq("hotel_id", booking.hotel_id)
+      .single();
+
+    if (!syncSetting?.api_endpoint || !syncSetting.is_active) {
+      return new Response(
+        JSON.stringify({ sent: false, reason: "No active API" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const peak = isPeakSeason(booking.check_in);
+
+    const payload = {
+      booking_reference: booking.transaction_hash,
+      room_number: booking.room_number ?? null,
+      check_in: booking.check_in,
+      check_out: booking.check_out,
+      cancelled_at: new Date().toISOString(),
+
+      guest: {
+        first_name: booking.guest_first_name,
+        last_name: booking.guest_last_name,
+        email: booking.guest_email,
+        phone: booking.guest_phone ?? null,
+      },
+
+      refund: {
+        is_peak_season: peak,
+        deposit_refunded: !peak,
+        amount_refunded: peak ? 0 : booking.deposit_amount,
+        reason: peak
+          ? "Peak season cancellation — no refund policy applied"
+          : "Off-peak cancellation — full deposit refunded to guest",
+      },
+    };
+
+    const hotelRes = await fetch(`${syncSetting.api_endpoint}/booking-cancelled`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${syncSetting.secret_key}`,
+      },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(10000),
+    });
+
+    await supabase.from("webhook_logs").insert({
+      hotel_id: booking.hotel_id,
+      event_type: "cancellation_sent_to_hotel",
+      payload: { booking_reference: booking.transaction_hash, refunded: !peak },
+      status: hotelRes.ok ? "sent" : "failed",
+    });
+
+    return new Response(
+      JSON.stringify({ sent: hotelRes.ok }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+
+  } catch (err) {
+    console.error("send-cancellation-to-hotel error:", err);
+    return new Response(
+      JSON.stringify({ error: err.message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});
