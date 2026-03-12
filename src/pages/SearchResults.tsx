@@ -36,9 +36,8 @@ const SearchResults = () => {
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
   const isMobile = useIsMobile();
 
-  const ALLOWED = ALLOWED_CITY_NAMES;
   const rawCity = searchParams.get("city") || "";
-  const initialCity = ALLOWED_CITY_NAMES.includes(rawCity) ? rawCity : "";
+  const initialCity = (ALLOWED_CITY_NAMES as readonly string[]).includes(rawCity) ? rawCity : "";
 
   const [hotels, setHotels] = useState<any[]>([]);
   const [minPrices, setMinPrices] = useState<Record<string, number>>({});
@@ -180,7 +179,7 @@ const SearchResults = () => {
           className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm outline-none text-foreground border border-border/50"
         >
           <option value="">{tx("جميع المدن", "All Cities")}</option>
-          {SYRIAN_CITIES.map((c) => (
+          {SYRIAN_MAIN_CITIES.map((c) => (
             <option key={c.en} value={c.en}>{lang === "ar" ? c.ar : c.en}</option>
           ))}
         </select>
