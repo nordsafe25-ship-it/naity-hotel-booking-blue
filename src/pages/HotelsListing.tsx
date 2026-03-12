@@ -197,7 +197,7 @@ const HotelsListing = () => {
             <div className="space-y-3">
               <label className="text-sm font-medium text-foreground">{tx("تصنيف النجوم", "Star Rating")}</label>
               <div className="flex flex-col gap-2">
-                {[3, 4, 5].map(s => (
+                {[1, 2, 3, 4, 5].map(s => (
                   <label key={s} className="flex items-center gap-2 cursor-pointer">
                     <Checkbox
                       checked={starFilters.includes(s)}

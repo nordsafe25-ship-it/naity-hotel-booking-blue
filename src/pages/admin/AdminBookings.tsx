@@ -80,8 +80,11 @@ const AdminBookings = () => {
               <SelectItem value="all">{lang === "ar" ? "جميع الحالات" : "All Status"}</SelectItem>
               <SelectItem value="pending">{lang === "ar" ? "قيد الانتظار" : "Pending"}</SelectItem>
               <SelectItem value="confirmed">{lang === "ar" ? "مؤكد" : "Confirmed"}</SelectItem>
+              <SelectItem value="active">{lang === "ar" ? "نشط" : "Active"}</SelectItem>
+              <SelectItem value="checked_in">{lang === "ar" ? "مسجل وصول" : "Checked In"}</SelectItem>
               <SelectItem value="cancelled">{lang === "ar" ? "ملغي" : "Cancelled"}</SelectItem>
               <SelectItem value="completed">{lang === "ar" ? "مكتمل" : "Completed"}</SelectItem>
+              <SelectItem value="expired">{lang === "ar" ? "منتهي" : "Expired"}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={paymentFilter} onValueChange={setPaymentFilter}>

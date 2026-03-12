@@ -54,15 +54,26 @@ const HotelDetails = () => {
       setAvailabilityLoading(true);
       setIsDateBlocked(false);
 
-      // Check blocked dates for apartments
+      // Check blocked dates for apartments/non-sync properties
       if ((hotel as any).property_type === "apartment") {
+        // Check manually blocked dates
         const { data: blocked } = await supabase
           .from("blocked_dates")
           .select("blocked_date")
           .eq("hotel_id", hotel.id)
           .gte("blocked_date", checkIn)
           .lt("blocked_date", checkOut);
-        if ((blocked?.length ?? 0) > 0) {
+
+        // Also check existing confirmed bookings for overlap
+        const { data: existingBookings } = await supabase
+          .from("bookings")
+          .select("check_in, check_out")
+          .eq("hotel_id", hotel.id)
+          .in("status", ["confirmed", "active", "checked_in"])
+          .lt("check_in", checkOut)
+          .gt("check_out", checkIn);
+
+        if ((blocked?.length ?? 0) > 0 || (existingBookings?.length ?? 0) > 0) {
           setIsDateBlocked(true);
           setAvailableRooms([]);
           setHasSearched(true);
@@ -71,6 +82,7 @@ const HotelDetails = () => {
         }
       }
 
+      // Try room_availability first (for API-synced hotels)
       const { data } = await supabase
         .from("room_availability")
         .select("*")
