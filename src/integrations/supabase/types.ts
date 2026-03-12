@@ -560,6 +560,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      unlist_stale_rooms: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "hotel_manager"
