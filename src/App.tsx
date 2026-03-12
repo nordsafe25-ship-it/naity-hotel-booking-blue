@@ -14,6 +14,7 @@ import HotelDetails from "./pages/HotelDetails";
 import BookingForm from "./pages/BookingForm";
 import HowItWorks from "./pages/HowItWorks";
 import About from "./pages/About";
+import Join from "./pages/Join";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
