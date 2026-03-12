@@ -16,9 +16,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-const HotelMapView = lazy(() => import("@/components/search/HotelMapView"));
-
 import { SYRIAN_MAIN_CITIES, ALLOWED_CITY_NAMES } from "@/lib/cities";
+
+const HotelMapView = lazy(() => import("@/components/search/HotelMapView"));
 
 const AMENITY_OPTIONS = [
   { key: "wifi", label_en: "High-speed Wi-Fi", label_ar: "واي فاي عالي السرعة", icon: Wifi },
