@@ -118,7 +118,12 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label>{tx("المدينة", "City")}</Label>
-            <Input value={form.city} onChange={(e) => setForm(f => ({ ...f, city: e.target.value }))} required />
+            <select value={form.city} onChange={(e) => setForm(f => ({ ...f, city: e.target.value }))} required className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring">
+              <option value="">{tx("اختر المدينة", "Select City")}</option>
+              {SYRIAN_MAIN_CITIES.map(c => (
+                <option key={c.en} value={c.en}>{lang === "ar" ? c.ar : c.en}</option>
+              ))}
+            </select>
           </div>
           <div>
             <Label>{tx("العنوان", "Address")}</Label>

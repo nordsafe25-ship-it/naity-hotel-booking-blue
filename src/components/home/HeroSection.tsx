@@ -8,14 +8,7 @@ import { useI18n } from "@/lib/i18n";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarUI } from "@/components/ui/calendar";
 
-const SYRIAN_CITIES = [
-  { en: "Damascus",  ar: "دمشق" },
-  { en: "Aleppo",    ar: "حلب" },
-  { en: "Homs",      ar: "حمص" },
-  { en: "Hama",      ar: "حماة" },
-  { en: "Lattakia",  ar: "اللاذقية" },
-  { en: "Tartus",    ar: "طرطوس" },
-];
+import { SYRIAN_MAIN_CITIES } from "@/lib/cities";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
