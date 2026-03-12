@@ -149,15 +149,20 @@ Deno.serve(async (req) => {
 
     const warnings: string[] = [];
 
-    const { error: profileError } = await supabaseAdmin.from("profiles").insert({
-      user_id: managerUserId,
-      full_name: fullName,
-      email,
-    });
+    const { error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .upsert(
+        {
+          user_id: managerUserId,
+          full_name: fullName,
+          email,
+        },
+        { onConflict: "user_id" }
+      );
 
     if (profileError) {
-      console.error("Profile creation failed", { message: profileError.message, managerUserId });
-      warnings.push("Profile was not created automatically");
+      console.error("Profile upsert failed", { message: profileError.message, managerUserId });
+      warnings.push("Profile was not synced automatically");
     }
 
     if (hotelId) {
