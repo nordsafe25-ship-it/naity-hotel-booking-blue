@@ -252,6 +252,7 @@ export type Database = {
           name_ar: string
           name_en: string
           property_type: string
+          slug: string | null
           stars: number
           updated_at: string
         }
@@ -275,6 +276,7 @@ export type Database = {
           name_ar: string
           name_en: string
           property_type?: string
+          slug?: string | null
           stars?: number
           updated_at?: string
         }
@@ -298,6 +300,7 @@ export type Database = {
           name_ar?: string
           name_en?: string
           property_type?: string
+          slug?: string | null
           stars?: number
           updated_at?: string
         }
@@ -388,7 +391,9 @@ export type Database = {
           occupied_check_out: string | null
           price_per_night: number | null
           room_category_id: string | null
+          room_kind: string | null
           room_number: string
+          sham_soft_room_id: string | null
           status: string
           updated_at: string
         }
@@ -402,7 +407,9 @@ export type Database = {
           occupied_check_out?: string | null
           price_per_night?: number | null
           room_category_id?: string | null
+          room_kind?: string | null
           room_number: string
+          sham_soft_room_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -416,7 +423,9 @@ export type Database = {
           occupied_check_out?: string | null
           price_per_night?: number | null
           room_category_id?: string | null
+          room_kind?: string | null
           room_number?: string
+          sham_soft_room_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -486,6 +495,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "room_categories_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sync_history: {
+        Row: {
+          created_at: string
+          direction: string
+          error_message: string | null
+          event_type: string
+          hotel_id: string
+          id: string
+          metadata: Json | null
+          records_count: number | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          direction?: string
+          error_message?: string | null
+          event_type?: string
+          hotel_id: string
+          id?: string
+          metadata?: Json | null
+          records_count?: number | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          direction?: string
+          error_message?: string | null
+          event_type?: string
+          hotel_id?: string
+          id?: string
+          metadata?: Json | null
+          records_count?: number | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sync_history_hotel_id_fkey"
             columns: ["hotel_id"]
             isOneToOne: false
             referencedRelation: "hotels"
