@@ -32,3 +32,9 @@ verify_jwt = false
 
 [functions.scheduled-cleanup]
 verify_jwt = false
+
+[functions.get-cancellation-policy]
+verify_jwt = false
+
+[functions.guest-cancel-booking]
+verify_jwt = false
