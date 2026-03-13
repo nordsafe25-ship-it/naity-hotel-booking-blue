@@ -34,6 +34,16 @@ Deno.serve(async (req) => {
 
     if (!booking) throw new Error("Booking not found");
 
+    // Unblock dates for apartments on cancellation
+    if ((booking.hotels as any)?.property_type === "apartment") {
+      await supabase
+        .from("blocked_dates")
+        .delete()
+        .eq("hotel_id", booking.hotel_id)
+        .gte("blocked_date", booking.check_in)
+        .lt("blocked_date", booking.check_out);
+    }
+
     const { data: syncSetting } = await supabase
       .from("local_sync_settings")
       .select("api_endpoint, secret_key, is_active")
