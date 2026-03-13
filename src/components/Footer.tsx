@@ -39,9 +39,13 @@ const Footer = () => {
 
           <div>
             <h4 className="font-semibold mb-3">{t("footer.forHotels")}</h4>
-            <p className="text-sm text-accent-foreground/70 mb-3">{t("footer.forHotelsDesc")}</p>
+            <p className="text-sm text-accent-foreground/70 mb-3">
+              {t("lang") === "ar"
+                ? "أضف فندقك أو شقتك إلى Naity واستقبل حجوزات مباشرة."
+                : "List your hotel or apartment on Naity and receive direct bookings."}
+            </p>
             <Link
-              to="/contact"
+              to="/join"
               className="inline-block px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
             >
               {t("footer.joinNaity")}
