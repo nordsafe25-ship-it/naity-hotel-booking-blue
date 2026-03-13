@@ -37,6 +37,15 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
     contact_email: hotel.contact_email ?? "",
     property_type: (hotel as any).property_type ?? "hotel",
     amenities: (hotel.amenities as string[]) ?? [],
+    floor: (hotel as any).floor ?? "",
+    neighborhood: (hotel as any).neighborhood ?? "",
+    check_in_time: (hotel as any).check_in_time ?? "14:00",
+    check_out_time: (hotel as any).check_out_time ?? "12:00",
+    house_rules_ar: (hotel as any).house_rules_ar ?? "",
+    house_rules_en: (hotel as any).house_rules_en ?? "",
+    bedrooms: (hotel as any).bedrooms ?? 1,
+    bathrooms: (hotel as any).bathrooms ?? 1,
+    area_sqm: (hotel as any).area_sqm ?? "",
   });
 
   const toggleAmenity = (key: string) => {
@@ -88,6 +97,66 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
             ))}
           </div>
         </div>
+
+        {form.property_type === "apartment" && (
+          <div className="space-y-4 border border-blue-200 bg-blue-50/30 rounded-xl p-4">
+            <p className="text-sm font-semibold text-blue-700">
+              {lang === "ar" ? "🏠 تفاصيل الشقة" : "🏠 Apartment Details"}
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div>
+                <Label>{lang === "ar" ? "غرف النوم" : "Bedrooms"}</Label>
+                <Input type="number" min={1} value={form.bedrooms}
+                  onChange={e => setForm(f => ({ ...f, bedrooms: +e.target.value }))} />
+              </div>
+              <div>
+                <Label>{lang === "ar" ? "الحمامات" : "Bathrooms"}</Label>
+                <Input type="number" min={1} value={form.bathrooms}
+                  onChange={e => setForm(f => ({ ...f, bathrooms: +e.target.value }))} />
+              </div>
+              <div>
+                <Label>{lang === "ar" ? "الطابق" : "Floor"}</Label>
+                <Input type="number" min={0} value={form.floor}
+                  onChange={e => setForm(f => ({ ...f, floor: +e.target.value }))} />
+              </div>
+              <div>
+                <Label>{lang === "ar" ? "المساحة م²" : "Area m²"}</Label>
+                <Input type="number" min={0} value={form.area_sqm}
+                  onChange={e => setForm(f => ({ ...f, area_sqm: +e.target.value }))} />
+              </div>
+            </div>
+            <div>
+              <Label>{lang === "ar" ? "الحي / المنطقة" : "Neighborhood"}</Label>
+              <Input value={form.neighborhood}
+                onChange={e => setForm(f => ({ ...f, neighborhood: e.target.value }))}
+                placeholder={lang === "ar" ? "مثال: المزة، باب توما..." : "e.g. Mezzeh, Bab Touma..."} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>{lang === "ar" ? "وقت تسجيل الوصول" : "Check-in Time"}</Label>
+                <Input type="time" value={form.check_in_time}
+                  onChange={e => setForm(f => ({ ...f, check_in_time: e.target.value }))} />
+              </div>
+              <div>
+                <Label>{lang === "ar" ? "وقت تسجيل المغادرة" : "Check-out Time"}</Label>
+                <Input type="time" value={form.check_out_time}
+                  onChange={e => setForm(f => ({ ...f, check_out_time: e.target.value }))} />
+              </div>
+            </div>
+            <div>
+              <Label>{lang === "ar" ? "قواعد الإقامة (عربي)" : "House Rules (Arabic)"}</Label>
+              <Textarea rows={3} value={form.house_rules_ar}
+                onChange={e => setForm(f => ({ ...f, house_rules_ar: e.target.value }))}
+                placeholder="مثال: لا تدخين، لا حيوانات، الهدوء بعد 11 مساءً" />
+            </div>
+            <div>
+              <Label>House Rules (English)</Label>
+              <Textarea rows={3} value={form.house_rules_en}
+                onChange={e => setForm(f => ({ ...f, house_rules_en: e.target.value }))}
+                placeholder="e.g. No smoking, no pets, quiet after 11 PM" />
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
