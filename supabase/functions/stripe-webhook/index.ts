@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
       if (datesToBlock.length > 0) {
         // Insert blocked dates, ignore if they already exist
         for (const bd of datesToBlock) {
-          await supabase.from("blocked_dates").insert(bd).select().maybeSingle();
+          await supabase.from("blocked_dates").upsert(bd, { onConflict: "hotel_id,blocked_date" });
         }
       }
     }
