@@ -235,6 +235,11 @@ export type Database = {
         Row: {
           address: string | null
           amenities: string[] | null
+          area_sqm: number | null
+          bathrooms: number | null
+          bedrooms: number | null
+          check_in_time: string | null
+          check_out_time: string | null
           city: string
           contact_email: string | null
           contact_phone: string | null
@@ -242,6 +247,9 @@ export type Database = {
           created_at: string
           description_ar: string | null
           description_en: string | null
+          floor: number | null
+          house_rules_ar: string | null
+          house_rules_en: string | null
           id: string
           is_active: boolean
           is_featured: boolean
@@ -251,6 +259,7 @@ export type Database = {
           manual_mode: boolean | null
           name_ar: string
           name_en: string
+          neighborhood: string | null
           property_type: string
           slug: string | null
           stars: number
@@ -259,6 +268,11 @@ export type Database = {
         Insert: {
           address?: string | null
           amenities?: string[] | null
+          area_sqm?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          check_in_time?: string | null
+          check_out_time?: string | null
           city: string
           contact_email?: string | null
           contact_phone?: string | null
@@ -266,6 +280,9 @@ export type Database = {
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
+          floor?: number | null
+          house_rules_ar?: string | null
+          house_rules_en?: string | null
           id?: string
           is_active?: boolean
           is_featured?: boolean
@@ -275,6 +292,7 @@ export type Database = {
           manual_mode?: boolean | null
           name_ar: string
           name_en: string
+          neighborhood?: string | null
           property_type?: string
           slug?: string | null
           stars?: number
@@ -283,6 +301,11 @@ export type Database = {
         Update: {
           address?: string | null
           amenities?: string[] | null
+          area_sqm?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          check_in_time?: string | null
+          check_out_time?: string | null
           city?: string
           contact_email?: string | null
           contact_phone?: string | null
@@ -290,6 +313,9 @@ export type Database = {
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
+          floor?: number | null
+          house_rules_ar?: string | null
+          house_rules_en?: string | null
           id?: string
           is_active?: boolean
           is_featured?: boolean
@@ -299,6 +325,7 @@ export type Database = {
           manual_mode?: boolean | null
           name_ar?: string
           name_en?: string
+          neighborhood?: string | null
           property_type?: string
           slug?: string | null
           stars?: number
