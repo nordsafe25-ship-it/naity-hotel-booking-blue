@@ -77,7 +77,7 @@ const App = () => (
               <Route path="/hotel-panel" element={<ProtectedRoute requiredRole="hotel_manager"><HotelPanel /></ProtectedRoute>} />
 
               {/* Partner */}
-              <Route path="/partner" element={<PartnerDashboard />} />
+              <Route path="/partner" element={<ProtectedRoute><PartnerDashboard /></ProtectedRoute>} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>
