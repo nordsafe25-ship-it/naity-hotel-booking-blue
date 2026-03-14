@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
     const checkInFmt = new Date(booking.check_in).toLocaleDateString("en-GB");
     const checkOutFmt = new Date(booking.check_out).toLocaleDateString("en-GB");
     const balance = booking.total_price - booking.deposit_amount;
-    const APP_URL = Deno.env.get("APP_URL") ?? "https://naity.com";
+    const APP_URL = Deno.env.get("APP_URL") ?? "https://naity.net";
 
     // Guest confirmation email (bilingual AR/EN)
     const guestEmailHtml = `<!DOCTYPE html>
