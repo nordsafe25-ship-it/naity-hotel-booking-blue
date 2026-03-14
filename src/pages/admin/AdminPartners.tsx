@@ -124,17 +124,27 @@ const AdminPartners = () => {
   const handleCreateLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginPartnerId) return;
+    if (loginPassword.length < 6) {
+      toast.error(lang === "ar" ? "كلمة المرور يجب أن تكون 6 أحرف على الأقل" : "Password must be at least 6 characters");
+      return;
+    }
     setCreatingLogin(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-partner", {
-        body: { email: loginEmail, password: loginPassword, partner_id: loginPartnerId },
+        body: { email: loginEmail.trim(), password: loginPassword, partner_id: loginPartnerId },
       });
-      if (error) throw error;
+      if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
-      toast.success(lang === "ar" ? "تم إنشاء الحساب بنجاح" : "Account created successfully");
+      toast.success(
+        lang === "ar"
+          ? `تم إنشاء الحساب بنجاح لـ ${data.email}`
+          : `Account created successfully for ${data.email}`
+      );
       setLoginOpen(false);
+      setLoginEmail("");
+      setLoginPassword("");
     } catch (err: any) {
-      toast.error(err.message || "Error creating account");
+      toast.error(err.message || (lang === "ar" ? "حدث خطأ أثناء إنشاء الحساب" : "Error creating account"));
     } finally {
       setCreatingLogin(false);
     }
