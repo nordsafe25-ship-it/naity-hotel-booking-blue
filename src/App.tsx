@@ -76,6 +76,9 @@ const App = () => (
               {/* Hotel Manager */}
               <Route path="/hotel-panel" element={<ProtectedRoute requiredRole="hotel_manager"><HotelPanel /></ProtectedRoute>} />
 
+              {/* Partner */}
+              <Route path="/partner" element={<PartnerDashboard />} />
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

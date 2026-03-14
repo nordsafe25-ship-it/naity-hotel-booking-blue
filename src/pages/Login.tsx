@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
+import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,13 +22,31 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     const { error } = await signIn(email, password);
-    setIsLoading(false);
     if (error) {
+      setIsLoading(false);
       toast.error(error.message);
-    } else {
-      toast.success("تم تسجيل الدخول بنجاح");
-      navigate("/dashboard");
+      return;
     }
+
+    // Check if partner user → redirect to /partner
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: partnerRow } = await supabase
+        .from("partner_users")
+        .select("partner_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (partnerRow) {
+        setIsLoading(false);
+        toast.success("تم تسجيل الدخول بنجاح");
+        navigate("/partner");
+        return;
+      }
+    }
+
+    setIsLoading(false);
+    toast.success("تم تسجيل الدخول بنجاح");
+    navigate("/dashboard");
   };
 
   return (
