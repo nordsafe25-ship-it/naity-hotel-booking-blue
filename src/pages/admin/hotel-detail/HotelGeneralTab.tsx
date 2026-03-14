@@ -238,23 +238,28 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
 
         {/* Tech Partner */}
         <div>
-          <Label>{tx("الشريك التقني", "Tech Partner")}</Label>
-          <Select
-            value={form.tech_partner_id || "none"}
-            onValueChange={(v) => setForm(f => ({ ...f, tech_partner_id: v === "none" ? null : v }))}
+          <Label>
+            {lang === "ar" ? "نظام إدارة الفندق / الشقة" : "Property Management System"}
+          </Label>
+          <select
+            value={form.tech_partner_id ?? ""}
+            onChange={e => setForm(f => ({ ...f, tech_partner_id: e.target.value || null }))}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
           >
-            <SelectTrigger>
-              <SelectValue placeholder={tx("بدون شريك", "No partner")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">{tx("بدون شريك", "No partner")}</SelectItem>
-              {techPartners.map((tp: any) => (
-                <SelectItem key={tp.id} value={tp.id}>
-                  {lang === "ar" && tp.name_ar ? tp.name_ar : tp.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <option value="">
+              {lang === "ar" ? "— بدون نظام / مستقل —" : "— None / Independent —"}
+            </option>
+            {techPartners.map((p: any) => (
+              <option key={p.id} value={p.id}>
+                {lang === "ar" ? (p.name_ar || p.name) : p.name}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-muted-foreground mt-1">
+            {lang === "ar"
+              ? "اختر الشركة التي تدير سيستم هذا العقار — يُستخدم لاحتساب العمولات"
+              : "Select the tech company managing this property — used for commission tracking"}
+          </p>
         </div>
       </div>
 
