@@ -257,85 +257,168 @@ const AdminPartners = () => {
             <p className="text-sm mt-1">{lang === "ar" ? "أضف أول شريك تقني" : "Add your first tech partner"}</p>
           </div>
         ) : (
-          <div className="bg-card rounded-2xl border border-border/50 shadow-card overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border/50 bg-muted/40">
-                    <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">{lang === "ar" ? "الاسم" : "Name"}</th>
-                    <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">{lang === "ar" ? "العمولة" : "Commission"}</th>
-                    <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">{lang === "ar" ? "البريد" : "Email"}</th>
-                    <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">{lang === "ar" ? "الهاتف" : "Phone"}</th>
-                    <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">{lang === "ar" ? "عدد الفنادق/الشقق" : "Properties"}</th>
-                    <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">{lang === "ar" ? "الحالة" : "Status"}</th>
-                    <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">{lang === "ar" ? "إجراءات" : "Actions"}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/30">
-                  {partners.map((p: any) => (
-                    <tr key={p.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 font-bold text-primary text-sm">
-                            {p.name?.charAt(0).toUpperCase() ?? "?"}
-                          </div>
-                          <span className="font-semibold text-foreground">{lang === "ar" && p.name_ar ? p.name_ar : p.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 font-semibold text-foreground">{p.commission_rate}%</td>
-                      <td className="px-5 py-4 text-muted-foreground" dir="ltr">{p.contact_email ?? "—"}</td>
-                      <td className="px-5 py-4 text-muted-foreground" dir="ltr">{p.contact_phone ?? "—"}</td>
-                      <td className="px-5 py-4">
-                        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
-                          <Building2 className="w-4 h-4 text-muted-foreground" />
-                          {p.hotels_count}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4">
-                        {p.is_active ? (
-                          <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-semibold border bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/50">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                            {lang === "ar" ? "نشط" : "Active"}
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-semibold border bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                            {lang === "ar" ? "غير نشط" : "Inactive"}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => openEdit(p)} className="p-2 rounded-lg hover:bg-muted transition text-muted-foreground hover:text-primary" title={lang === "ar" ? "تعديل" : "Edit"}>
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (p.hotels_count > 0) {
-                                toast.error(lang === "ar"
-                                  ? "لا يمكن حذف شريك مرتبط بعقارات"
-                                  : "Cannot delete partner linked to properties");
-                                return;
-                              }
-                              if (confirm(lang === "ar" ? "حذف هذا الشريك؟" : "Delete this partner?"))
-                                deleteMutation.mutate({ id: p.id, hotelsCount: p.hotels_count });
-                            }}
-                            className="p-2 rounded-lg hover:bg-destructive/10 transition text-muted-foreground hover:text-destructive"
-                            title={lang === "ar" ? "حذف" : "Delete"}>
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => openLoginDialog(p)}
-                            className="p-2 rounded-lg hover:bg-primary/10 transition text-muted-foreground hover:text-primary"
-                            title={lang === "ar" ? "إنشاء حساب" : "Create Login"}>
-                            <UserPlus className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
+          <div className="space-y-3">
+            {/* ── MOBILE: Cards (hidden on lg+) ── */}
+            <div className="flex flex-col gap-3 lg:hidden">
+              {partners.map((p: any) => (
+                <div key={p.id} className="bg-card rounded-2xl border border-border/50 shadow-card p-4 space-y-3">
+                  {/* Header row */}
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 font-bold text-primary text-sm">
+                        {p.name?.charAt(0).toUpperCase() ?? "?"}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-bold text-foreground truncate">
+                          {lang === "ar" && p.name_ar ? p.name_ar : p.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {p.commission_rate}% {lang === "ar" ? "عمولة" : "commission"}
+                        </p>
+                      </div>
+                    </div>
+                    {p.is_active ? (
+                      <span className="shrink-0 inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/50">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                        {lang === "ar" ? "نشط" : "Active"}
+                      </span>
+                    ) : (
+                      <span className="shrink-0 inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700">
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                        {lang === "ar" ? "غير نشط" : "Inactive"}
+                      </span>
+                    )}
+                  </div>
+                  {/* Info rows */}
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    {p.contact_email && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">{lang === "ar" ? "البريد" : "Email"}</p>
+                        <p className="text-foreground truncate" dir="ltr">{p.contact_email}</p>
+                      </div>
+                    )}
+                    {p.contact_phone && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">{lang === "ar" ? "الهاتف" : "Phone"}</p>
+                        <p className="text-foreground" dir="ltr">{p.contact_phone}</p>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-xs text-muted-foreground">{lang === "ar" ? "عدد العقارات" : "Properties"}</p>
+                      <p className="font-semibold text-foreground flex items-center gap-1">
+                        <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
+                        {p.hotels_count}
+                      </p>
+                    </div>
+                  </div>
+                  {/* Action buttons */}
+                  <div className="flex gap-2 pt-1 border-t border-border/40">
+                    <button onClick={() => openEdit(p)}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-muted hover:bg-muted/80 text-sm font-medium text-foreground transition">
+                      <Pencil className="w-4 h-4" />
+                      {lang === "ar" ? "تعديل" : "Edit"}
+                    </button>
+                    <button onClick={() => openLoginDialog(p)}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-sm font-medium text-primary transition">
+                      <UserPlus className="w-4 h-4" />
+                      {lang === "ar" ? "إنشاء حساب" : "Create Login"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (p.hotels_count > 0) {
+                          toast.error(lang === "ar" ? "لا يمكن حذف شريك مرتبط بعقارات" : "Cannot delete partner linked to properties");
+                          return;
+                        }
+                        if (confirm(lang === "ar" ? "حذف هذا الشريك؟" : "Delete this partner?"))
+                          deleteMutation.mutate({ id: p.id, hotelsCount: p.hotels_count });
+                      }}
+                      className="p-2 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive transition">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ── DESKTOP: Table (hidden on mobile) ── */}
+            <div className="hidden lg:block bg-card rounded-2xl border border-border/50 shadow-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border/50 bg-muted/40">
+                      <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">{lang === "ar" ? "الاسم" : "Name"}</th>
+                      <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">{lang === "ar" ? "العمولة" : "Commission"}</th>
+                      <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">{lang === "ar" ? "البريد" : "Email"}</th>
+                      <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">{lang === "ar" ? "الهاتف" : "Phone"}</th>
+                      <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">{lang === "ar" ? "عدد الفنادق/الشقق" : "Properties"}</th>
+                      <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">{lang === "ar" ? "الحالة" : "Status"}</th>
+                      <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">{lang === "ar" ? "إجراءات" : "Actions"}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-border/30">
+                    {partners.map((p: any) => (
+                      <tr key={p.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 font-bold text-primary text-sm">
+                              {p.name?.charAt(0).toUpperCase() ?? "?"}
+                            </div>
+                            <span className="font-semibold text-foreground">{lang === "ar" && p.name_ar ? p.name_ar : p.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4 font-semibold text-foreground">{p.commission_rate}%</td>
+                        <td className="px-5 py-4 text-muted-foreground" dir="ltr">{p.contact_email ?? "—"}</td>
+                        <td className="px-5 py-4 text-muted-foreground" dir="ltr">{p.contact_phone ?? "—"}</td>
+                        <td className="px-5 py-4">
+                          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
+                            <Building2 className="w-4 h-4 text-muted-foreground" />
+                            {p.hotels_count}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4">
+                          {p.is_active ? (
+                            <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-semibold border bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/50">
+                              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                              {lang === "ar" ? "نشط" : "Active"}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-semibold border bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700">
+                              <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                              {lang === "ar" ? "غير نشط" : "Inactive"}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => openEdit(p)} className="p-2 rounded-lg hover:bg-muted transition text-muted-foreground hover:text-primary" title={lang === "ar" ? "تعديل" : "Edit"}>
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (p.hotels_count > 0) {
+                                  toast.error(lang === "ar" ? "لا يمكن حذف شريك مرتبط بعقارات" : "Cannot delete partner linked to properties");
+                                  return;
+                                }
+                                if (confirm(lang === "ar" ? "حذف هذا الشريك؟" : "Delete this partner?"))
+                                  deleteMutation.mutate({ id: p.id, hotelsCount: p.hotels_count });
+                              }}
+                              className="p-2 rounded-lg hover:bg-destructive/10 transition text-muted-foreground hover:text-destructive"
+                              title={lang === "ar" ? "حذف" : "Delete"}>
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => openLoginDialog(p)}
+                              className="p-2 rounded-lg hover:bg-primary/10 transition text-muted-foreground hover:text-primary"
+                              title={lang === "ar" ? "إنشاء حساب" : "Create Login"}>
+                              <UserPlus className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
