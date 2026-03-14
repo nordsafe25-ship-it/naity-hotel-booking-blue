@@ -433,7 +433,9 @@ ${booking.special_requests ? `<tr><td style="color:#999;font-size:12px">Special 
       try {
         await sendEmail(
           hotelEmail,
-          `🔔 New Booking: ${booking.guest_first_name} ${booking.guest_last_name} · ${checkInFmt} → ${checkOutFmt}`,
+          isApartment
+            ? `🏠 حجز جديد لشقتك — ${booking.guest_first_name} ${booking.guest_last_name} · ${checkInFmt} → ${checkOutFmt}`
+            : `🔔 New Booking: ${booking.guest_first_name} ${booking.guest_last_name} · ${checkInFmt} → ${checkOutFmt}`,
           hotelEmailHtml
         );
       } catch (emailErr) {
