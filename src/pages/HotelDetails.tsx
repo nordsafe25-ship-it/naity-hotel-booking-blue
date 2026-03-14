@@ -293,6 +293,62 @@ const HotelDetails = () => {
           )}
         </div>
 
+        {/* Apartment Details */}
+        {isApartment && (hotel as any).bedrooms && (
+          <div className="bg-card rounded-xl p-6 shadow-card border border-border/50 space-y-4">
+            <h2 className="text-xl font-bold text-foreground">
+              {tx("🏠 تفاصيل الشقة", "🏠 Apartment Details")}
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {(hotel as any).bedrooms && (
+                <div className="text-center p-3 bg-muted rounded-lg">
+                  <p className="text-2xl font-bold text-foreground">{(hotel as any).bedrooms}</p>
+                  <p className="text-xs text-muted-foreground">{tx("غرف نوم", "Bedrooms")}</p>
+                </div>
+              )}
+              {(hotel as any).bathrooms && (
+                <div className="text-center p-3 bg-muted rounded-lg">
+                  <p className="text-2xl font-bold text-foreground">{(hotel as any).bathrooms}</p>
+                  <p className="text-xs text-muted-foreground">{tx("حمامات", "Bathrooms")}</p>
+                </div>
+              )}
+              {(hotel as any).area_sqm && (
+                <div className="text-center p-3 bg-muted rounded-lg">
+                  <p className="text-2xl font-bold text-foreground">{(hotel as any).area_sqm}</p>
+                  <p className="text-xs text-muted-foreground">{tx("م²", "m²")}</p>
+                </div>
+              )}
+              {(hotel as any).floor != null && (
+                <div className="text-center p-3 bg-muted rounded-lg">
+                  <p className="text-2xl font-bold text-foreground">{(hotel as any).floor}</p>
+                  <p className="text-xs text-muted-foreground">{tx("الطابق", "Floor")}</p>
+                </div>
+              )}
+            </div>
+            {((hotel as any).check_in_time || (hotel as any).check_out_time) && (
+              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                <span>⏰ {tx("الوصول:", "Check-in:")} {(hotel as any).check_in_time}</span>
+                <span>⏰ {tx("المغادرة:", "Check-out:")} {(hotel as any).check_out_time}</span>
+              </div>
+            )}
+            {(hotel as any).neighborhood && (
+              <p className="text-sm text-muted-foreground">
+                📍 {tx("الحي:", "Neighborhood:")} {(hotel as any).neighborhood}
+              </p>
+            )}
+            {((hotel as any).house_rules_ar || (hotel as any).house_rules_en) && (
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-foreground">
+                  📋 {tx("قواعد الإقامة", "House Rules")}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {lang === "ar" ? (hotel as any).house_rules_ar : (hotel as any).house_rules_en}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Room Categories with Pricing Table */}
         <div>
           <h2 className="text-xl font-bold text-foreground mb-4">{t("hotel.rooms")}</h2>

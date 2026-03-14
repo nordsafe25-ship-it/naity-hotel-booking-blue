@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Search, Calendar, MapPin, Star,
-         ChevronDown, ChevronUp, Copy, Check } from "lucide-react";
+         ChevronDown, ChevronUp, Copy, Check, AlertTriangle, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { useI18n } from "@/lib/i18n";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 
 const DEPOSIT_PERCENT = 10;
@@ -44,7 +46,7 @@ const STATUS_CONFIG: Record<string, { ar: string; en: string; classes: string; d
   },
 };
 
-function BookingCard({ b, lang, tx, expandedId, setExpandedId, copiedId, copy }: any) {
+function BookingCard({ b, lang, tx, expandedId, setExpandedId, copiedId, copy, onCancel }: any) {
   const hotel = b.hotels;
   const room = b.room_categories;
   const name = lang === "ar" ? hotel?.name_ar : hotel?.name_en;
@@ -160,6 +162,14 @@ function BookingCard({ b, lang, tx, expandedId, setExpandedId, copiedId, copy }:
               </p>
               <p className="text-xs font-mono text-primary font-bold">{b.id.slice(0, 8).toUpperCase()}</p>
             </div>
+            {/* Cancel button */}
+            {["confirmed", "pending"].includes(b.status) && (
+              <button onClick={() => onCancel?.(b)}
+                className="text-sm text-destructive hover:underline flex items-center gap-1 mt-2 mx-auto">
+                <XCircle className="w-4 h-4" />
+                {lang === "ar" ? "إلغاء الحجز" : "Cancel Booking"}
+              </button>
+            )}
           </div>
         </motion.div>
       )}
@@ -175,6 +185,10 @@ export default function MyBookings() {
   const [bookings, setBookings] = useState<any[] | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [cancellingBooking, setCancellingBooking] = useState<any>(null);
+  const [policy, setPolicy] = useState<any>(null);
+  const [loadingPolicy, setLoadingPolicy] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   const handleSearch = async () => {
     const trimmed = email.trim().toLowerCase();
@@ -202,10 +216,40 @@ export default function MyBookings() {
     toast.success(tx("تم النسخ", "Copied!"));
   };
 
+  const openCancelDialog = async (booking: any) => {
+    setCancellingBooking(booking);
+    setLoadingPolicy(true);
+    setPolicy(null);
+    try {
+      const { data } = await supabase.functions.invoke("get-cancellation-policy", {
+        body: { check_in: booking.check_in, deposit_amount: booking.deposit_amount },
+      });
+      setPolicy(data);
+    } catch { toast.error("Failed to load policy"); }
+    setLoadingPolicy(false);
+  };
+
+  const confirmCancel = async () => {
+    if (!cancellingBooking) return;
+    setCancelling(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("guest-cancel-booking", {
+        body: { booking_id: cancellingBooking.id, guest_email: cancellingBooking.guest_email },
+      });
+      if (error || !data?.success) throw new Error(error?.message ?? "Failed");
+      setCancellingBooking(null);
+      toast.success(data.refunded > 0
+        ? `Booking cancelled. Refund of $${data.refunded} in 5-10 business days.`
+        : "Booking cancelled. No refund applies.");
+      handleSearch();
+    } catch (e: any) { toast.error(e.message); }
+    setCancelling(false);
+  };
+
   const upcomingBookings = bookings?.filter(b => ["confirmed", "active", "pending"].includes(b.status)) ?? [];
   const pastBookings = bookings?.filter(b => ["expired", "completed", "cancelled"].includes(b.status)) ?? [];
 
-  const cardProps = { lang, tx, expandedId, setExpandedId, copiedId, copy };
+  const cardProps = { lang, tx, expandedId, setExpandedId, copiedId, copy, onCancel: openCancelDialog };
 
   return (
     <Layout>
@@ -288,6 +332,70 @@ export default function MyBookings() {
           </AnimatePresence>
         )}
       </div>
+
+      {/* Cancel Dialog */}
+      <Dialog open={!!cancellingBooking} onOpenChange={(v) => { if (!v) setCancellingBooking(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              {tx("تأكيد إلغاء الحجز", "Confirm Cancellation")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {cancellingBooking && (
+              <div className="space-y-1 text-sm">
+                <p className="font-semibold text-foreground">
+                  {lang === "ar" ? cancellingBooking.hotels?.name_ar : cancellingBooking.hotels?.name_en}
+                </p>
+                <p className="text-muted-foreground">
+                  {cancellingBooking.check_in} → {cancellingBooking.check_out}
+                </p>
+                <p className="text-muted-foreground">
+                  {tx("العربون:", "Deposit:")} ${cancellingBooking.deposit_amount}
+                </p>
+              </div>
+            )}
+            {loadingPolicy && (
+              <div className="flex justify-center py-4">
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+            {policy && (
+              <div className="space-y-2 bg-muted rounded-lg p-3">
+                <p className="text-sm font-semibold text-foreground">
+                  {tx("سياسة الاسترداد:", "Refund Policy:")}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {lang === "ar" ? policy.policy_ar : policy.policy_en}
+                </p>
+                {policy.peak_season && (
+                  <p className="text-xs text-destructive font-medium">
+                    {tx(
+                      "🚫 موسم الذروة (15 يونيو – 15 سبتمبر): لن يتم استرداد العربون.",
+                      "🚫 Peak season (Jun 15 – Sep 15): deposit will NOT be refunded."
+                    )}
+                  </p>
+                )}
+              </div>
+            )}
+            <p className="text-xs text-destructive">
+              {tx("هل أنت متأكد؟ لا يمكن التراجع.", "Are you sure? This cannot be undone.")}
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setCancellingBooking(null)} disabled={cancelling}>
+                {tx("رجوع", "Go Back")}
+              </Button>
+              <Button variant="destructive" onClick={confirmCancel} disabled={cancelling || loadingPolicy}>
+                {cancelling
+                  ? <div className="w-4 h-4 border-2 border-destructive-foreground/30 border-t-destructive-foreground rounded-full animate-spin" />
+                  : <XCircle className="w-4 h-4" />}
+                {tx(cancelling ? "جاري الإلغاء..." : "تأكيد الإلغاء", cancelling ? "Cancelling..." : "Confirm Cancel")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }

@@ -24,9 +24,18 @@ const AdminHotels = () => {
   const [editing, setEditing] = useState<Tables<"hotels"> | null>(null);
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
 
-  const [form, setForm] = useState<Partial<TablesInsert<"hotels">> & { property_type?: string }>({
+  const [form, setForm] = useState<Partial<TablesInsert<"hotels">> & { property_type?: string; tech_partner_id?: string | null }>({
     name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "",
-    contact_phone: "", contact_email: "", property_type: "hotel",
+    contact_phone: "", contact_email: "", property_type: "hotel", tech_partner_id: null,
+  });
+
+  const { data: techPartners = [] } = useQuery({
+    queryKey: ["tech-partners-list"],
+    queryFn: async () => {
+      const { data } = await supabase.from("tech_partners")
+        .select("id, name, name_ar").eq("is_active", true).order("name");
+      return data ?? [];
+    },
   });
 
   const { data: hotels, isLoading } = useQuery({
@@ -88,7 +97,7 @@ const AdminHotels = () => {
   });
 
   const resetForm = () => {
-    setForm({ name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "", contact_phone: "", contact_email: "", property_type: "hotel" });
+    setForm({ name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "", contact_phone: "", contact_email: "", property_type: "hotel", tech_partner_id: null });
     setEditing(null);
   };
 
@@ -100,6 +109,7 @@ const AdminHotels = () => {
       description_ar: hotel.description_ar ?? "", address: hotel.address ?? "",
       contact_phone: hotel.contact_phone ?? "", contact_email: hotel.contact_email ?? "",
       property_type: (hotel as any).property_type ?? "hotel",
+      tech_partner_id: (hotel as any).tech_partner_id ?? null,
     });
     setOpen(true);
   };
@@ -169,6 +179,19 @@ const AdminHotels = () => {
                 <div>
                   <Label>{tx("العنوان", "Address")}</Label>
                   <Input value={form.address ?? ""} onChange={(e) => setForm(f => ({ ...f, address: e.target.value }))} />
+                </div>
+                <div>
+                  <Label>{lang === "ar" ? "نظام إدارة الفندق / الشقة" : "Property Management System"}</Label>
+                  <select
+                    value={form.tech_partner_id ?? ""}
+                    onChange={e => setForm(f => ({ ...f, tech_partner_id: e.target.value || null }))}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">{lang === "ar" ? "— بدون نظام —" : "— None / Independent —"}</option>
+                    {techPartners.map((p: any) => (
+                      <option key={p.id} value={p.id}>{lang === "ar" ? (p.name_ar || p.name) : p.name}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
