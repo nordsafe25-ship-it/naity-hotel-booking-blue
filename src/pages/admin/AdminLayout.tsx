@@ -101,9 +101,9 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
 
       {/* Mobile overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
+        <div className="fixed inset-0 z-[99] lg:hidden">
           <div className="fixed inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
-          <aside className={`fixed top-0 ${lang === "ar" ? "right-0" : "left-0"} w-64 h-full bg-accent text-accent-foreground flex flex-col z-50`}>
+          <aside className={`fixed top-0 ${lang === "ar" ? "right-0" : "left-0"} w-64 h-full bg-accent text-accent-foreground flex flex-col z-[100]`}>
             <SidebarContent />
           </aside>
         </div>
