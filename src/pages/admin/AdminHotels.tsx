@@ -109,6 +109,7 @@ const AdminHotels = () => {
       description_ar: hotel.description_ar ?? "", address: hotel.address ?? "",
       contact_phone: hotel.contact_phone ?? "", contact_email: hotel.contact_email ?? "",
       property_type: (hotel as any).property_type ?? "hotel",
+      tech_partner_id: (hotel as any).tech_partner_id ?? null,
     });
     setOpen(true);
   };
