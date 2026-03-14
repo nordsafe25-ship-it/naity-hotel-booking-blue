@@ -263,6 +263,7 @@ export type Database = {
           property_type: string
           slug: string | null
           stars: number
+          tech_partner_id: string | null
           updated_at: string
         }
         Insert: {
@@ -296,6 +297,7 @@ export type Database = {
           property_type?: string
           slug?: string | null
           stars?: number
+          tech_partner_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -329,9 +331,18 @@ export type Database = {
           property_type?: string
           slug?: string | null
           stars?: number
+          tech_partner_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "hotels_tech_partner_id_fkey"
+            columns: ["tech_partner_id"]
+            isOneToOne: false
+            referencedRelation: "tech_partners"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       local_sync_settings: {
         Row: {
@@ -373,6 +384,35 @@ export type Database = {
             columns: ["hotel_id"]
             isOneToOne: true
             referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_users: {
+        Row: {
+          created_at: string
+          id: string
+          partner_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          partner_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          partner_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_users_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "tech_partners"
             referencedColumns: ["id"]
           },
         ]
@@ -572,6 +612,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tech_partners: {
+        Row: {
+          commission_rate: number
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          name_ar: string | null
+          notes: string | null
+        }
+        Insert: {
+          commission_rate?: number
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          name_ar?: string | null
+          notes?: string | null
+        }
+        Update: {
+          commission_rate?: number
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_ar?: string | null
+          notes?: string | null
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
