@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
   try {
     event = stripe.webhooks.constructEvent(body, sig, secret);
   } catch (err) {
-    return new Response(`Webhook Error: ${err.message}`, { status: 400 });
+    return new Response(`Webhook Error: ${(err as Error).message}`, { status: 400 });
   }
 
   const session = event.data.object as Stripe.Checkout.Session;

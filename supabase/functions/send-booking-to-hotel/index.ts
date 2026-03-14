@@ -142,7 +142,7 @@ Deno.serve(async (req) => {
   } catch (err) {
     console.error("send-booking-to-hotel error:", err);
     return new Response(
-      JSON.stringify({ error: err.message }),
+      JSON.stringify({ error: (err as Error).message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
