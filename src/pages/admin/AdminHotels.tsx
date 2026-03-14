@@ -24,9 +24,18 @@ const AdminHotels = () => {
   const [editing, setEditing] = useState<Tables<"hotels"> | null>(null);
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
 
-  const [form, setForm] = useState<Partial<TablesInsert<"hotels">> & { property_type?: string }>({
+  const [form, setForm] = useState<Partial<TablesInsert<"hotels">> & { property_type?: string; tech_partner_id?: string | null }>({
     name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "",
-    contact_phone: "", contact_email: "", property_type: "hotel",
+    contact_phone: "", contact_email: "", property_type: "hotel", tech_partner_id: null,
+  });
+
+  const { data: techPartners = [] } = useQuery({
+    queryKey: ["tech-partners-list"],
+    queryFn: async () => {
+      const { data } = await supabase.from("tech_partners")
+        .select("id, name, name_ar").eq("is_active", true).order("name");
+      return data ?? [];
+    },
   });
 
   const { data: hotels, isLoading } = useQuery({
