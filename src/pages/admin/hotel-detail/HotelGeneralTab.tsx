@@ -73,7 +73,8 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
 
   const updateMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("hotels").update(form as any).eq("id", hotel.id);
+      const payload = { ...form, tech_partner_id: form.tech_partner_id || null };
+      const { error } = await supabase.from("hotels").update(payload as any).eq("id", hotel.id);
       if (error) throw error;
     },
     onSuccess: () => {
