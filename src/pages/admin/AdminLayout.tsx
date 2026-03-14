@@ -30,10 +30,10 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     { to: "/admin/hotels", icon: Hotel, label: lang === "ar" ? "الفنادق" : "Hotels" },
     { to: "/admin/rooms", icon: Settings, label: lang === "ar" ? "المخزون والغرف" : "Inventory" },
     { to: "/admin/managers", icon: Users, label: lang === "ar" ? "مدراء الفنادق" : "Managers" },
+    { to: "/admin/partners", icon: Handshake, label: lang === "ar" ? "شركاء التقنية" : "Tech Partners" },
     { to: "/admin/bookings", icon: BookOpen, label: lang === "ar" ? "سجل الحجوزات" : "Reservations" },
     { to: "/admin/messages", icon: MessageSquare, label: lang === "ar" ? "الرسائل" : "Messages", badge: unreadCount },
     { to: "/admin/sync", icon: Activity, label: lang === "ar" ? "إعدادات المزامنة" : "Sync Settings" },
-    { to: "/admin/partners", icon: Handshake, label: lang === "ar" ? "الشركاء" : "Partners" },
   ];
 
   const isActive = (path: string) => location.pathname === path;
