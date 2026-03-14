@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Search, Calendar, MapPin, Star,
-         ChevronDown, ChevronUp, Copy, Check } from "lucide-react";
+         ChevronDown, ChevronUp, Copy, Check, AlertTriangle, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { useI18n } from "@/lib/i18n";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 
 const DEPOSIT_PERCENT = 10;
