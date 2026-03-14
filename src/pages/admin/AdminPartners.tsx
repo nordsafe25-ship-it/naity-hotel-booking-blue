@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Handshake, Plus, Trash2, Pencil, ToggleLeft, ToggleRight } from "lucide-react";
+import { Handshake, Plus, Trash2, Pencil, Building2 } from "lucide-react";
 
 const AdminPartners = () => {
   const { lang } = useI18n();
@@ -18,11 +19,11 @@ const AdminPartners = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: "", name_ar: "", contact_email: "", contact_phone: "",
-    commission_rate: 0, notes: "",
+    commission_rate: 0, notes: "", is_active: true,
   });
 
   const resetForm = () => {
-    setForm({ name: "", name_ar: "", contact_email: "", contact_phone: "", commission_rate: 0, notes: "" });
+    setForm({ name: "", name_ar: "", contact_email: "", contact_phone: "", commission_rate: 0, notes: "", is_active: true });
     setEditId(null);
   };
 
@@ -31,10 +32,13 @@ const AdminPartners = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tech_partners")
-        .select("*")
+        .select("*, hotels(id)")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []).map((p: any) => ({
+        ...p,
+        hotels_count: Array.isArray(p.hotels) ? p.hotels.length : 0,
+      }));
     },
   });
 
@@ -47,6 +51,7 @@ const AdminPartners = () => {
         contact_phone: form.contact_phone.trim() || null,
         commission_rate: form.commission_rate,
         notes: form.notes.trim() || null,
+        is_active: form.is_active,
       };
       if (!payload.name) throw new Error(lang === "ar" ? "الاسم مطلوب" : "Name is required");
 
@@ -69,16 +74,13 @@ const AdminPartners = () => {
     onError: (err: Error) => toast.error(err.message),
   });
 
-  const toggleActive = useMutation({
-    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-      const { error } = await supabase.from("tech_partners").update({ is_active: !is_active }).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-partners"] }),
-  });
-
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, hotelsCount }: { id: string; hotelsCount: number }) => {
+      if (hotelsCount > 0) {
+        throw new Error(lang === "ar"
+          ? "لا يمكن حذف شريك مرتبط بعقارات. قم بفك الارتباط أولاً."
+          : "Cannot delete a partner linked to properties. Unlink them first.");
+      }
       const { error } = await supabase.from("tech_partners").delete().eq("id", id);
       if (error) throw error;
     },
@@ -86,6 +88,7 @@ const AdminPartners = () => {
       queryClient.invalidateQueries({ queryKey: ["admin-partners"] });
       toast.success(lang === "ar" ? "تم حذف الشريك" : "Partner deleted");
     },
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const openEdit = (p: any) => {
@@ -97,6 +100,7 @@ const AdminPartners = () => {
       contact_phone: p.contact_phone ?? "",
       commission_rate: p.commission_rate ?? 0,
       notes: p.notes ?? "",
+      is_active: p.is_active ?? true,
     });
     setOpen(true);
   };
@@ -157,6 +161,12 @@ const AdminPartners = () => {
                   <Label>{lang === "ar" ? "ملاحظات" : "Notes"}</Label>
                   <Textarea value={form.notes} onChange={(e) => setForm(f => ({ ...f, notes: e.target.value }))} rows={3} />
                 </div>
+                {editId && (
+                  <div className="flex items-center justify-between">
+                    <Label>{lang === "ar" ? "نشط" : "Active"}</Label>
+                    <Switch checked={form.is_active} onCheckedChange={(v) => setForm(f => ({ ...f, is_active: v }))} />
+                  </div>
+                )}
                 <Button type="submit" className="w-full gradient-cta" disabled={saveMutation.isPending}>
                   {saveMutation.isPending ? "..." : editId
                     ? (lang === "ar" ? "حفظ التعديلات" : "Save Changes")
@@ -171,74 +181,78 @@ const AdminPartners = () => {
           <div className="flex justify-center py-12">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
+        ) : !partners?.length ? (
+          <div className="bg-card rounded-2xl border border-border/50 shadow-card flex flex-col items-center justify-center py-20 text-muted-foreground">
+            <Handshake className="w-12 h-12 opacity-30 mb-3" />
+            <p className="text-lg font-medium">{lang === "ar" ? "لا يوجد شركاء بعد" : "No partners yet"}</p>
+            <p className="text-sm mt-1">{lang === "ar" ? "أضف أول شريك تقني" : "Add your first tech partner"}</p>
+          </div>
         ) : (
           <div className="bg-card rounded-2xl border border-border/50 shadow-card overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border/50 bg-muted/40">
-                    <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">
-                      {lang === "ar" ? "الشريك" : "Partner"}
-                    </th>
-                    <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">
-                      {lang === "ar" ? "البريد" : "Email"}
-                    </th>
-                    <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">
-                      {lang === "ar" ? "العمولة %" : "Commission %"}
-                    </th>
-                    <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">
-                      {lang === "ar" ? "الحالة" : "Status"}
-                    </th>
-                    <th className="px-5 py-3.5" />
+                    <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">{lang === "ar" ? "الاسم" : "Name"}</th>
+                    <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">{lang === "ar" ? "العمولة" : "Commission"}</th>
+                    <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">{lang === "ar" ? "البريد" : "Email"}</th>
+                    <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">{lang === "ar" ? "الهاتف" : "Phone"}</th>
+                    <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">{lang === "ar" ? "عدد الفنادق/الشقق" : "Properties"}</th>
+                    <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">{lang === "ar" ? "الحالة" : "Status"}</th>
+                    <th className="text-start px-5 py-3.5 font-semibold text-muted-foreground">{lang === "ar" ? "إجراءات" : "Actions"}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/30">
-                  {!partners?.length && (
-                    <tr>
-                      <td colSpan={5} className="text-center py-16 text-muted-foreground">
-                        <div className="flex flex-col items-center gap-3">
-                          <Handshake className="w-10 h-10 opacity-30" />
-                          <p>{lang === "ar" ? "لا يوجد شركاء بعد" : "No partners yet"}</p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                  {partners?.map((p: any) => (
-                    <tr key={p.id} className="hover:bg-muted/30 transition-colors group">
+                  {partners.map((p: any) => (
+                    <tr key={p.id} className="hover:bg-muted/30 transition-colors">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 font-bold text-primary text-sm">
                             {p.name?.charAt(0).toUpperCase() ?? "?"}
                           </div>
-                          <div>
-                            <p className="font-semibold text-foreground">{lang === "ar" && p.name_ar ? p.name_ar : p.name}</p>
-                            {p.contact_phone && <p className="text-xs text-muted-foreground" dir="ltr">{p.contact_phone}</p>}
-                          </div>
+                          <span className="font-semibold text-foreground">{lang === "ar" && p.name_ar ? p.name_ar : p.name}</span>
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-muted-foreground" dir="ltr">{p.contact_email ?? "—"}</td>
                       <td className="px-5 py-4 font-semibold text-foreground">{p.commission_rate}%</td>
+                      <td className="px-5 py-4 text-muted-foreground" dir="ltr">{p.contact_email ?? "—"}</td>
+                      <td className="px-5 py-4 text-muted-foreground" dir="ltr">{p.contact_phone ?? "—"}</td>
                       <td className="px-5 py-4">
-                        <button onClick={() => toggleActive.mutate({ id: p.id, is_active: p.is_active })}>
-                          {p.is_active ? (
-                            <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-semibold border bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/50">
-                              <ToggleRight className="w-3.5 h-3.5" />
-                              {lang === "ar" ? "نشط" : "Active"}
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-semibold border bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700">
-                              <ToggleLeft className="w-3.5 h-3.5" />
-                              {lang === "ar" ? "غير نشط" : "Inactive"}
-                            </span>
-                          )}
-                        </button>
+                        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
+                          <Building2 className="w-4 h-4 text-muted-foreground" />
+                          {p.hotels_count}
+                        </span>
                       </td>
                       <td className="px-5 py-4">
-                        <div className="flex items-center gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                        {p.is_active ? (
+                          <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-semibold border bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/50">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                            {lang === "ar" ? "نشط" : "Active"}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-semibold border bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                            {lang === "ar" ? "غير نشط" : "Inactive"}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-2">
                           <button onClick={() => openEdit(p)} className="p-2 rounded-lg hover:bg-muted transition text-muted-foreground hover:text-primary" title={lang === "ar" ? "تعديل" : "Edit"}>
                             <Pencil className="w-4 h-4" />
                           </button>
-                          <button onClick={() => { if (confirm(lang === "ar" ? "حذف هذا الشريك؟" : "Delete this partner?")) deleteMutation.mutate(p.id); }} className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition text-muted-foreground hover:text-red-500" title={lang === "ar" ? "حذف" : "Delete"}>
+                          <button
+                            onClick={() => {
+                              if (p.hotels_count > 0) {
+                                toast.error(lang === "ar"
+                                  ? "لا يمكن حذف شريك مرتبط بعقارات"
+                                  : "Cannot delete partner linked to properties");
+                                return;
+                              }
+                              if (confirm(lang === "ar" ? "حذف هذا الشريك؟" : "Delete this partner?"))
+                                deleteMutation.mutate({ id: p.id, hotelsCount: p.hotels_count });
+                            }}
+                            className="p-2 rounded-lg hover:bg-destructive/10 transition text-muted-foreground hover:text-destructive"
+                            title={lang === "ar" ? "حذف" : "Delete"}>
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
