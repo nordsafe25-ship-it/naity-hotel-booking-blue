@@ -97,7 +97,7 @@ const AdminHotels = () => {
   });
 
   const resetForm = () => {
-    setForm({ name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "", contact_phone: "", contact_email: "", property_type: "hotel" });
+    setForm({ name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "", contact_phone: "", contact_email: "", property_type: "hotel", tech_partner_id: null });
     setEditing(null);
   };
 
