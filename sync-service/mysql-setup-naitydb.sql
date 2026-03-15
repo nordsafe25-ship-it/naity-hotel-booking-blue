@@ -1,5 +1,6 @@
--- MySQL Setup for amsoft_NaityDB
--- Run this in phpMyAdmin for the NaityDB database
+-- MySQL Setup for naitagfz_Naity_Booking
+-- Run this in phpMyAdmin for the Naity Booking database
+-- This is your main booking system database
 
 -- Create rooms table
 CREATE TABLE IF NOT EXISTS rooms (

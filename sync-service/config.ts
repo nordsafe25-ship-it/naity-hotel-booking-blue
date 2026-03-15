@@ -4,13 +4,22 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const config = {
-  // MySQL ShamSoft Configuration
+  // MySQL Configuration - Namecheap Server
   mysql: {
-    host: '184.107.35.137',
+    host: '68.65.123.142',
     port: 3306,
-    user: 'amsoft_naty',
-    password: 'g*TZtRDuyHoF',
-    database: 'amsoft_Natydb',
+    // Naity Booking Database (Main System)
+    naityDb: {
+      database: 'naitagfz_Naity_Booking',
+      user: 'naitagfz_Naity_Booking',
+      password: 'p3cu(+odU6F^',
+    },
+    // ShamSoft Database (Local Hotel System)
+    shamSoftDb: {
+      database: 'naitagfz_Cham_Soft',
+      user: 'naitagfz_Samir',
+      password: 'r(eJX+6Cwjx1',
+    },
   },
   
   // Supabase Configuration

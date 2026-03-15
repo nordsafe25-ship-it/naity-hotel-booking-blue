@@ -1,5 +1,6 @@
--- MySQL Setup for amsoft_ShamSoftDB
--- Run this in phpMyAdmin for the ShamSoftDB database
+-- MySQL Setup for naitagfz_Cham_Soft
+-- Run this in phpMyAdmin for the ShamSoft database
+-- This is the local hotel management system database
 
 -- Create rooms table
 CREATE TABLE IF NOT EXISTS rooms (

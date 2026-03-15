@@ -14,6 +14,15 @@ if (!isset($_GET['key']) || $_GET['key'] !== SECRET_KEY) {
 
 header('Content-Type: application/json');
 
+// Database credentials
+define('MYSQL_HOST', '68.65.123.142');
+define('DB_NAITY_NAME', 'naitagfz_Naity_Booking');
+define('DB_NAITY_USER', 'naitagfz_Naity_Booking');
+define('DB_NAITY_PASS', 'p3cu(+odU6F^');
+define('DB_SHAMSOFT_NAME', 'naitagfz_Cham_Soft');
+define('DB_SHAMSOFT_USER', 'naitagfz_Samir');
+define('DB_SHAMSOFT_PASS', 'r(eJX+6Cwjx1');
+
 $results = [
     'timestamp' => date('Y-m-d H:i:s'),
     'tests' => []
@@ -22,9 +31,9 @@ $results = [
 // Test NaityDB Connection
 try {
     $pdoNaity = new PDO(
-        'mysql:host=localhost;dbname=amsoft_NaityDB;charset=utf8mb4',
-        'amsoft_naty',
-        'g*TZtRDuyHoF'
+        'mysql:host=' . MYSQL_HOST . ';dbname=' . DB_NAITY_NAME . ';charset=utf8mb4',
+        DB_NAITY_USER,
+        DB_NAITY_PASS
     );
     $pdoNaity->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
@@ -32,14 +41,16 @@ try {
     $stmt = $pdoNaity->query('SELECT COUNT(*) as count FROM rooms');
     $count = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    $results['tests']['naitydb'] = [
+    $results['tests']['naity_booking_db'] = [
         'status' => 'success',
         'message' => 'Connected successfully',
+        'database' => DB_NAITY_NAME,
         'rooms_count' => $count['count']
     ];
 } catch (PDOException $e) {
-    $results['tests']['naitydb'] = [
+    $results['tests']['naity_booking_db'] = [
         'status' => 'error',
+        'database' => DB_NAITY_NAME,
         'message' => $e->getMessage()
     ];
 }
@@ -47,9 +58,9 @@ try {
 // Test ShamSoftDB Connection
 try {
     $pdoShamSoft = new PDO(
-        'mysql:host=localhost;dbname=amsoft_ShamSoftDB;charset=utf8mb4',
-        'amsoft_naty',
-        'g*TZtRDuyHoF'
+        'mysql:host=' . MYSQL_HOST . ';dbname=' . DB_SHAMSOFT_NAME . ';charset=utf8mb4',
+        DB_SHAMSOFT_USER,
+        DB_SHAMSOFT_PASS
     );
     $pdoShamSoft->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
@@ -57,14 +68,16 @@ try {
     $stmt = $pdoShamSoft->query('SELECT COUNT(*) as count FROM rooms');
     $count = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    $results['tests']['shamsoftdb'] = [
+    $results['tests']['cham_soft_db'] = [
         'status' => 'success',
         'message' => 'Connected successfully',
+        'database' => DB_SHAMSOFT_NAME,
         'rooms_count' => $count['count']
     ];
 } catch (PDOException $e) {
-    $results['tests']['shamsoftdb'] = [
+    $results['tests']['cham_soft_db'] = [
         'status' => 'error',
+        'database' => DB_SHAMSOFT_NAME,
         'message' => $e->getMessage()
     ];
 }

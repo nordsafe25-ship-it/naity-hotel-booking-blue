@@ -17,12 +17,19 @@ define('SECRET_KEY', 'naity_sync_2026_secure_key_change_this');
 define('SUPABASE_URL', 'https://lfnvnxeymkhyzzsvadbp.supabase.co');
 define('SUPABASE_SERVICE_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjbWd0b3FpbGJrYWt4aWtpZ3R6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjUzNTA3MywiZXhwIjoyMDg4MTExMDczfQ.EwRswaOkNiC9xZNhjB8vYg-WOR41GAuaobSGTxj3FKM');
 
-// MySQL Configuration (Namecheap Shared Server)
-define('MYSQL_HOST', 'localhost');
-define('MYSQL_USER', 'amsoft_naty');
-define('MYSQL_PASS', 'g*TZtRDuyHoF');
-define('DB_NAITY', 'amsoft_NaityDB');
-define('DB_SHAMSOFT', 'amsoft_ShamSoftDB');
+// MySQL Configuration (Namecheap Shared Server - 68.65.123.142)
+// Both databases are on the same server
+define('MYSQL_HOST', '68.65.123.142');
+
+// Naity Booking Database (Main System)
+define('DB_NAITY_NAME', 'naitagfz_Naity_Booking');
+define('DB_NAITY_USER', 'naitagfz_Naity_Booking');
+define('DB_NAITY_PASS', 'p3cu(+odU6F^');
+
+// ShamSoft Database (Local Hotel System)
+define('DB_SHAMSOFT_NAME', 'naitagfz_Cham_Soft');
+define('DB_SHAMSOFT_USER', 'naitagfz_Samir');
+define('DB_SHAMSOFT_PASS', 'r(eJX+6Cwjx1');
 
 // Log file path
 define('LOG_FILE', __DIR__ . '/sync_log.txt');
@@ -96,14 +103,14 @@ function supabaseRequest($method, $endpoint, $data = null) {
 /**
  * Create PDO connection
  */
-function createConnection($database) {
+function createConnection($database, $user, $password) {
     try {
         $dsn = "mysql:host=" . MYSQL_HOST . ";dbname=$database;charset=utf8mb4";
-        $pdo = new PDO($dsn, MYSQL_USER, MYSQL_PASS);
+        $pdo = new PDO($dsn, $user, $password);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         return $pdo;
     } catch (PDOException $e) {
-        throw new Exception("Database connection failed: " . $e->getMessage());
+        throw new Exception("Database connection failed for $database: " . $e->getMessage());
     }
 }
 
@@ -127,8 +134,8 @@ function syncInventory() {
         writeLog("✅ Found " . count($rooms) . " rooms in Supabase");
         
         // Connect to both databases
-        $pdoNaity = createConnection(DB_NAITY);
-        $pdoShamSoft = createConnection(DB_SHAMSOFT);
+        $pdoNaity = createConnection(DB_NAITY_NAME, DB_NAITY_USER, DB_NAITY_PASS);
+        $pdoShamSoft = createConnection(DB_SHAMSOFT_NAME, DB_SHAMSOFT_USER, DB_SHAMSOFT_PASS);
         
         $successCount = 0;
         $errorCount = 0;
@@ -212,8 +219,8 @@ function syncReservations() {
         writeLog("✅ Found " . count($bookings) . " pending bookings");
         
         // Connect to both databases
-        $pdoNaity = createConnection(DB_NAITY);
-        $pdoShamSoft = createConnection(DB_SHAMSOFT);
+        $pdoNaity = createConnection(DB_NAITY_NAME, DB_NAITY_USER, DB_NAITY_PASS);
+        $pdoShamSoft = createConnection(DB_SHAMSOFT_NAME, DB_SHAMSOFT_USER, DB_SHAMSOFT_PASS);
         
         $successCount = 0;
         $errorCount = 0;
