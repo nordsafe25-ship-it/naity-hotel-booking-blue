@@ -15,19 +15,7 @@ const MobileAppSection = () => {
   return (
     <section className="py-16 bg-accent overflow-hidden">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
-          {/* Phone mockup */}
-          <motion.div initial={{ opacity: 0, x: lang === "ar" ? 40 : -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
-            className="relative shrink-0">
-            <div className="w-56 h-[420px] bg-accent-foreground/10 rounded-[2.5rem] border-4 border-accent-foreground/20 p-2 relative">
-              <div className="absolute top-3 inset-x-0 flex justify-center">
-                <div className="w-20 h-5 bg-accent-foreground/20 rounded-full" />
-              </div>
-              <div className="w-full h-full rounded-[2rem] bg-gradient-to-b from-primary/30 to-accent/50 flex items-center justify-center">
-                <Smartphone className="w-16 h-16 text-accent-foreground/40" />
-              </div>
-            </div>
-          </motion.div>
+        <div className="flex flex-col items-center gap-10">
 
           {/* Content */}
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
