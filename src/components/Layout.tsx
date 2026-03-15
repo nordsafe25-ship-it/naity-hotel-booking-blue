@@ -6,7 +6,7 @@ import CookieBanner from "./CookieBanner";
 const Layout = ({ children }: { children: ReactNode }) => (
   <div className="min-h-screen flex flex-col overflow-x-hidden">
     <Navbar />
-    <main className="flex-1">{children}</main>
+    <main className="flex-1 pt-16">{children}</main>
     <Footer />
     <CookieBanner />
   </div>
