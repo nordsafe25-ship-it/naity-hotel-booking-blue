@@ -263,7 +263,7 @@ const BookingForm = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 pb-8">
           {/* Main content */}
           <div className="lg:col-span-2">
             {/* Step 1: Guest Details */}
