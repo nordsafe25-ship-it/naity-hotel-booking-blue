@@ -124,11 +124,11 @@ const HotelsListing = () => {
         </motion.h1>
 
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Filters */}
+          {/* Sidebar Filters - hidden on mobile */}
           <motion.aside
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="lg:w-72 shrink-0 bg-card rounded-xl p-5 shadow-card border border-border/50 h-fit space-y-5"
+            className="hidden lg:block lg:w-72 shrink-0 bg-card rounded-xl p-5 shadow-card border border-border/50 h-fit space-y-5"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-foreground font-semibold">
