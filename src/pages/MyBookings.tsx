@@ -253,7 +253,7 @@ export default function MyBookings() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8 pb-20 max-w-2xl space-y-8">
+      <div className="container mx-auto px-4 py-8 pb-20 max-w-2xl space-y-8 overflow-x-hidden">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-3">
           <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
