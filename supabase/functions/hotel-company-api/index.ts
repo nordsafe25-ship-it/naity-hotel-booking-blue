@@ -88,19 +88,19 @@ Deno.serve(async (req) => {
         return json({ status: "error", message: "Hotel not found" }, 404);
       }
 
-      const roomNumber = String(RoomId);
+      const roomName = `Room ${RoomId}`;
       const isActive = Status === "Available";
 
-      // Check if room exists
+      // Check if room exists by hotel_id + name_en
       const { data: existingRoom } = await supabase
         .from("room_categories")
         .select("id")
         .eq("hotel_id", hotel.id)
-        .eq("name_en", `Room ${RoomId}`)
+        .eq("name_en", roomName)
         .maybeSingle();
 
       if (existingRoom) {
-        // Update
+        // Update existing room
         await supabase
           .from("room_categories")
           .update({
@@ -114,8 +114,10 @@ Deno.serve(async (req) => {
         // Insert new room category
         await supabase.from("room_categories").insert({
           hotel_id: hotel.id,
-          name_en: `Room ${RoomId}`,
+          name_en: roomName,
           name_ar: `غرفة ${RoomId}`,
+          description_en: `Synced from ${company.name}`,
+          description_ar: `مزامنة من ${company.name}`,
           price_per_night: Price,
           max_guests: Bed || 2,
           is_active: isActive,

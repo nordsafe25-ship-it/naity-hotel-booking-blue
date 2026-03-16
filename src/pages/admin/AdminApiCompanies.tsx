@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "./AdminLayout";
@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import {
   Plus, Copy, Eye, EyeOff, RefreshCw, Trash2, Edit, Plug, Loader2,
-  Hotel, Link2, Unlink, PackageOpen
+  Hotel, Link2, Unlink, PackageOpen, FileText
 } from "lucide-react";
 
 interface ApiCompany {
@@ -35,6 +35,17 @@ interface LinkedHotel {
   name_ar: string;
   city: string;
   external_hotel_id: number | null;
+}
+
+interface SyncLog {
+  id: string;
+  company_id: string;
+  hotel_id: string | null;
+  event_type: string;
+  payload: Record<string, unknown> | null;
+  status: string;
+  created_at: string;
+  api_companies: { name: string } | null;
 }
 
 function generateApiKey(name: string) {
@@ -86,12 +97,20 @@ export default function AdminApiCompanies() {
   const [linkExternalId, setLinkExternalId] = useState("");
   const [hotelsLoading, setHotelsLoading] = useState(false);
 
+  // Sync logs
+  const [syncLogs, setSyncLogs] = useState<SyncLog[]>([]);
+  const [syncLogsLoading, setSyncLogsLoading] = useState(true);
+  const [payloadDialogLog, setPayloadDialogLog] = useState<SyncLog | null>(null);
+
+  // Docs key selector
+  const [docsCompanyId, setDocsCompanyId] = useState<string>("");
+
   const apiEndpoint = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/hotel-company-api`;
 
   const fetchCompanies = async () => {
     setLoading(true);
     const { data: comps } = await supabase
-      .from("api_companies" as any)
+      .from("api_companies")
       .select("*")
       .order("created_at", { ascending: false });
 
@@ -101,16 +120,36 @@ export default function AdminApiCompanies() {
       .from("hotels")
       .select("id, company_id");
 
-    const enriched = (comps as any[]).map((c: any) => ({
+    const enriched = comps.map((c) => ({
       ...c,
-      hotels_count: (hotels || []).filter((h: any) => h.company_id === c.id).length,
+      hotels_count: (hotels || []).filter((h) => h.company_id === c.id).length,
     }));
 
     setCompanies(enriched);
     setLoading(false);
   };
 
-  useEffect(() => { fetchCompanies(); }, []);
+  const fetchSyncLogs = useCallback(async () => {
+    setSyncLogsLoading(true);
+    const { data } = await supabase
+      .from("api_sync_logs")
+      .select("*, api_companies(name)")
+      .order("created_at", { ascending: false })
+      .limit(20);
+    setSyncLogs((data as unknown as SyncLog[]) || []);
+    setSyncLogsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchCompanies();
+    fetchSyncLogs();
+  }, [fetchSyncLogs]);
+
+  // Auto-refresh sync logs every 30s
+  useEffect(() => {
+    const interval = setInterval(fetchSyncLogs, 30000);
+    return () => clearInterval(interval);
+  }, [fetchSyncLogs]);
 
   const fetchHotelsForCompany = async (companyId: string) => {
     setHotelsLoading(true);
@@ -118,8 +157,8 @@ export default function AdminApiCompanies() {
       supabase.from("hotels").select("id, name_en, name_ar, city, external_hotel_id").eq("company_id", companyId),
       supabase.from("hotels").select("id, name_en, name_ar, city, external_hotel_id").is("company_id", null),
     ]);
-    setLinkedHotels((linkedRes.data || []) as any);
-    setUnlinkedHotels((unlinkedRes.data || []) as any);
+    setLinkedHotels((linkedRes.data || []) as LinkedHotel[]);
+    setUnlinkedHotels((unlinkedRes.data || []) as LinkedHotel[]);
     setHotelsLoading(false);
   };
 
@@ -152,14 +191,14 @@ export default function AdminApiCompanies() {
 
     if (editingCompany) {
       await supabase
-        .from("api_companies" as any)
-        .update({ name: form.name, contact_email: form.contact_email || null, notes: form.notes || null, api_key: apiKey } as any)
+        .from("api_companies")
+        .update({ name: form.name, contact_email: form.contact_email || null, notes: form.notes || null, api_key: apiKey })
         .eq("id", editingCompany.id);
       toast({ title: isAr ? "تم تحديث الشركة" : "Company updated" });
     } else {
       await supabase
-        .from("api_companies" as any)
-        .insert({ name: form.name, contact_email: form.contact_email || null, notes: form.notes || null, api_key: apiKey } as any);
+        .from("api_companies")
+        .insert({ name: form.name, contact_email: form.contact_email || null, notes: form.notes || null, api_key: apiKey });
       toast({ title: t("api.addedToast") });
     }
 
@@ -170,14 +209,14 @@ export default function AdminApiCompanies() {
 
   const toggleStatus = async (c: ApiCompany) => {
     const newStatus = c.status === "active" ? "inactive" : "active";
-    await supabase.from("api_companies" as any).update({ status: newStatus } as any).eq("id", c.id);
+    await supabase.from("api_companies").update({ status: newStatus }).eq("id", c.id);
     toast({ title: isAr ? "تم تحديث الحالة" : "Status updated" });
     fetchCompanies();
   };
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
-    await supabase.from("api_companies" as any).delete().eq("id", deleteTarget.id);
+    await supabase.from("api_companies").delete().eq("id", deleteTarget.id);
     toast({ title: isAr ? "تم حذف الشركة" : "Company deleted" });
     setDeleteTarget(null);
     fetchCompanies();
@@ -205,7 +244,7 @@ export default function AdminApiCompanies() {
     if (!linkHotelId || !linkExternalId || !hotelsCompany) return;
     await supabase
       .from("hotels")
-      .update({ company_id: hotelsCompany.id, external_hotel_id: parseInt(linkExternalId) } as any)
+      .update({ company_id: hotelsCompany.id, external_hotel_id: parseInt(linkExternalId) })
       .eq("id", linkHotelId);
     toast({ title: isAr ? "تم ربط الفندق" : "Hotel linked" });
     setLinkHotelId("");
@@ -218,14 +257,13 @@ export default function AdminApiCompanies() {
     if (!hotelsCompany) return;
     await supabase
       .from("hotels")
-      .update({ company_id: null, external_hotel_id: null } as any)
+      .update({ company_id: null, external_hotel_id: null })
       .eq("id", hotelId);
     toast({ title: t("api.unlinkHotel") + " ✓" });
     fetchHotelsForCompany(hotelsCompany.id);
     fetchCompanies();
   };
 
-  // Update API key when name changes in create mode
   const handleNameChange = (name: string) => {
     setForm(f => {
       const newForm = { ...f, name };
@@ -235,6 +273,8 @@ export default function AdminApiCompanies() {
       return newForm;
     });
   };
+
+  const selectedDocsKey = companies.find(c => c.id === docsCompanyId)?.api_key || "sk_yourcompany_xxxxxx";
 
   return (
     <AdminLayout>
@@ -348,19 +388,98 @@ export default function AdminApiCompanies() {
           </div>
         )}
 
+        {/* Sync Logs Section */}
+        <div className="bg-card rounded-lg border border-border p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-foreground flex items-center gap-2">
+              <FileText className="w-4 h-4 text-primary" />
+              {isAr ? "سجلات المزامنة الأخيرة" : "Recent Sync Logs"}
+            </h3>
+            <Button variant="outline" size="sm" onClick={fetchSyncLogs}>
+              <RefreshCw className="w-3.5 h-3.5 me-1" />
+              {isAr ? "تحديث" : "Refresh"}
+            </Button>
+          </div>
+
+          {syncLogsLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-10 w-full" />)}
+            </div>
+          ) : syncLogs.length === 0 ? (
+            <p className="text-center text-muted-foreground py-6 text-sm">
+              {isAr ? "لا توجد سجلات بعد" : "No sync logs yet"}
+            </p>
+          ) : (
+            <div className="border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{isAr ? "الوقت" : "Time"}</TableHead>
+                    <TableHead>{isAr ? "الشركة" : "Company"}</TableHead>
+                    <TableHead>{isAr ? "النوع" : "Event"}</TableHead>
+                    <TableHead>{isAr ? "الحالة" : "Status"}</TableHead>
+                    <TableHead>{isAr ? "البيانات" : "Payload"}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {syncLogs.map(log => (
+                    <TableRow key={log.id}>
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                        {timeAgo(log.created_at, isAr)}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {log.api_companies?.name || "—"}
+                      </TableCell>
+                      <TableCell className="text-xs font-mono">{log.event_type}</TableCell>
+                      <TableCell>
+                        <Badge variant={log.status === "success" ? "default" : "destructive"}>
+                          {log.status === "success" ? (isAr ? "نجاح" : "Success") : (isAr ? "فشل" : "Failed")}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" onClick={() => setPayloadDialogLog(log)}>
+                          <Eye className="w-3.5 h-3.5 me-1" />
+                          {isAr ? "عرض" : "View"}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
+
         {/* API Documentation Card */}
         <div className="bg-card rounded-lg border border-border p-6 space-y-3">
           <h3 className="font-semibold text-foreground flex items-center gap-2">
             <Plug className="w-4 h-4 text-primary" />
             {t("api.howToConnect")}
           </h3>
+          {companies.length > 0 && (
+            <div className="max-w-xs">
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                {isAr ? "اختر شركة لعرض مفتاحها" : "Select company to show key"}
+              </label>
+              <Select value={docsCompanyId} onValueChange={setDocsCompanyId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={isAr ? "اختر شركة..." : "Select company..."} />
+                </SelectTrigger>
+                <SelectContent>
+                  {companies.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <pre className="text-xs bg-muted rounded-lg p-4 overflow-x-auto border border-border" dir="ltr">
 {`ENDPOINT:
 POST ${apiEndpoint}
 
 HEADERS:
 Content-Type: application/json
-X-API-KEY: sk_yourcompany_xxxxxx
+X-API-KEY: ${selectedDocsKey}
 
 BODY:
 {
@@ -377,7 +496,7 @@ RESPONSE:
           </pre>
           <Button variant="outline" size="sm" onClick={() => copyText(
 `POST ${apiEndpoint}
-Headers: Content-Type: application/json, X-API-KEY: sk_yourcompany_xxxxxx
+Headers: Content-Type: application/json, X-API-KEY: ${selectedDocsKey}
 Body: { "HotelId": 1, "RoomId": 101, "Price": 120, "Bed": 2, "Status": "Available", "YesToDate": "2026-04-01" }`
           )}>
             <Copy className="w-3.5 h-3.5 me-2" />
@@ -521,6 +640,23 @@ Body: { "HotelId": 1, "RoomId": 101, "Price": 120, "Bed": 2, "Status": "Availabl
             <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               {isAr ? "حذف" : "Delete"}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Payload Viewer Dialog */}
+      <AlertDialog open={!!payloadDialogLog} onOpenChange={open => !open && setPayloadDialogLog(null)}>
+        <AlertDialogContent className="max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{isAr ? "بيانات المزامنة" : "Sync Payload"}</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <pre className="text-xs bg-muted rounded-lg p-4 overflow-x-auto border border-border mt-2 whitespace-pre-wrap" dir="ltr">
+                {payloadDialogLog ? JSON.stringify(payloadDialogLog.payload, null, 2) : ""}
+              </pre>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{isAr ? "إغلاق" : "Close"}</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
