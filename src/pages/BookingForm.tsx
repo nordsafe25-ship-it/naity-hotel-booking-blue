@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { QRCodeSVG } from "qrcode.react";
 import { format } from "date-fns";
+import type { Tables } from "@/integrations/supabase/types";
 
 const DEPOSIT_PERCENT = 10;
 
