@@ -15,9 +15,9 @@ const HotelDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t, lang } = useI18n();
-  const [hotel, setHotel] = useState<any>(null);
-  const [photos, setPhotos] = useState<any[]>([]);
-  const [rooms, setRooms] = useState<any[]>([]);
+  const [hotel, setHotel] = useState<Tables<'hotels'> | null>(null);
+  const [photos, setPhotos] = useState<Tables<'hotel_photos'>[]>([]);
+  const [rooms, setRooms] = useState<Tables<'room_categories'>[]>([]);
   const [loading, setLoading] = useState(true);
   const [galleryIdx, setGalleryIdx] = useState(0);
 
