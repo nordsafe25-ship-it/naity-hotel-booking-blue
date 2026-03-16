@@ -32,6 +32,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     { to: "/admin/managers", icon: Users, label: lang === "ar" ? "مدراء الفنادق" : "Managers" },
     { to: "/admin/partners", icon: Handshake, label: lang === "ar" ? "شركاء التقنية" : "Tech Partners" },
     { to: "/admin/bookings", icon: BookOpen, label: lang === "ar" ? "سجل الحجوزات" : "Reservations" },
+    { to: "/admin/api-companies", icon: Globe, label: lang === "ar" ? "تكاملات API" : "API Integrations" },
     { to: "/admin/messages", icon: MessageSquare, label: lang === "ar" ? "الرسائل" : "Messages", badge: unreadCount },
     { to: "/admin/sync", icon: Activity, label: lang === "ar" ? "إعدادات المزامنة" : "Sync Settings" },
   ];
