@@ -311,7 +311,7 @@ const Contact = () => {
                 </div>
 
                 {/* WhatsApp */}
-                <a href="https://wa.me/963912345678" target="_blank" rel="noopener noreferrer"
+                <a href="https://wa.me/963988495629" target="_blank" rel="noopener noreferrer"
                    className="flex items-start gap-3 hover:opacity-80 transition group">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                        style={{ background: "#25D366" }}>
@@ -321,7 +321,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">{tx("واتساب", "WhatsApp")}</p>
-                    <p className="text-sm font-medium text-foreground group-hover:text-green-500 transition">+963 912 345 678</p>
+                    <p className="text-sm font-medium text-foreground group-hover:text-green-500 transition">+963 988 495 629</p>
                   </div>
                 </a>
 
@@ -399,7 +399,7 @@ const Contact = () => {
                 <h3 className="font-bold text-lg">{t("contact.hotelCta")}</h3>
                 <p className="text-sm text-accent-foreground/80">{t("contact.hotelCtaDesc")}</p>
                 <a
-                  href="https://wa.me/963912345678?text=مرحباً،%20أريد%20إضافة%20فندقي%20إلى%20Naity"
+                  href="https://wa.me/963988495629?text=مرحباً،%20أريد%20إضافة%20فندقي%20إلى%20Naity"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-opacity"
