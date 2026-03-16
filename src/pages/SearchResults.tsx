@@ -16,6 +16,7 @@ import { Slider } from "@/components/ui/slider";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
+import type { Tables } from "@/integrations/supabase/types";
 
 import { SYRIAN_MAIN_CITIES, ALLOWED_CITY_NAMES } from "@/lib/cities";
 
