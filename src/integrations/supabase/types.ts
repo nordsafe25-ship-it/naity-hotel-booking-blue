@@ -14,6 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_companies: {
+        Row: {
+          api_key: string
+          contact_email: string | null
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          status: string
+        }
+        Insert: {
+          api_key: string
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          status?: string
+        }
+        Update: {
+          api_key?: string
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      api_sync_logs: {
+        Row: {
+          company_id: string
+          created_at: string
+          event_type: string
+          hotel_id: string | null
+          id: string
+          payload: Json | null
+          status: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          event_type: string
+          hotel_id?: string | null
+          id?: string
+          payload?: Json | null
+          status?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          event_type?: string
+          hotel_id?: string | null
+          id?: string
+          payload?: Json | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_sync_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "api_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_sync_logs_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blocked_dates: {
         Row: {
           blocked_date: string
@@ -241,6 +316,7 @@ export type Database = {
           check_in_time: string | null
           check_out_time: string | null
           city: string
+          company_id: string | null
           contact_email: string | null
           contact_phone: string | null
           cover_image: string | null
@@ -275,6 +351,7 @@ export type Database = {
           check_in_time?: string | null
           check_out_time?: string | null
           city: string
+          company_id?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           cover_image?: string | null
@@ -309,6 +386,7 @@ export type Database = {
           check_in_time?: string | null
           check_out_time?: string | null
           city?: string
+          company_id?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           cover_image?: string | null
@@ -335,6 +413,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "hotels_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "api_companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "hotels_tech_partner_id_fkey"
             columns: ["tech_partner_id"]
