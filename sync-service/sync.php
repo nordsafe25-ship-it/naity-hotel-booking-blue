@@ -14,8 +14,8 @@
 define('SECRET_KEY', 'naity_sync_rDqhMn85HXLcuiTBIaRt6vAmeKY3ClP2');
 
 // Supabase Configuration
-define('SUPABASE_URL', 'https://scmgtoqilbkakxikigtz.supabase.co');
-define('SUPABASE_SERVICE_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjbWd0b3FpbGJrYWt4aWtpZ3R6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjUzNTA3MywiZXhwIjoyMDg4MTExMDczfQ.EwRswaOkNiC9xZNhjB8vYg-WOR41GAuaobSGTxj3FKM');
+define('SUPABASE_URL', 'https://lfnvnxeymkhyzzsvadbp.supabase.co');
+define('SUPABASE_SERVICE_KEY', 'YOUR_SERVICE_ROLE_KEY_HERE'); // Get from lfnvnxeymkhyzzsvadbp project
 
 // MySQL Configuration (Namecheap Shared Server - 68.65.123.142)
 // Both databases are on the same server

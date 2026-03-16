@@ -84,10 +84,10 @@ try {
 
 // Test Supabase Connection
 try {
-    $url = 'https://scmgtoqilbkakxikigtz.supabase.co/rest/v1/hotels?select=count&limit=1';
+    $url = 'https://lfnvnxeymkhyzzsvadbp.supabase.co/rest/v1/hotels?select=count&limit=1';
     $headers = [
-        'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjbWd0b3FpbGJrYWt4aWtpZ3R6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjUzNTA3MywiZXhwIjoyMDg4MTExMDczfQ.EwRswaOkNiC9xZNhjB8vYg-WOR41GAuaobSGTxj3FKM',
-        'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjbWd0b3FpbGJrYWt4aWtpZ3R6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjUzNTA3MywiZXhwIjoyMDg4MTExMDczfQ.EwRswaOkNiC9xZNhjB8vYg-WOR41GAuaobSGTxj3FKM'
+        'apikey: YOUR_SERVICE_ROLE_KEY_HERE',
+        'Authorization: Bearer YOUR_SERVICE_ROLE_KEY_HERE'
     ];
     
     $ch = curl_init($url);
