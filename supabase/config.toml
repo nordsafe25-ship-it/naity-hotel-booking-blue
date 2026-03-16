@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.handle-hotel-api]
 verify_jwt = false
+
+[functions.hotel-company-api]
+verify_jwt = false

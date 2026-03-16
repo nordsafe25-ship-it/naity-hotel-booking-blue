@@ -189,6 +189,22 @@ const translations: Record<string, Record<Lang, string>> = {
 
   // ── HotelCard ─────────────────────────────────────
   "card.review": { ar: "تقييم", en: "reviews" },
+
+  // ── API Companies ─────────────────────────────────
+  "api.companies":    { ar: "شركات API",              en: "API Companies" },
+  "api.addCompany":   { ar: "إضافة شركة",              en: "Add Company" },
+  "api.apiKey":       { ar: "مفتاح API",               en: "API Key" },
+  "api.regenerate":   { ar: "إعادة توليد",             en: "Regenerate" },
+  "api.copyKey":      { ar: "نسخ المفتاح",             en: "Copy Key" },
+  "api.lastSync":     { ar: "آخر مزامنة",              en: "Last Sync" },
+  "api.linkHotel":    { ar: "ربط فندق",                en: "Link Hotel" },
+  "api.externalId":   { ar: "الرقم الخارجي للفندق",    en: "External Hotel ID" },
+  "api.linkedHotels": { ar: "فنادق مرتبطة",            en: "Linked Hotels" },
+  "api.endpoint":     { ar: "رابط الاتصال",            en: "API Endpoint" },
+  "api.howToConnect": { ar: "كيف تتصل الشركات؟",       en: "How to connect?" },
+  "api.addedToast":   { ar: "تم إضافة الشركة بنجاح",   en: "Company added!" },
+  "api.copiedToast":  { ar: "تم النسخ!",               en: "Copied!" },
+  "api.unlinkHotel":  { ar: "إلغاء الربط",             en: "Unlink" },
 };
 
 const I18nContext = createContext<I18nContextType | null>(null);

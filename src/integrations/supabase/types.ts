@@ -20,6 +20,7 @@ export type Database = {
           contact_email: string | null
           created_at: string
           id: string
+          last_sync_at: string | null
           name: string
           notes: string | null
           status: string
@@ -29,6 +30,7 @@ export type Database = {
           contact_email?: string | null
           created_at?: string
           id?: string
+          last_sync_at?: string | null
           name: string
           notes?: string | null
           status?: string
@@ -38,6 +40,7 @@ export type Database = {
           contact_email?: string | null
           created_at?: string
           id?: string
+          last_sync_at?: string | null
           name?: string
           notes?: string | null
           status?: string
@@ -323,6 +326,7 @@ export type Database = {
           created_at: string
           description_ar: string | null
           description_en: string | null
+          external_hotel_id: number | null
           floor: number | null
           house_rules_ar: string | null
           house_rules_en: string | null
@@ -358,6 +362,7 @@ export type Database = {
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
+          external_hotel_id?: number | null
           floor?: number | null
           house_rules_ar?: string | null
           house_rules_en?: string | null
@@ -393,6 +398,7 @@ export type Database = {
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
+          external_hotel_id?: number | null
           floor?: number | null
           house_rules_ar?: string | null
           house_rules_en?: string | null
