@@ -321,7 +321,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">{tx("واتساب", "WhatsApp")}</p>
-                    <p className="text-sm font-medium text-foreground group-hover:text-green-500 transition">+963 912 345 678</p>
+                    <p className="text-sm font-medium text-foreground group-hover:text-green-500 transition">+963 988 495 629</p>
                   </div>
                 </a>
 
