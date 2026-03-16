@@ -76,7 +76,6 @@ const App = () => (
               <Route path="/admin/messages" element={<ProtectedRoute requiredRole="admin"><AdminMessages /></ProtectedRoute>} />
               <Route path="/admin/partners" element={<ProtectedRoute requiredRole="admin"><AdminPartners /></ProtectedRoute>} />
               <Route path="/admin/api-companies" element={<ProtectedRoute requiredRole="admin"><AdminApiCompanies /></ProtectedRoute>} />
-              <Route path="/admin/api-companies/:id/logs" element={<ProtectedRoute requiredRole="admin"><AdminApiLogs /></ProtectedRoute>} />
 
               {/* Hotel Manager */}
               <Route path="/hotel-panel" element={<ProtectedRoute requiredRole="hotel_manager"><HotelPanel /></ProtectedRoute>} />
