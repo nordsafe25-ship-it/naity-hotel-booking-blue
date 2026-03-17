@@ -72,6 +72,8 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
     bathrooms: (hotel as any).bathrooms ?? 1,
     area_sqm: (hotel as any).area_sqm ?? null,
     tech_partner_id: (hotel as any).tech_partner_id ?? null,
+    company_id: (hotel as any).company_id ?? null,
+    external_hotel_id: (hotel as any).external_hotel_id ?? "",
   });
 
   const toggleAmenity = (key: string) => {
