@@ -204,6 +204,31 @@ const AdminHotels = () => {
                     ))}
                   </select>
                 </div>
+                {/* API Company */}
+                <div>
+                  <Label>{lang === "ar" ? "شركة إدارة الفندق (API)" : "Hotel API Company"}</Label>
+                  <select
+                    value={(form as any).company_id ?? ""}
+                    onChange={e => setForm(f => ({ ...f, company_id: e.target.value || null }))}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">{lang === "ar" ? "— بدون API —" : "— No API —"}</option>
+                    {apiCompanies.map((c: any) => (
+                      <option key={c.id} value={c.id}>{lang === "ar" ? (c.name_ar || c.name) : c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                {(form as any).company_id && (
+                  <div>
+                    <Label>{lang === "ar" ? "رقم الفندق في نظام الشركة" : "Hotel ID in Company System"}</Label>
+                    <Input
+                      type="number"
+                      value={(form as any).external_hotel_id ?? ""}
+                      onChange={e => setForm(f => ({ ...f, external_hotel_id: e.target.value ? +e.target.value : null }))}
+                      placeholder={lang === "ar" ? "مثال: 42" : "e.g. 42"}
+                    />
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>{tx("هاتف التواصل", "Contact Phone")}</Label>
