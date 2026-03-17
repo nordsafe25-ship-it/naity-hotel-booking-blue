@@ -180,6 +180,7 @@ function BookingCard({ b, lang, tx, expandedId, setExpandedId, copiedId, copy, o
 
 export default function MyBookings() {
   const { lang } = useI18n();
+  const queryClient = useQueryClient();
   const tx = (ar: string, en: string) => lang === "ar" ? ar : en;
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
