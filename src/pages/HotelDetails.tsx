@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Star, MapPin, Users, Check, ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Calendar, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getRoomsByHotel } from "@/services";
 import Layout from "@/components/Layout";
 import { useI18n } from "@/lib/i18n";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -90,14 +91,9 @@ const HotelDetails = () => {
         }
       }
 
-      // Try room_availability first (for API-synced hotels)
-      const { data } = await supabase
-        .from("room_availability")
-        .select("*")
-        .eq("hotel_id", hotel.id)
-        .eq("status", "available");
-
-      setAvailableRooms(data ?? []);
+      // Use multi-provider API router (falls back to Supabase automatically)
+      const normalizedRooms = await getRoomsByHotel(hotel.id);
+      setAvailableRooms(normalizedRooms);
       setHasSearched(true);
       setAvailabilityLoading(false);
     };
