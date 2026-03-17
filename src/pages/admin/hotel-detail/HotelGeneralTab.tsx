@@ -38,6 +38,18 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
     },
   });
 
+  const { data: apiCompanies = [] } = useQuery({
+    queryKey: ["api-companies-list"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("api_companies")
+        .select("id, name, name_ar")
+        .eq("status", "active")
+        .order("name");
+      return data ?? [];
+    },
+  });
+
   const [form, setForm] = useState({
     name_en: hotel.name_en,
     name_ar: hotel.name_ar,
