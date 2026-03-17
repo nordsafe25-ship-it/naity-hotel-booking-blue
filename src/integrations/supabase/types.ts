@@ -17,33 +17,60 @@ export type Database = {
       api_companies: {
         Row: {
           api_key: string
+          api_token: string | null
+          auth_type: string | null
+          base_url: string
           contact_email: string | null
+          contact_phone: string | null
           created_at: string
+          get_rooms_path: string | null
           id: string
           last_sync_at: string | null
           name: string
+          name_ar: string | null
           notes: string | null
+          password: string | null
+          post_booking_path: string | null
           status: string
+          username: string | null
         }
         Insert: {
           api_key: string
+          api_token?: string | null
+          auth_type?: string | null
+          base_url?: string
           contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
+          get_rooms_path?: string | null
           id?: string
           last_sync_at?: string | null
           name: string
+          name_ar?: string | null
           notes?: string | null
+          password?: string | null
+          post_booking_path?: string | null
           status?: string
+          username?: string | null
         }
         Update: {
           api_key?: string
+          api_token?: string | null
+          auth_type?: string | null
+          base_url?: string
           contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
+          get_rooms_path?: string | null
           id?: string
           last_sync_at?: string | null
           name?: string
+          name_ar?: string | null
           notes?: string | null
+          password?: string | null
+          post_booking_path?: string | null
           status?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -51,28 +78,40 @@ export type Database = {
         Row: {
           company_id: string
           created_at: string
+          direction: string | null
+          error_msg: string | null
           event_type: string
           hotel_id: string | null
           id: string
           payload: Json | null
+          request_url: string | null
+          response: Json | null
           status: string
         }
         Insert: {
           company_id: string
           created_at?: string
+          direction?: string | null
+          error_msg?: string | null
           event_type: string
           hotel_id?: string | null
           id?: string
           payload?: Json | null
+          request_url?: string | null
+          response?: Json | null
           status?: string
         }
         Update: {
           company_id?: string
           created_at?: string
+          direction?: string | null
+          error_msg?: string | null
           event_type?: string
           hotel_id?: string | null
           id?: string
           payload?: Json | null
+          request_url?: string | null
+          response?: Json | null
           status?: string
         }
         Relationships: [
