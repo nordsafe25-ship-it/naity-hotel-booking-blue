@@ -98,7 +98,7 @@ const PartnerDashboard = () => {
       const hList = hData ?? [];
       setHotels(hList);
 
-      if (!hList.length) { setLoading(false); return; }
+      if (!hList.length) { setLoading(false); setNoHotels(true); return; }
 
       // 3. Bookings
       const hotelIds = hList.map(h => h.id);
