@@ -91,14 +91,9 @@ const HotelDetails = () => {
         }
       }
 
-      // Try room_availability first (for API-synced hotels)
-      const { data } = await supabase
-        .from("room_availability")
-        .select("*")
-        .eq("hotel_id", hotel.id)
-        .eq("status", "available");
-
-      setAvailableRooms(data ?? []);
+      // Use multi-provider API router (falls back to Supabase automatically)
+      const normalizedRooms = await getRoomsByHotel(hotel.id);
+      setAvailableRooms(normalizedRooms);
       setHasSearched(true);
       setAvailabilityLoading(false);
     };
