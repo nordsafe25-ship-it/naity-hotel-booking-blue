@@ -6,7 +6,7 @@ import FeaturedHotels from "@/components/home/FeaturedHotels";
 import WhyBookSection from "@/components/home/WhyBookSection";
 import CustomerReviews from "@/components/home/CustomerReviews";
 import HowItWorksSection from "@/components/home/HowItWorksSection";
-import MobileAppSection from "@/components/home/MobileAppSection";
+
 import TrustSection from "@/components/home/TrustSection";
 import FinalCTA from "@/components/home/FinalCTA";
 import { useI18n } from "@/lib/i18n";
@@ -50,7 +50,7 @@ const Index = () => {
       <WhyBookSection />
       {/* <CustomerReviews /> */}
       <HowItWorksSection />
-      <MobileAppSection />
+      
       {/* <TrustSection /> */}
       <FinalCTA />
     </Layout>
