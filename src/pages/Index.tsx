@@ -50,7 +50,7 @@ const Index = () => {
       <WhyBookSection />
       {/* <CustomerReviews /> */}
       <HowItWorksSection />
-      <MobileAppSection />
+      
       {/* <TrustSection /> */}
       <FinalCTA />
     </Layout>
