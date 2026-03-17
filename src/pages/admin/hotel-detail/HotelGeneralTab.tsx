@@ -283,6 +283,44 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
               : "Select the tech company managing this property — used for commission tracking"}
           </p>
         </div>
+
+        {/* API Company */}
+        <div>
+          <Label>
+            {lang === "ar" ? "شركة إدارة الفندق (API)" : "Hotel API Company"}
+          </Label>
+          <select
+            value={form.company_id ?? ""}
+            onChange={e => setForm(f => ({ ...f, company_id: e.target.value || null }))}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">
+              {lang === "ar" ? "— بدون API —" : "— No API —"}
+            </option>
+            {apiCompanies.map((c: any) => (
+              <option key={c.id} value={c.id}>
+                {lang === "ar" ? (c.name_ar || c.name) : c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {form.company_id && (
+          <div>
+            <Label>
+              {lang === "ar" ? "رقم الفندق في نظام الشركة" : "Hotel ID in Company System"}
+            </Label>
+            <Input
+              type="number"
+              value={form.external_hotel_id}
+              onChange={e => setForm(f => ({ ...f, external_hotel_id: e.target.value ? +e.target.value : null }))}
+              placeholder={lang === "ar" ? "مثال: 42" : "e.g. 42"}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              {lang === "ar" ? "الرقم المستخدم في API الشركة لتعريف هذا الفندق" : "The hotel ID used in the company's API"}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Amenities */}

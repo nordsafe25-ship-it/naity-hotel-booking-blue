@@ -384,6 +384,28 @@ Deno.serve(async (req) => {
     }
     // ── End Hotel Notification ───────────────────────────
 
+    // ── Post-payment: Send to API Company if linked ──────
+    const hotelData = booking.hotels as Record<string, unknown> | null;
+    if (hotelData?.company_id) {
+      try {
+        await fetch(`${APP_SUPABASE_URL}/functions/v1/api-company-sync`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${SERVICE_KEY}`,
+          },
+          body: JSON.stringify({
+            action: "send_booking",
+            company_id: hotelData.company_id,
+            booking_id: bookingId,
+          }),
+        });
+      } catch (apiSyncErr) {
+        console.error("API company booking sync failed:", apiSyncErr);
+      }
+    }
+    // ── End API Company Sync ─────────────────────────────
+
     if (hotelEmail) {
       const hotelEmailHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#ffffff;font-family:Arial,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto">
