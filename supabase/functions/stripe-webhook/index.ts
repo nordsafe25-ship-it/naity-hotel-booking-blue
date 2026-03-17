@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
         stripe_payment_id: session.id,
       })
       .eq("id", bookingId)
-      .select("*, hotels(name_ar,name_en,city,address,contact_email,property_type), room_categories(name_ar,name_en)")
+      .select("*, hotels(name_ar,name_en,city,address,contact_email,property_type,company_id,external_hotel_id), room_categories(name_ar,name_en)")
       .single();
 
     if (!booking) return new Response("Booking not found", { status: 404 });
