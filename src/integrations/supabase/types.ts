@@ -850,7 +850,7 @@ export type Database = {
       unlist_stale_rooms: { Args: never; Returns: undefined }
     }
     Enums: {
-      app_role: "admin" | "hotel_manager"
+      app_role: "admin" | "hotel_manager" | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -978,7 +978,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "hotel_manager"],
+      app_role: ["admin", "hotel_manager", "viewer"],
     },
   },
 } as const

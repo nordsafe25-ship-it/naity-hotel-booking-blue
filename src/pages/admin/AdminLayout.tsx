@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import naityLogo from "@/assets/naity-logo.png";
 import {
   Hotel, Users, BookOpen, LogOut, LayoutDashboard, Settings,
-  Menu, X, Globe, ChevronLeft, Activity, MessageSquare, Handshake, Plug
+  Menu, X, Globe, ChevronLeft, Activity, MessageSquare, Handshake, Plug, UserCog
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -34,6 +34,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     { to: "/admin/bookings", icon: BookOpen, label: lang === "ar" ? "سجل الحجوزات" : "Reservations" },
     { to: "/admin/api-companies", icon: Plug, label: lang === "ar" ? "شركات API" : "API Companies" },
     { to: "/admin/messages", icon: MessageSquare, label: lang === "ar" ? "الرسائل" : "Messages", badge: unreadCount },
+    { to: "/admin/users", icon: UserCog, label: lang === "ar" ? "المستخدمون" : "Users" },
     { to: "/admin/sync", icon: Activity, label: lang === "ar" ? "إعدادات المزامنة" : "Sync Settings" },
   ];
 

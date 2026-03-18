@@ -32,6 +32,7 @@ import AdminSync from "./pages/admin/AdminSync";
 import AdminMessages from "./pages/admin/AdminMessages";
 import AdminPartners from "./pages/admin/AdminPartners";
 import AdminApiCompanies from "./pages/admin/AdminApiCompanies";
+import AdminUsers from "./pages/admin/AdminUsers";
 import HotelPanel from "./pages/hotel/HotelPanel";
 import PartnerDashboard from "./pages/partner/PartnerDashboard";
 
@@ -76,6 +77,7 @@ const App = () => (
               <Route path="/admin/messages" element={<ProtectedRoute requiredRole="admin"><AdminMessages /></ProtectedRoute>} />
               <Route path="/admin/partners" element={<ProtectedRoute requiredRole="admin"><AdminPartners /></ProtectedRoute>} />
               <Route path="/admin/api-companies" element={<ProtectedRoute requiredRole="admin"><AdminApiCompanies /></ProtectedRoute>} />
+              <Route path="/admin/users" element={<ProtectedRoute requiredRole="admin"><AdminUsers /></ProtectedRoute>} />
 
               {/* Hotel Manager */}
               <Route path="/hotel-panel" element={<ProtectedRoute requiredRole="hotel_manager"><HotelPanel /></ProtectedRoute>} />

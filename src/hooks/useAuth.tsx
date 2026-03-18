@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  role: "admin" | "hotel_manager" | null;
+  role: "admin" | "hotel_manager" | "viewer" | null;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [role, setRole] = useState<"admin" | "hotel_manager" | null>(null);
+  const [role, setRole] = useState<"admin" | "hotel_manager" | "viewer" | null>(null);
 
   const fetchRole = async (userId: string) => {
     try {
