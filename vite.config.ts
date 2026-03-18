@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [],
   esbuild: {
     jsx: "automatic",
+    jsxImportSource: "react",
   },
   resolve: {
     alias: {
