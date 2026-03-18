@@ -19,6 +19,7 @@
     "sync:health": "tsx sync-service/health-check.ts"
   },
   "dependencies": {
+    "@alloc/quick-lru": "^5.2.0",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
