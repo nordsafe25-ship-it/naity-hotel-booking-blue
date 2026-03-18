@@ -241,6 +241,16 @@ export default function AdminApiCompanies() {
     } else {
       await supabase.from("api_companies").insert(payload as any);
       toast({ title: isAr ? "تم إضافة الشركة" : "Company added" });
+      supabase.functions.invoke("send-admin-notification", {
+        body: {
+          type: "new_company",
+          data: {
+            name: form.name,
+            base_url: form.base_url,
+            auth_type: form.auth_type,
+          },
+        },
+      }).catch((e) => console.error("Company notification failed:", e));
     }
 
     setSaving(false);

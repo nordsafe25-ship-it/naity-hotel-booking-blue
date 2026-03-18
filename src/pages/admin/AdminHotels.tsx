@@ -77,6 +77,19 @@ const AdminHotels = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-hotels"] });
       toast.success(editing ? tx("تم تحديث الفندق", "Hotel updated") : tx("تم إضافة الفندق", "Hotel added"));
+      if (!editing) {
+        supabase.functions.invoke("send-admin-notification", {
+          body: {
+            type: "new_hotel",
+            data: {
+              name_en: form.name_en,
+              name_ar: form.name_ar,
+              city: form.city,
+              property_type: form.property_type ?? "hotel",
+            },
+          },
+        }).catch((e) => console.error("Hotel notification failed:", e));
+      }
       setOpen(false);
       resetForm();
     },
