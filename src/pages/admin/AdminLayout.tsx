@@ -34,6 +34,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     { to: "/admin/bookings", icon: BookOpen, label: lang === "ar" ? "سجل الحجوزات" : "Reservations" },
     { to: "/admin/api-companies", icon: Plug, label: lang === "ar" ? "شركات API" : "API Companies" },
     { to: "/admin/messages", icon: MessageSquare, label: lang === "ar" ? "الرسائل" : "Messages", badge: unreadCount },
+    { to: "/admin/users", icon: UserCog, label: lang === "ar" ? "المستخدمون" : "Users" },
     { to: "/admin/sync", icon: Activity, label: lang === "ar" ? "إعدادات المزامنة" : "Sync Settings" },
   ];
 
