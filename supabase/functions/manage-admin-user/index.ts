@@ -45,32 +45,47 @@ Deno.serve(async (req) => {
     const { action, email, password, role, user_id, full_name } = body;
 
     if (action === "create") {
-      if (!email || !password || !role)
-        return json({ error: "email, password and role are required" }, 400);
+      if (!email || !role)
+        return json({ error: "email and role are required" }, 400);
 
+      let userId: string;
+
+      // Try to create a new user first
       const { data: authData, error: authErr } =
         await supabase.auth.admin.createUser({
           email,
-          password,
+          password: password || crypto.randomUUID(),
           email_confirm: true,
           user_metadata: { full_name: full_name || "" },
         });
 
       if (authErr) {
-        const status = authErr.message.toLowerCase().includes("already") ? 409 : 400;
-        return json({ error: authErr.message }, status);
+        // If user already exists, look them up and assign the role
+        if (authErr.message.toLowerCase().includes("already")) {
+          const { data: usersData } = await supabase.auth.admin.listUsers();
+          const existing = usersData?.users?.find(
+            (u: any) => u.email?.toLowerCase() === email.toLowerCase()
+          );
+          if (!existing) return json({ error: "User exists but could not be found" }, 500);
+          userId = existing.id;
+        } else {
+          return json({ error: authErr.message }, 400);
+        }
+      } else {
+        userId = authData.user.id;
       }
 
       const { error: roleErr } = await supabase
         .from("user_roles")
-        .upsert({ user_id: authData.user.id, role });
+        .upsert({ user_id: userId, role });
 
       if (roleErr) {
-        await supabase.auth.admin.deleteUser(authData.user.id);
+        // Only delete user if we just created them
+        if (authData?.user) await supabase.auth.admin.deleteUser(userId);
         return json({ error: roleErr.message }, 500);
       }
 
-      return json({ success: true, user_id: authData.user.id, email });
+      return json({ success: true, user_id: userId, email });
     }
 
     if (action === "update_role") {
