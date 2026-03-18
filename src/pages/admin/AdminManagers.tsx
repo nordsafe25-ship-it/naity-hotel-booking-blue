@@ -61,7 +61,7 @@ const AdminManagers = () => {
 
   const createManager = useMutation({
     mutationFn: async () => {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      const { data: sessionData, error: sessionError } = await (supabase.auth as any).getSession();
       if (sessionError) throw new Error(sessionError.message);
 
       const token = sessionData?.session?.access_token;

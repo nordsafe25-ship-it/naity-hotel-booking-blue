@@ -29,7 +29,7 @@ const Login = () => {
     }
 
     // Check if partner user → redirect to /partner
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await (supabase.auth as any).getUser();
     if (user) {
       const { data: partnerRow } = await supabase
         .from("partner_users")

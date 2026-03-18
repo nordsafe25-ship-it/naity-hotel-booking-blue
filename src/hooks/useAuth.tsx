@@ -1,10 +1,12 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
+type UserType = any;
+type SessionType = any;
+
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
+  user: UserType;
+  session: SessionType;
   loading: boolean;
   role: "admin" | "hotel_manager" | "viewer" | null;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -15,8 +17,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<UserType>(null);
+  const [session, setSession] = useState<SessionType>(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<"admin" | "hotel_manager" | "viewer" | null>(null);
 
@@ -36,15 +38,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    (supabase.auth as any).getSession().then(({ data: { session } }: any) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) fetchRole(session.user.id);
       else setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+    const { data: { subscription } } = (supabase.auth as any).onAuthStateChange(
+      (_event: any, session: any) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
@@ -60,12 +62,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await (supabase.auth as any).signInWithPassword({ email, password });
     return { error: error as Error | null };
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    const { error } = await supabase.auth.signUp({
+    const { error } = await (supabase.auth as any).signUp({
       email,
       password,
       options: {
@@ -77,7 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await (supabase.auth as any).signOut();
   };
 
   return (
