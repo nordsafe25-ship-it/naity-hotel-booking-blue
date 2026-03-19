@@ -122,6 +122,8 @@ Deno.serve(async (req) => {
       return jsonResponse(400, { error: "Password must be at least 6 characters" });
     }
 
+    let managerUserId: string;
+
     const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -129,12 +131,29 @@ Deno.serve(async (req) => {
       user_metadata: { full_name: fullName },
     });
 
-    if (createError || !userData.user?.id) {
-      console.error("Failed to create manager user", { message: createError?.message, email });
-      return jsonResponse(400, { error: createError?.message ?? "Failed to create manager user" });
+    if (createError) {
+      // If user already exists, look them up and reuse their ID
+      if (createError.message?.includes("already been registered")) {
+        const { data: listData, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+        if (listError) {
+          console.error("Failed to list users", { message: listError.message });
+          return jsonResponse(500, { error: "Failed to look up existing user" });
+        }
+        const existingUser = listData.users.find((u: any) => u.email === email);
+        if (!existingUser) {
+          return jsonResponse(400, { error: "User exists but could not be found" });
+        }
+        managerUserId = existingUser.id;
+        console.log("Using existing user", { managerUserId, email });
+      } else {
+        console.error("Failed to create manager user", { message: createError.message, email });
+        return jsonResponse(400, { error: createError.message });
+      }
+    } else if (!userData.user?.id) {
+      return jsonResponse(400, { error: "Failed to create manager user" });
+    } else {
+      managerUserId = userData.user.id;
     }
-
-    const managerUserId = userData.user.id;
 
     const { error: roleError } = await supabaseAdmin.from("user_roles").insert({
       user_id: managerUserId,
