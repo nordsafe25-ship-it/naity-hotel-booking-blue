@@ -474,6 +474,18 @@ const BookingForm = () => {
                       )}
                     </p>
                   )}
+                  {actualChildren >= 3 && !supervisorOk && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
+                      <p className="font-semibold">⚠️ {tx("يجب وجود بالغ مشرف","Supervising adult required")}</p>
+                      <p>{tx(
+                        `${actualChildren} أطفال يتطلبون ${requiredAdults} بالغ. لديك ${effectiveAdults}.`,
+                        `${actualChildren} children require ${requiredAdults} adult(s). You have ${effectiveAdults}.`
+                      )}</p>
+                      <p className="text-xs text-red-500 mt-1">
+                        {tx("القاعدة: بالغ واحد لكل 3 أطفال","Rule: 1 adult per 3 children (under 14)")}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Extra room suggestion */}
