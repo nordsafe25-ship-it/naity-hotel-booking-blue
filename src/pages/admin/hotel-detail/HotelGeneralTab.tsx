@@ -74,6 +74,11 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
     tech_partner_id: (hotel as any).tech_partner_id ?? null,
     company_id: (hotel as any).company_id ?? null,
     external_hotel_id: (hotel as any).external_hotel_id ?? "",
+    breakfast_available: (hotel as any).breakfast_available ?? false,
+    breakfast_type: (hotel as any).breakfast_type ?? "none",
+    breakfast_season_start: (hotel as any).breakfast_season_start ?? "",
+    breakfast_season_end: (hotel as any).breakfast_season_end ?? "",
+    breakfast_price: (hotel as any).breakfast_price ?? 0,
   });
 
   const toggleAmenity = (key: string) => {
