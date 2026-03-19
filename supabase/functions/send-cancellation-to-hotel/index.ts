@@ -34,8 +34,10 @@ Deno.serve(async (req) => {
 
     if (!booking) throw new Error("Booking not found");
 
+    const isApartment = (booking.hotels as any)?.property_type === "apartment";
+
     // Unblock dates for apartments on cancellation
-    if ((booking.hotels as any)?.property_type === "apartment") {
+    if (isApartment) {
       await supabase
         .from("blocked_dates")
         .delete()
@@ -58,6 +60,38 @@ Deno.serve(async (req) => {
     }
 
     const peak = isPeakSeason(booking.check_in);
+    const depositAmount = Number(booking.deposit_amount ?? 0);
+
+    // Calculate refund based on property type
+    let refundAmount = 0;
+    let depositRefunded = false;
+    let reason = "";
+
+    if (peak) {
+      reason = "Peak season cancellation — no refund policy applied";
+    } else if (isApartment) {
+      const h = (new Date(booking.check_in).getTime() - Date.now()) / 3600000;
+      if (h >= 72) {
+        refundAmount = depositAmount; depositRefunded = true;
+        reason = "Apartment off-peak cancellation 72h+ — full deposit refunded";
+      } else if (h >= 48) {
+        refundAmount = Math.round(depositAmount * 0.5); depositRefunded = true;
+        reason = "Apartment off-peak cancellation 48-72h — 50% deposit refunded";
+      } else {
+        reason = "Apartment cancellation <48h — no refund";
+      }
+    } else {
+      const h = (new Date(booking.check_in).getTime() - Date.now()) / 3600000;
+      if (h >= 48) {
+        refundAmount = depositAmount; depositRefunded = true;
+        reason = "Hotel off-peak cancellation 48h+ — full deposit refunded";
+      } else if (h >= 24) {
+        refundAmount = Math.round(depositAmount * 0.5); depositRefunded = true;
+        reason = "Hotel off-peak cancellation 24-48h — 50% deposit refunded";
+      } else {
+        reason = "Hotel cancellation <24h — no refund";
+      }
+    }
 
     const payload = {
       booking_reference: booking.transaction_hash,
@@ -65,21 +99,18 @@ Deno.serve(async (req) => {
       check_in: booking.check_in,
       check_out: booking.check_out,
       cancelled_at: new Date().toISOString(),
-
       guest: {
         first_name: booking.guest_first_name,
         last_name: booking.guest_last_name,
         email: booking.guest_email,
         phone: booking.guest_phone ?? null,
       },
-
       refund: {
         is_peak_season: peak,
-        deposit_refunded: !peak,
-        amount_refunded: peak ? 0 : booking.deposit_amount,
-        reason: peak
-          ? "Peak season cancellation — no refund policy applied"
-          : "Off-peak cancellation — full deposit refunded to guest",
+        is_apartment: isApartment,
+        deposit_refunded: depositRefunded,
+        amount_refunded: refundAmount,
+        reason,
       },
     };
 
@@ -96,7 +127,7 @@ Deno.serve(async (req) => {
     await supabase.from("webhook_logs").insert({
       hotel_id: booking.hotel_id,
       event_type: "cancellation_sent_to_hotel",
-      payload: { booking_reference: booking.transaction_hash, refunded: !peak },
+      payload: { booking_reference: booking.transaction_hash, refunded: depositRefunded, is_apartment: isApartment },
       status: hotelRes.ok ? "sent" : "failed",
     });
 

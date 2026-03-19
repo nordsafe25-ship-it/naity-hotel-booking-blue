@@ -21,17 +21,35 @@ const isPeakSeason = (dateStr: string): boolean => {
   return false;
 };
 
-const getRefundAmount = (depositAmount: number, checkIn: string, peak: boolean) => {
+const getRefundAmount = (depositAmount: number, checkIn: string, peak: boolean, isApartment: boolean) => {
   if (peak) return { refundAmount: 0, refundPercent: 0,
-    policyAr: "موسم الذروة: لا يوجد استرداد للعربون.",
-    policyEn: "Peak season: No deposit refund." };
+    policyAr: "لا يوجد استرداد خلال موسم الصيف (15 يونيو - 15 سبتمبر)",
+    policyEn: "No refund during summer season (June 15 - September 15)" };
+
   const h = (new Date(checkIn).getTime() - Date.now()) / 3600000;
+
+  if (isApartment) {
+    if (h >= 72) return { refundAmount: depositAmount, refundPercent: 100,
+      policyAr: "استرداد كامل — الإلغاء قبل 72 ساعة من الوصول",
+      policyEn: "Full refund — cancelled 72+ hours before check-in" };
+    if (h >= 48) return { refundAmount: Math.round(depositAmount * 0.5), refundPercent: 50,
+      policyAr: "استرداد 50% — الإلغاء بين 48-72 ساعة قبل الوصول",
+      policyEn: "50% refund — cancelled 48-72 hours before check-in" };
+    return { refundAmount: 0, refundPercent: 0,
+      policyAr: "لا استرداد — الإلغاء أقل من 48 ساعة قبل الوصول",
+      policyEn: "No refund — cancelled less than 48 hours before check-in" };
+  }
+
+  // Hotel policy
   if (h >= 48) return { refundAmount: depositAmount, refundPercent: 100,
-    policyAr: "استرداد كامل للعربون.", policyEn: "Full deposit refund." };
+    policyAr: "استرداد كامل — الإلغاء قبل 48 ساعة من الوصول",
+    policyEn: "Full refund — cancelled 48+ hours before check-in" };
   if (h >= 24) return { refundAmount: Math.round(depositAmount * 0.5), refundPercent: 50,
-    policyAr: "استرداد 50% من العربون.", policyEn: "50% deposit refund." };
+    policyAr: "استرداد 50% — الإلغاء بين 24-48 ساعة قبل الوصول",
+    policyEn: "50% refund — cancelled 24-48 hours before check-in" };
   return { refundAmount: 0, refundPercent: 0,
-    policyAr: "لا يوجد استرداد (أقل من 24 ساعة).", policyEn: "No refund (less than 24 hours)." };
+    policyAr: "لا استرداد — الإلغاء أقل من 24 ساعة قبل الوصول",
+    policyEn: "No refund — cancelled less than 24 hours before check-in" };
 };
 
 async function sendEmail(to: string, subject: string, html: string) {
@@ -68,8 +86,9 @@ Deno.serve(async (req) => {
       { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const peak = isPeakSeason(booking.check_in);
+    const isApartment = (booking.hotels as any)?.property_type === "apartment";
     const depositAmount = Number(booking.deposit_amount ?? 0);
-    const { refundAmount, refundPercent, policyAr, policyEn } = getRefundAmount(depositAmount, booking.check_in, peak);
+    const { refundAmount, refundPercent, policyAr, policyEn } = getRefundAmount(depositAmount, booking.check_in, peak, isApartment);
 
     // Stripe refund
     let stripeRefundId: string | null = null;
@@ -97,7 +116,7 @@ Deno.serve(async (req) => {
       .eq("id", booking_id);
 
     // Unblock apartment dates
-    if ((booking.hotels as any)?.property_type === "apartment") {
+    if (isApartment) {
       await supabase.from("blocked_dates").delete()
         .eq("hotel_id", booking.hotel_id)
         .gte("blocked_date", booking.check_in)
@@ -137,6 +156,7 @@ Deno.serve(async (req) => {
       <tr><td style="padding:0;">
         <table width="100%" cellpadding="10" cellspacing="0" style="font-size:13px;">
           <tr style="border-bottom:1px solid #f0f0f0;"><td style="color:#888;">Hotel</td><td style="font-weight:700;color:#1a1a2e;">${hotelName}</td></tr>
+          <tr style="border-bottom:1px solid #f0f0f0;"><td style="color:#888;">Type</td><td style="font-weight:700;color:#1a1a2e;">${isApartment ? "🏠 Apartment" : "🏨 Hotel"}</td></tr>
           <tr style="border-bottom:1px solid #f0f0f0;"><td style="color:#888;">Check-in</td><td style="font-weight:700;color:#1a1a2e;">${checkInFmt}</td></tr>
           <tr style="border-bottom:1px solid #f0f0f0;"><td style="color:#888;">Check-out</td><td style="font-weight:700;color:#1a1a2e;">${checkOutFmt}</td></tr>
           <tr><td style="color:#888;">Deposit Paid</td><td style="font-weight:700;color:#1a1a2e;">$${depositAmount}</td></tr>
@@ -178,7 +198,8 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true, refunded: actualRefunded, refund_percent: refundPercent,
-      stripe_refund_id: stripeRefundId, policy_ar: policyAr, policy_en: policyEn, peak_season: peak,
+      stripe_refund_id: stripeRefundId, policy_ar: policyAr, policy_en: policyEn,
+      peak_season: peak, is_apartment: isApartment,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   } catch (err) {
