@@ -163,6 +163,54 @@ export type Database = {
           },
         ]
       }
+      booking_rooms: {
+        Row: {
+          booking_id: string
+          created_at: string
+          deposit_amount: number
+          guests_count: number
+          id: string
+          price_per_night: number
+          room_category_id: string | null
+          room_number: string | null
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          deposit_amount?: number
+          guests_count?: number
+          id?: string
+          price_per_night?: number
+          room_category_id?: string | null
+          room_number?: string | null
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          deposit_amount?: number
+          guests_count?: number
+          id?: string
+          price_per_night?: number
+          room_category_id?: string | null
+          room_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_rooms_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_rooms_room_category_id_fkey"
+            columns: ["room_category_id"]
+            isOneToOne: false
+            referencedRelation: "room_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           breakfast_included: boolean | null
