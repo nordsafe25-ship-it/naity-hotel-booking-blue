@@ -155,10 +155,10 @@ Deno.serve(async (req) => {
       managerUserId = userData.user.id;
     }
 
-    const { error: roleError } = await supabaseAdmin.from("user_roles").insert({
+    const { error: roleError } = await supabaseAdmin.from("user_roles").upsert({
       user_id: managerUserId,
       role: "hotel_manager",
-    });
+    }, { onConflict: "user_id,role" });
 
     if (roleError) {
       console.error("Failed to assign hotel_manager role", { message: roleError.message, managerUserId });
