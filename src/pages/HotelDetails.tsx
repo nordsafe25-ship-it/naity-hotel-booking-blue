@@ -221,23 +221,19 @@ const HotelDetails = () => {
 
         {/* Breakfast Info */}
         {(hotel as any).breakfast_available && (
-          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+          <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
             <span className="text-2xl">🍳</span>
             <div>
               <p className="font-semibold text-amber-800 text-sm">
-                {tx("الفطور متاح", "Breakfast Available")}
+                {tx("الفطور متاح ومتضمن في السعر", "Breakfast included in room rate")}
               </p>
-              <p className="text-xs text-amber-700">
-                {(hotel as any).breakfast_type === "all_year"
+              <p className="text-xs text-amber-700 mt-0.5">
+                {(hotel as any).breakfast_type === 'all_year'
                   ? tx("طوال السنة", "All year round")
                   : tx(
-                      `من ${(hotel as any).breakfast_season_start} إلى ${(hotel as any).breakfast_season_end}`,
-                      `${(hotel as any).breakfast_season_start} → ${(hotel as any).breakfast_season_end}`
-                    )
-                }
-                {" — "}
-                <strong>${(hotel as any).breakfast_price}</strong>
-                {tx(" / شخص / ليلة", " / person / night")}
+                      `خلال: ${(hotel as any).breakfast_season_start} → ${(hotel as any).breakfast_season_end}`,
+                      `Season: ${(hotel as any).breakfast_season_start} → ${(hotel as any).breakfast_season_end}`
+                    )}
               </p>
             </div>
           </div>
@@ -434,6 +430,11 @@ const HotelDetails = () => {
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Users className="w-4 h-4" /> {t("hotel.upTo")} {room.max_guests} {t("hotel.guests")}
                       </div>
+                      <span className="text-xs text-muted-foreground">
+                        👥 {tx(`يتسع لـ ${room.max_guests} أشخاص`, `Fits ${room.max_guests} guests`)}
+                        {" · "}
+                        {tx("الأطفال دون 14 مجاناً", "Children under 14 free")}
+                      </span>
 
                       {room.amenities && room.amenities.length > 0 && (
                         <div className="flex flex-wrap gap-1.5">
