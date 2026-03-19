@@ -57,7 +57,7 @@ const SearchResults = () => {
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<"all" | "hotel" | "apartment">("all");
   const [breakfastOnly, setBreakfastOnly] = useState(false);
 
-  const hasActiveFilters = city !== "" || starFilters.length > 0 || amenityFilters.length > 0 || instantOnly || priceRange[0] > 0 || priceRange[1] < 500 || propertyTypeFilter !== "all";
+  const hasActiveFilters = city !== "" || starFilters.length > 0 || amenityFilters.length > 0 || instantOnly || priceRange[0] > 0 || priceRange[1] < 500 || propertyTypeFilter !== "all" || breakfastOnly;
 
   useEffect(() => {
     const load = async () => {
