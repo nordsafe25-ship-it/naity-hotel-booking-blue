@@ -74,6 +74,11 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
     tech_partner_id: (hotel as any).tech_partner_id ?? null,
     company_id: (hotel as any).company_id ?? null,
     external_hotel_id: (hotel as any).external_hotel_id ?? "",
+    breakfast_available: (hotel as any).breakfast_available ?? false,
+    breakfast_type: (hotel as any).breakfast_type ?? "none",
+    breakfast_season_start: (hotel as any).breakfast_season_start ?? "",
+    breakfast_season_end: (hotel as any).breakfast_season_end ?? "",
+    breakfast_price: (hotel as any).breakfast_price ?? 0,
   });
 
   const toggleAmenity = (key: string) => {
@@ -319,6 +324,61 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
             <p className="text-xs text-muted-foreground mt-1">
               {lang === "ar" ? "الرقم المستخدم في API الشركة لتعريف هذا الفندق" : "The hotel ID used in the company's API"}
             </p>
+          </div>
+        )}
+      </div>
+
+      {/* Breakfast Section */}
+      <div className="bg-card rounded-xl p-6 border border-border/50 shadow-card space-y-4">
+        <h2 className="font-semibold text-foreground text-lg">
+          {tx("🍳 خدمة الفطور", "🍳 Breakfast Service")}
+        </h2>
+
+        <div className="space-y-2">
+          <Label>{tx("هل يقدم الفندق فطور؟", "Does the hotel offer breakfast?")}</Label>
+          <div className="flex flex-col gap-2">
+            {[
+              { val: "none", ar: "لا يوجد فطور", en: "No breakfast" },
+              { val: "all_year", ar: "فطور طوال السنة", en: "All year round" },
+              { val: "seasonal", ar: "فطور موسمي (حدد الفترة)", en: "Seasonal (specify period)" },
+            ].map(opt => (
+              <label key={opt.val} className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="breakfast_type"
+                  value={opt.val}
+                  checked={form.breakfast_type === opt.val}
+                  onChange={() => setForm(f => ({
+                    ...f,
+                    breakfast_type: opt.val,
+                    breakfast_available: opt.val !== "none",
+                  }))}
+                  className="accent-primary w-4 h-4"
+                />
+                <span className="text-sm text-foreground">{lang === "ar" ? opt.ar : opt.en}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {form.breakfast_type === "seasonal" && (
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>{tx("من تاريخ", "From date")}</Label>
+              <Input type="date" value={form.breakfast_season_start}
+                onChange={e => setForm(f => ({ ...f, breakfast_season_start: e.target.value }))} />
+            </div>
+            <div>
+              <Label>{tx("إلى تاريخ", "To date")}</Label>
+              <Input type="date" value={form.breakfast_season_end}
+                onChange={e => setForm(f => ({ ...f, breakfast_season_end: e.target.value }))} />
+            </div>
+          </div>
+        )}
+
+        {form.breakfast_type !== "none" && (
+          <div>
+            <Label>{tx("سعر الفطور / شخص / ليلة ($)", "Breakfast price / person / night ($)")}</Label>
+            <Input type="number" min={0} value={form.breakfast_price}
+              onChange={e => setForm(f => ({ ...f, breakfast_price: +e.target.value }))} />
           </div>
         )}
       </div>

@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Users, CreditCard,
          CheckCircle, FileText, Phone, Mail,
-         Globe, Shield, Calendar, MapPin } from "lucide-react";
+         Globe, Shield, Calendar, MapPin, Minus, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { toast } from "sonner";
@@ -110,6 +110,12 @@ const BookingForm = () => {
   const [specialRequests, setSpecialRequests] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
 
+  // Children ages
+  const [childrenAges, setChildrenAges] = useState<number[]>([]);
+
+  // Breakfast
+  const [breakfastIncluded, setBreakfastIncluded] = useState<boolean | null>(null);
+
   // Payment / Voucher
   const [processing, setProcessing] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
@@ -159,8 +165,34 @@ const BookingForm = () => {
     }
   }, []);
 
+  // Breakfast helpers
+  const breakfastAvailable = (hotel as any)?.breakfast_available;
+  const breakfastPrice = (hotel as any)?.breakfast_price ?? 0;
+
+  const isBreakfastInSeason = () => {
+    if (!breakfastAvailable) return false;
+    if ((hotel as any).breakfast_type === "all_year") return true;
+    if ((hotel as any).breakfast_type === "seasonal") {
+      const now = new Date();
+      const start = new Date((hotel as any).breakfast_season_start);
+      const end = new Date((hotel as any).breakfast_season_end);
+      const todayMD = now.getMonth() * 100 + now.getDate();
+      const startMD = start.getMonth() * 100 + start.getDate();
+      const endMD = end.getMonth() * 100 + end.getDate();
+      return todayMD >= startMD && todayMD <= endMD;
+    }
+    return false;
+  };
+
+  // Children 14+ count as adults
+  const adultsFromChildren = childrenAges.filter(age => age >= 14).length;
+  const effectiveAdults = guests + adultsFromChildren;
+  const actualChildren = childrenAges.filter(age => age < 14).length;
+
   const nights = checkIn && checkOut ? Math.max(1, Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000)) : 1;
-  const totalPrice = room ? room.price_per_night * nights : 0;
+  const roomPrice = room ? room.price_per_night : 0;
+  const breakfastTotal = breakfastIncluded ? breakfastPrice * effectiveAdults * nights : 0;
+  const totalPrice = roomPrice * nights + breakfastTotal;
   const depositAmount = Math.round(totalPrice * DEPOSIT_PERCENT / 100);
   const balanceDue = totalPrice - depositAmount;
 
@@ -177,7 +209,7 @@ const BookingForm = () => {
           guest_email: email,
           guest_phone: fullPhone,
           nationality,
-          guests_count: guests,
+          guests_count: effectiveAdults,
           check_in: checkIn,
           check_out: checkOut,
           nights,
@@ -187,6 +219,10 @@ const BookingForm = () => {
           room_number: roomNumberParam || null,
           hotel_name: lang === "ar" ? hotel?.name_ar : hotel?.name_en,
           room_name: lang === "ar" ? room?.name_ar : room?.name_en,
+          children_count: actualChildren,
+          children_ages: childrenAges,
+          breakfast_included: breakfastIncluded ?? false,
+          breakfast_total: breakfastTotal,
         },
       });
 
@@ -321,7 +357,7 @@ const BookingForm = () => {
                   </div>
                 </div>
 
-                {/* C) Nationality + D) Guests */}
+                {/* C) Nationality + D) Adults */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
@@ -342,7 +378,7 @@ const BookingForm = () => {
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
                       <Users className="w-3.5 h-3.5 text-primary" />
-                      {tx("عدد الأشخاص", "Number of Guests")} *
+                      {tx("عدد البالغين", "Adults")} *
                     </label>
                     <div className="flex items-center gap-3 bg-muted rounded-lg px-3 py-2">
                       <button type="button" onClick={() => setGuests(Math.max(1, guests - 1))}
@@ -350,7 +386,7 @@ const BookingForm = () => {
                         −
                       </button>
                       <span className="flex-1 text-center text-sm font-medium text-foreground">
-                        {guests} {tx(guests === 1 ? "شخص" : "أشخاص", guests === 1 ? "Guest" : "Guests")}
+                        {guests} {tx(guests === 1 ? "بالغ" : "بالغين", guests === 1 ? "Adult" : "Adults")}
                       </span>
                       <button type="button" onClick={() => setGuests(Math.min(room?.max_guests ?? 6, guests + 1))}
                         className="w-9 h-9 rounded-full border border-border flex items-center justify-center hover:bg-card text-foreground font-bold text-lg transition shrink-0">
@@ -363,6 +399,102 @@ const BookingForm = () => {
                     </p>
                   </div>
                 </div>
+
+                {/* Children Ages */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-foreground">
+                      {tx("أطفال", "Children")}
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <button type="button"
+                        onClick={() => setChildrenAges(prev => prev.slice(0, -1))}
+                        disabled={childrenAges.length === 0}
+                        className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-muted disabled:opacity-40 transition">
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="w-6 text-center font-semibold text-foreground">{childrenAges.length}</span>
+                      <button type="button"
+                        onClick={() => setChildrenAges(prev => [...prev, 5])}
+                        className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-muted transition">
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {childrenAges.map((age, idx) => (
+                    <div key={idx} className="flex items-center gap-3">
+                      <span className="text-sm text-muted-foreground">
+                        {tx(`عمر الطفل ${idx + 1}`, `Child ${idx + 1} age`)}
+                      </span>
+                      <select
+                        value={age}
+                        onChange={e => {
+                          const newAges = [...childrenAges];
+                          newAges[idx] = +e.target.value;
+                          setChildrenAges(newAges);
+                        }}
+                        className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm outline-none text-foreground">
+                        {Array.from({ length: 18 }, (_, i) => (
+                          <option key={i} value={i}>{i} {tx("سنة", "yr")}</option>
+                        ))}
+                      </select>
+                      {age >= 14 && (
+                        <span className="text-xs text-amber-600 font-medium">
+                          {tx("يُحسب بالغ", "Counted as adult")}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Breakfast Question */}
+                {isBreakfastInSeason() && (
+                  <div className="border border-amber-200 bg-amber-50 rounded-xl p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">🍳</span>
+                      <p className="font-semibold text-amber-800">
+                        {tx(
+                          `هل تريد تضمين الفطور؟ ($${breakfastPrice}/شخص/ليلة)`,
+                          `Include breakfast? ($${breakfastPrice}/person/night)`
+                        )}
+                      </p>
+                    </div>
+                    <p className="text-xs text-amber-700">
+                      {tx("* هذا السؤال إجباري", "* This question is required")}
+                    </p>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="breakfast"
+                          checked={breakfastIncluded === true}
+                          onChange={() => setBreakfastIncluded(true)}
+                          className="accent-primary"
+                        />
+                        <span className="text-sm font-medium text-green-700">
+                          {tx("✅ نعم، أريد الفطور", "✅ Yes, include breakfast")}
+                        </span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="breakfast"
+                          checked={breakfastIncluded === false}
+                          onChange={() => setBreakfastIncluded(false)}
+                          className="accent-primary"
+                        />
+                        <span className="text-sm font-medium text-red-700">
+                          {tx("❌ لا شكراً", "❌ No thanks")}
+                        </span>
+                      </label>
+                    </div>
+                    {breakfastIncluded && (
+                      <p className="text-xs text-amber-700 bg-amber-100 rounded-lg px-3 py-2">
+                        🍳 {tx(
+                          `الفطور: $${breakfastPrice} × ${effectiveAdults} أشخاص × ${nights} ليالي = $${breakfastTotal}`,
+                          `Breakfast: $${breakfastPrice} × ${effectiveAdults} persons × ${nights} nights = $${breakfastTotal}`
+                        )}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {/* E) Dates */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -449,6 +581,10 @@ const BookingForm = () => {
                       toast.error(tx("تاريخ المغادرة يجب أن يكون بعد الوصول", "Check-out must be after check-in"));
                       return;
                     }
+                    if (isBreakfastInSeason() && breakfastIncluded === null) {
+                      toast.error(tx("يرجى الإجابة على سؤال الفطور", "Please answer the breakfast question"));
+                      return;
+                    }
                     if (!termsAccepted) {
                       toast.error(tx("يجب الموافقة على الشروط والأحكام", "You must accept the Terms & Conditions"));
                       return;
@@ -479,13 +615,23 @@ const BookingForm = () => {
                 <div className="bg-muted/50 rounded-xl p-5 space-y-3 border border-border/30">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">{roomName} × {nights} {tx("ليالي", "nights")}</span>
-                    <span className="font-medium text-foreground" dir="ltr">${totalPrice}</span>
+                    <span className="font-medium text-foreground" dir="ltr">${roomPrice * nights}</span>
+                  </div>
+                  {breakfastIncluded && (
+                    <div className="flex justify-between text-sm text-amber-700">
+                      <span>🍳 {tx("الفطور", "Breakfast")}</span>
+                      <span className="font-medium" dir="ltr">${breakfastPrice} × {effectiveAdults} × {nights} = ${breakfastTotal}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-sm border-t border-border/50 pt-2">
+                    <span className="text-muted-foreground font-bold">{tx("الإجمالي", "Total")}</span>
+                    <span className="font-bold text-foreground" dir="ltr">${totalPrice}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">{tx(`العربون (${DEPOSIT_PERCENT}%)`, `Deposit (${DEPOSIT_PERCENT}%)`)}</span>
                     <span className="font-bold text-primary text-lg" dir="ltr">${depositAmount}</span>
                   </div>
-                  <div className="flex justify-between text-sm border-t border-border/50 pt-2">
+                  <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">{tx("الباقي عند الوصول", "Balance at check-in")}</span>
                     <span className="font-medium text-foreground" dir="ltr">${balanceDue}</span>
                   </div>
@@ -632,6 +778,16 @@ const BookingForm = () => {
                       <span className="text-muted-foreground">{tx("عدد الليالي", "Nights")}</span>
                       <span className="font-medium text-foreground">{nights}</span>
                     </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{tx("سعر الغرفة", "Room total")}</span>
+                      <span className="font-medium text-foreground" dir="ltr">${roomPrice * nights}</span>
+                    </div>
+                    {breakfastIncluded && (
+                      <div className="flex justify-between text-amber-700">
+                        <span>🍳 {tx("فطور", "Breakfast")}</span>
+                        <span className="font-medium" dir="ltr">${breakfastTotal}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between border-t border-border/50 pt-2">
                       <span className="text-muted-foreground">{tx("الإجمالي", "Total")}</span>
                       <span className="font-bold text-foreground" dir="ltr">${totalPrice}</span>
@@ -643,9 +799,15 @@ const BookingForm = () => {
                   </>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("booking.guestsLabel")}</span>
-                  <span className="font-medium text-foreground">{guests} / {room.max_guests}</span>
+                  <span className="text-muted-foreground">{tx("البالغين", "Adults")}</span>
+                  <span className="font-medium text-foreground">{effectiveAdults}</span>
                 </div>
+                {actualChildren > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{tx("أطفال (أقل من 14)", "Children (<14)")}</span>
+                    <span className="font-medium text-foreground">{actualChildren}</span>
+                  </div>
+                )}
               </div>
             </div>
           )}

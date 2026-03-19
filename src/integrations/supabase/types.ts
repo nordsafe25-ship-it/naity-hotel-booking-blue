@@ -165,9 +165,13 @@ export type Database = {
       }
       bookings: {
         Row: {
+          breakfast_included: boolean | null
+          breakfast_total: number | null
           check_in: string
           check_out: string
           check_out_processed: boolean | null
+          children_ages: number[] | null
+          children_count: number | null
           created_at: string
           deposit_amount: number | null
           guest_email: string
@@ -195,9 +199,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          breakfast_included?: boolean | null
+          breakfast_total?: number | null
           check_in: string
           check_out: string
           check_out_processed?: boolean | null
+          children_ages?: number[] | null
+          children_count?: number | null
           created_at?: string
           deposit_amount?: number | null
           guest_email: string
@@ -225,9 +233,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          breakfast_included?: boolean | null
+          breakfast_total?: number | null
           check_in?: string
           check_out?: string
           check_out_processed?: boolean | null
+          children_ages?: number[] | null
+          children_count?: number | null
           created_at?: string
           deposit_amount?: number | null
           guest_email?: string
@@ -355,6 +367,11 @@ export type Database = {
           area_sqm: number | null
           bathrooms: number | null
           bedrooms: number | null
+          breakfast_available: boolean | null
+          breakfast_price: number | null
+          breakfast_season_end: string | null
+          breakfast_season_start: string | null
+          breakfast_type: string | null
           check_in_time: string | null
           check_out_time: string | null
           city: string
@@ -391,6 +408,11 @@ export type Database = {
           area_sqm?: number | null
           bathrooms?: number | null
           bedrooms?: number | null
+          breakfast_available?: boolean | null
+          breakfast_price?: number | null
+          breakfast_season_end?: string | null
+          breakfast_season_start?: string | null
+          breakfast_type?: string | null
           check_in_time?: string | null
           check_out_time?: string | null
           city: string
@@ -427,6 +449,11 @@ export type Database = {
           area_sqm?: number | null
           bathrooms?: number | null
           bedrooms?: number | null
+          breakfast_available?: boolean | null
+          breakfast_price?: number | null
+          breakfast_season_end?: string | null
+          breakfast_season_start?: string | null
+          breakfast_type?: string | null
           check_in_time?: string | null
           check_out_time?: string | null
           city?: string

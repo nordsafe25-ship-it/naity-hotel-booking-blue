@@ -219,6 +219,30 @@ const HotelDetails = () => {
           </div>
         )}
 
+        {/* Breakfast Info */}
+        {(hotel as any).breakfast_available && (
+          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+            <span className="text-2xl">🍳</span>
+            <div>
+              <p className="font-semibold text-amber-800 text-sm">
+                {tx("الفطور متاح", "Breakfast Available")}
+              </p>
+              <p className="text-xs text-amber-700">
+                {(hotel as any).breakfast_type === "all_year"
+                  ? tx("طوال السنة", "All year round")
+                  : tx(
+                      `من ${(hotel as any).breakfast_season_start} إلى ${(hotel as any).breakfast_season_end}`,
+                      `${(hotel as any).breakfast_season_start} → ${(hotel as any).breakfast_season_end}`
+                    )
+                }
+                {" — "}
+                <strong>${(hotel as any).breakfast_price}</strong>
+                {tx(" / شخص / ليلة", " / person / night")}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Amenities */}
         {hotel.amenities && hotel.amenities.length > 0 && (
           <div>

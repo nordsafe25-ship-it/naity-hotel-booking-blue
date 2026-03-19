@@ -194,6 +194,14 @@ Deno.serve(async (req) => {
                   <td style="font-weight:700;color:#1a1a2e;text-align:right;">${booking.guests_count ?? 1} ضيف</td>
                   <td style="color:#888;text-align:left;">عدد الضيوف</td>
                 </tr>
+                ${(booking as any).children_ages?.length > 0 ? `<tr style="border-bottom:1px solid #f0f0f0;">
+                  <td style="font-weight:700;color:#1a1a2e;text-align:right;">${(booking as any).children_ages.join(', ')} سنة</td>
+                  <td style="color:#888;text-align:left;">أعمار الأطفال</td>
+                </tr>` : ''}
+                ${(booking as any).breakfast_included ? `<tr style="border-bottom:1px solid #f0f0f0;">
+                  <td style="font-weight:700;color:#d97706;text-align:right;">🍳 مشمول ($${(booking as any).breakfast_total})</td>
+                  <td style="color:#888;text-align:left;">الفطور</td>
+                </tr>` : ''}
                 <tr style="border-bottom:1px solid #f0f0f0;">
                   <td style="font-weight:700;color:#1a1a2e;text-align:right;">$${booking.total_price}</td>
                   <td style="color:#888;text-align:left;">المبلغ الإجمالي</td>
@@ -275,6 +283,14 @@ Deno.serve(async (req) => {
                   <td style="color:#888;">Number of Guests</td>
                   <td style="font-weight:700;color:#1a1a2e;">${booking.guests_count ?? 1} guest${(booking.guests_count ?? 1) > 1 ? "s" : ""}</td>
                 </tr>
+                ${(booking as any).children_ages?.length > 0 ? `<tr style="border-bottom:1px solid #f0f0f0;">
+                  <td style="color:#888;">Children Ages</td>
+                  <td style="font-weight:700;color:#1a1a2e;">${(booking as any).children_ages.join(', ')} yr</td>
+                </tr>` : ''}
+                ${(booking as any).breakfast_included ? `<tr style="border-bottom:1px solid #f0f0f0;">
+                  <td style="color:#888;">Breakfast</td>
+                  <td style="font-weight:700;color:#d97706;">🍳 Included ($${(booking as any).breakfast_total})</td>
+                </tr>` : ''}
                 <tr style="border-bottom:1px solid #f0f0f0;">
                   <td style="color:#888;font-weight:700;">Total Amount</td>
                   <td style="font-weight:700;color:#1a1a2e;">$${booking.total_price}</td>
