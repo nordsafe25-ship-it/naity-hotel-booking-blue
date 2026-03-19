@@ -142,6 +142,22 @@ function BookingCard({ b, lang, tx, expandedId, setExpandedId, copiedId, copy, o
                 </div>
               )}
             </div>
+            {b.children_count > 0 && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Users className="w-3 h-3" />
+                <span>
+                  {lang === "ar"
+                    ? `${b.children_count} أطفال — أعمار: ${(b.children_ages ?? []).join('، ')} سنة`
+                    : `${b.children_count} children — ages: ${(b.children_ages ?? []).join(', ')} yr`}
+                </span>
+              </div>
+            )}
+            {b.breakfast_included && (
+              <div className="flex items-center gap-2 text-xs text-amber-700">
+                <span>🍳</span>
+                <span>{lang === "ar" ? "الفطور مشمول" : "Breakfast included"}</span>
+              </div>
+            )}
             {b.transaction_hash && (
               <div className="space-y-1">
                 <p className="text-[10px] text-muted-foreground">{tx("رقم المعاملة", "Transaction ID")}</p>
