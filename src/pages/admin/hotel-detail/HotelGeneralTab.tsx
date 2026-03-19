@@ -94,6 +94,9 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
     mutationFn: async () => {
       const payload = {
         ...form,
+        breakfast_available: form.breakfast_type !== "none",
+        breakfast_season_start: form.breakfast_season_start || null,
+        breakfast_season_end: form.breakfast_season_end || null,
         tech_partner_id: form.tech_partner_id || null,
         floor: form.floor !== "" && form.floor != null ? Number(form.floor) : null,
         area_sqm: form.area_sqm !== "" && form.area_sqm != null ? Number(form.area_sqm) : null,
@@ -329,56 +332,42 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
       </div>
 
       {/* Breakfast Section */}
-      <div className="bg-card rounded-xl p-6 border border-border/50 shadow-card space-y-4">
-        <h2 className="font-semibold text-foreground text-lg">
-          {tx("🍳 خدمة الفطور", "🍳 Breakfast Service")}
-        </h2>
-
-        <div className="space-y-2">
-          <Label>{tx("هل يقدم الفندق فطور؟", "Does the hotel offer breakfast?")}</Label>
-          <div className="flex flex-col gap-2">
-            {[
-              { val: "none", ar: "لا يوجد فطور", en: "No breakfast" },
-              { val: "all_year", ar: "فطور طوال السنة", en: "All year round" },
-              { val: "seasonal", ar: "فطور موسمي (حدد الفترة)", en: "Seasonal (specify period)" },
-            ].map(opt => (
-              <label key={opt.val} className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" name="breakfast_type"
-                  value={opt.val}
-                  checked={form.breakfast_type === opt.val}
-                  onChange={() => setForm(f => ({
-                    ...f,
-                    breakfast_type: opt.val,
-                    breakfast_available: opt.val !== "none",
-                  }))}
-                  className="accent-primary w-4 h-4"
-                />
-                <span className="text-sm text-foreground">{lang === "ar" ? opt.ar : opt.en}</span>
-              </label>
-            ))}
-          </div>
+      <div className="space-y-4 border border-amber-200 bg-amber-50/30 rounded-xl p-4">
+        <h3 className="font-semibold text-foreground flex items-center gap-2">
+          🍳 {tx("خدمة الفطور", "Breakfast Service")}
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          {tx("سعر الفطور متضمن في سعر الغرفة", "Breakfast price is included in room rate")}
+        </p>
+        <div className="flex flex-col gap-2">
+          {[
+            { val: "none", ar: "❌ لا يوجد فطور", en: "❌ No breakfast" },
+            { val: "all_year", ar: "✅ فطور طوال السنة", en: "✅ All year round" },
+            { val: "seasonal", ar: "📅 فطور موسمي (حدد الفترة)", en: "📅 Seasonal" },
+          ].map(opt => (
+            <label key={opt.val} className="flex items-center gap-2 cursor-pointer text-sm">
+              <input type="radio" name="breakfast_type" value={opt.val}
+                checked={form.breakfast_type === opt.val}
+                onChange={() => setForm(f => ({ ...f, breakfast_type: opt.val }))}
+                className="accent-primary" />
+              {lang === "ar" ? opt.ar : opt.en}
+            </label>
+          ))}
         </div>
-
         {form.breakfast_type === "seasonal" && (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 mt-2">
             <div>
-              <Label>{tx("من تاريخ", "From date")}</Label>
+              <Label className="text-xs">{tx("من تاريخ", "Season start")}</Label>
               <Input type="date" value={form.breakfast_season_start}
-                onChange={e => setForm(f => ({ ...f, breakfast_season_start: e.target.value }))} />
+                onChange={e => setForm(f => ({ ...f, breakfast_season_start: e.target.value }))}
+                className="mt-1" />
             </div>
             <div>
-              <Label>{tx("إلى تاريخ", "To date")}</Label>
+              <Label className="text-xs">{tx("إلى تاريخ", "Season end")}</Label>
               <Input type="date" value={form.breakfast_season_end}
-                onChange={e => setForm(f => ({ ...f, breakfast_season_end: e.target.value }))} />
+                onChange={e => setForm(f => ({ ...f, breakfast_season_end: e.target.value }))}
+                className="mt-1" />
             </div>
-          </div>
-        )}
-
-        {form.breakfast_type !== "none" && (
-          <div>
-            <Label>{tx("سعر الفطور / شخص / ليلة ($)", "Breakfast price / person / night ($)")}</Label>
-            <Input type="number" min={0} value={form.breakfast_price}
-              onChange={e => setForm(f => ({ ...f, breakfast_price: +e.target.value }))} />
           </div>
         )}
       </div>
