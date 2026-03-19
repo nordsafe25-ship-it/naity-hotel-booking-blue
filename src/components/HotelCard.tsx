@@ -33,6 +33,11 @@ const HotelCard = ({ hotel }: { hotel: Hotel & { property_type?: string } }) => 
             🏠 {lang === "ar" ? "شقة" : "Apt"}
           </span>
         )}
+        {(hotel as any).breakfast_available && (
+          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
+            🍳 {lang === "ar" ? "فطور" : "Breakfast"}
+          </span>
+        )}
         <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
           {localizeHotelName(hotel.id, hotel.name)}
         </h3>

@@ -45,9 +45,10 @@ const HotelsListing = () => {
   const [instantOnly, setInstantOnly] = useState(false);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<"all" | "hotel" | "apartment">("all");
+  const [breakfastOnly, setBreakfastOnly] = useState(false);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
-  const hasActiveFilters = city !== "" || starFilters.length > 0 || amenityFilters.length > 0 || instantOnly || priceRange[0] > 0 || priceRange[1] < 500 || propertyTypeFilter !== "all";
+  const hasActiveFilters = city !== "" || starFilters.length > 0 || amenityFilters.length > 0 || instantOnly || priceRange[0] > 0 || priceRange[1] < 500 || propertyTypeFilter !== "all" || breakfastOnly;
 
   const ALLOWED_CITY_NAMES = SYRIAN_CITIES.map(c => c.en);
 
@@ -91,6 +92,7 @@ const HotelsListing = () => {
     setInstantOnly(false);
     setPriceRange([0, 500]);
     setPropertyTypeFilter("all");
+    setBreakfastOnly(false);
   };
 
   const filtered = useMemo(() =>
@@ -107,9 +109,10 @@ const HotelsListing = () => {
         if (!amenityFilters.every(af => ha.some(a => a.includes(af)))) return false;
       }
       if (instantOnly && !syncStatuses[h.id]) return false;
+      if (breakfastOnly && !(h as any).breakfast_available) return false;
       return true;
     }),
-    [hotels, city, propertyTypeFilter, starFilters, amenityFilters, instantOnly, priceRange, minPrices, syncStatuses]
+    [hotels, city, propertyTypeFilter, starFilters, amenityFilters, instantOnly, breakfastOnly, priceRange, minPrices, syncStatuses]
   );
 
   return (
@@ -233,6 +236,12 @@ const HotelsListing = () => {
               </div>
             </div>
 
+            {/* Breakfast Filter */}
+            <label className="flex items-center gap-2 cursor-pointer text-sm">
+              <Checkbox checked={breakfastOnly} onCheckedChange={v => setBreakfastOnly(!!v)} />
+              <span>🍳 {tx("يشمل الفطور", "Breakfast included")}</span>
+            </label>
+
             {/* Instantly Bookable */}
             <div className="flex items-center justify-between">
               <div>
@@ -320,6 +329,11 @@ const HotelsListing = () => {
                         ))}
                       </div>
                     </div>
+                    {/* Breakfast Filter */}
+                    <label className="flex items-center gap-2 cursor-pointer text-sm">
+                      <Checkbox checked={breakfastOnly} onCheckedChange={v => setBreakfastOnly(!!v)} />
+                      <span>🍳 {tx("يشمل الفطور", "Breakfast included")}</span>
+                    </label>
                     {/* Instantly Bookable */}
                     <div className="flex items-center justify-between">
                       <div>
