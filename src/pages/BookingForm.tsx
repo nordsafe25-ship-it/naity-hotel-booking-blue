@@ -125,6 +125,8 @@ const BookingForm = () => {
   const actualChildren = childrenAges.filter(age => age < 14).length;
   const effectiveAdults = guests + childrenAsAdults;
   const totalGuests = effectiveAdults + actualChildren;
+  const requiredAdults = actualChildren >= 3 ? Math.ceil(actualChildren / 3) : 1;
+  const supervisorOk = actualChildren < 3 || effectiveAdults >= requiredAdults;
 
   // Payment / Voucher
   const [processing, setProcessing] = useState(false);
