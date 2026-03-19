@@ -94,6 +94,9 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
     mutationFn: async () => {
       const payload = {
         ...form,
+        breakfast_available: form.breakfast_type !== "none",
+        breakfast_season_start: form.breakfast_season_start || null,
+        breakfast_season_end: form.breakfast_season_end || null,
         tech_partner_id: form.tech_partner_id || null,
         floor: form.floor !== "" && form.floor != null ? Number(form.floor) : null,
         area_sqm: form.area_sqm !== "" && form.area_sqm != null ? Number(form.area_sqm) : null,
