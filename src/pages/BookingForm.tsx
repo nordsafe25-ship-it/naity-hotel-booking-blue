@@ -116,6 +116,16 @@ const BookingForm = () => {
   // Breakfast
   const [breakfastIncluded, setBreakfastIncluded] = useState<boolean | null>(null);
 
+  // Extra room
+  const [extraRoom, setExtraRoom] = useState<any>(null);
+  const [availableExtraRooms, setAvailableExtraRooms] = useState<any[]>([]);
+
+  // Children calculations
+  const childrenAsAdults = childrenAges.filter(age => age >= 14).length;
+  const actualChildren = childrenAges.filter(age => age < 14).length;
+  const effectiveAdults = guests + childrenAsAdults;
+  const totalGuests = effectiveAdults + actualChildren;
+
   // Payment / Voucher
   const [processing, setProcessing] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
@@ -166,35 +176,43 @@ const BookingForm = () => {
   }, []);
 
   // Breakfast helpers
-  const breakfastAvailable = (hotel as any)?.breakfast_available;
-  const breakfastPrice = (hotel as any)?.breakfast_price ?? 0;
+  const hotelData = hotel as any;
 
-  const isBreakfastInSeason = () => {
-    if (!breakfastAvailable) return false;
-    if ((hotel as any).breakfast_type === "all_year") return true;
-    if ((hotel as any).breakfast_type === "seasonal") {
-      const now = new Date();
-      const start = new Date((hotel as any).breakfast_season_start);
-      const end = new Date((hotel as any).breakfast_season_end);
-      const todayMD = now.getMonth() * 100 + now.getDate();
-      const startMD = start.getMonth() * 100 + start.getDate();
-      const endMD = end.getMonth() * 100 + end.getDate();
-      return todayMD >= startMD && todayMD <= endMD;
+  const breakfastInSeason = () => {
+    if (!hotelData?.breakfast_available) return false;
+    if (hotelData.breakfast_type === "all_year") return true;
+    if (hotelData.breakfast_type === "seasonal" && checkIn) {
+      const d = new Date(checkIn);
+      const s = new Date(hotelData.breakfast_season_start);
+      const e = new Date(hotelData.breakfast_season_end);
+      const md = (x: Date) => x.getMonth() * 100 + x.getDate();
+      return md(d) >= md(s) && md(d) <= md(e);
     }
     return false;
   };
 
-  // Children 14+ count as adults
-  const adultsFromChildren = childrenAges.filter(age => age >= 14).length;
-  const effectiveAdults = guests + adultsFromChildren;
-  const actualChildren = childrenAges.filter(age => age < 14).length;
+  // Extra room logic
+  const roomCapacity = room?.max_guests ?? 0;
+  const needsExtraRoom = totalGuests > roomCapacity;
 
+  useEffect(() => {
+    if (!needsExtraRoom || !hotel?.id || !room?.id) return;
+    supabase.from("room_categories").select("*")
+      .eq("hotel_id", hotel.id).eq("is_active", true)
+      .neq("id", room.id)
+      .then(({ data }) => setAvailableExtraRooms(data ?? []));
+  }, [needsExtraRoom, hotel?.id, room?.id]);
+
+  // Price calculations
   const nights = checkIn && checkOut ? Math.max(1, Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000)) : 1;
   const roomPrice = room ? room.price_per_night : 0;
-  const breakfastTotal = breakfastIncluded ? breakfastPrice * effectiveAdults * nights : 0;
-  const totalPrice = roomPrice * nights + breakfastTotal;
-  const depositAmount = Math.round(totalPrice * DEPOSIT_PERCENT / 100);
-  const balanceDue = totalPrice - depositAmount;
+  const room1Total = roomPrice * nights;
+  const room2Total = extraRoom ? (extraRoom.price_per_night ?? 0) * nights : 0;
+  const totalPrice = room1Total + room2Total;
+  const deposit1 = Math.round(room1Total * DEPOSIT_PERCENT / 100);
+  const deposit2 = Math.round(room2Total * DEPOSIT_PERCENT / 100);
+  const totalDeposit = deposit1 + deposit2;
+  const totalBalance = totalPrice - totalDeposit;
 
   const handleStripeCheckout = async () => {
     setProcessing(true);
@@ -210,19 +228,23 @@ const BookingForm = () => {
           guest_phone: fullPhone,
           nationality,
           guests_count: effectiveAdults,
+          children_count: actualChildren,
+          children_ages: childrenAges,
+          breakfast_included: breakfastIncluded ?? false,
           check_in: checkIn,
           check_out: checkOut,
           nights,
           total_price: totalPrice,
-          deposit_amount: depositAmount,
+          deposit_amount: totalDeposit,
           special_requests: specialRequests || null,
           room_number: roomNumberParam || null,
           hotel_name: lang === "ar" ? hotel?.name_ar : hotel?.name_en,
           room_name: lang === "ar" ? room?.name_ar : room?.name_en,
-          children_count: actualChildren,
-          children_ages: childrenAges,
-          breakfast_included: breakfastIncluded ?? false,
-          breakfast_total: breakfastTotal,
+          extra_room: extraRoom ? {
+            room_category_id: extraRoom.id,
+            price_per_night: extraRoom.price_per_night,
+            deposit_amount: deposit2,
+          } : null,
         },
       });
 
@@ -388,24 +410,20 @@ const BookingForm = () => {
                       <span className="flex-1 text-center text-sm font-medium text-foreground">
                         {guests} {tx(guests === 1 ? "بالغ" : "بالغين", guests === 1 ? "Adult" : "Adults")}
                       </span>
-                      <button type="button" onClick={() => setGuests(Math.min(room?.max_guests ?? 6, guests + 1))}
+                      <button type="button" onClick={() => setGuests(guests + 1)}
                         className="w-9 h-9 rounded-full border border-border flex items-center justify-center hover:bg-card text-foreground font-bold text-lg transition shrink-0">
                         +
                       </button>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">
-                      {tx(`الحد الأقصى لهذه الغرفة: ${room?.max_guests ?? "—"} أشخاص`,
-                          `Max for this room: ${room?.max_guests ?? "—"} guests`)}
-                    </p>
                   </div>
                 </div>
 
                 {/* Children Ages */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-foreground">
+                    <span className="text-sm font-medium text-foreground">
                       {tx("أطفال", "Children")}
-                    </label>
+                    </span>
                     <div className="flex items-center gap-3">
                       <button type="button"
                         onClick={() => setChildrenAges(prev => prev.slice(0, -1))}
@@ -423,76 +441,100 @@ const BookingForm = () => {
                   </div>
 
                   {childrenAges.map((age, idx) => (
-                    <div key={idx} className="flex items-center gap-3">
-                      <span className="text-sm text-muted-foreground">
-                        {tx(`عمر الطفل ${idx + 1}`, `Child ${idx + 1} age`)}
+                    <div key={idx} className="flex items-center gap-3 ps-2">
+                      <span className="text-xs text-muted-foreground w-20">
+                        {tx(`الطفل ${idx + 1}`, `Child ${idx + 1}`)}
                       </span>
-                      <select
-                        value={age}
+                      <select value={age}
                         onChange={e => {
-                          const newAges = [...childrenAges];
-                          newAges[idx] = +e.target.value;
-                          setChildrenAges(newAges);
+                          const updated = [...childrenAges];
+                          updated[idx] = +e.target.value;
+                          setChildrenAges(updated);
                         }}
-                        className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm outline-none text-foreground">
+                        className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm outline-none text-foreground border border-border/50">
                         {Array.from({ length: 18 }, (_, i) => (
                           <option key={i} value={i}>{i} {tx("سنة", "yr")}</option>
                         ))}
                       </select>
                       {age >= 14 && (
-                        <span className="text-xs text-amber-600 font-medium">
-                          {tx("يُحسب بالغ", "Counted as adult")}
+                        <span className="text-xs text-amber-600 font-medium shrink-0">
+                          {tx("← يُحسب بالغ", "← Adult")}
                         </span>
                       )}
                     </div>
                   ))}
+
+                  {childrenAsAdults > 0 && (
+                    <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
+                      ⚠️ {tx(
+                        `${childrenAsAdults} طفل سيُحسب كبالغ (14 سنة فأكثر)`,
+                        `${childrenAsAdults} child counted as adult (14+)`
+                      )}
+                    </p>
+                  )}
                 </div>
 
+                {/* Extra room suggestion */}
+                {needsExtraRoom && (
+                  <div className="border border-amber-200 bg-amber-50 rounded-xl p-4 space-y-3">
+                    <p className="font-semibold text-amber-800 text-sm">
+                      ⚠️ {tx(
+                        `الغرفة تتسع لـ ${roomCapacity} أشخاص فقط. أنت حددت ${totalGuests}.`,
+                        `Room fits ${roomCapacity} guests. You selected ${totalGuests}.`
+                      )}
+                    </p>
+                    <label className="text-sm font-medium text-foreground">{tx("اختر غرفة إضافية", "Select additional room")}</label>
+                    <select className="w-full bg-card border border-amber-300 rounded-lg px-3 py-2 text-sm"
+                      value={extraRoom?.id ?? ""}
+                      onChange={e => {
+                        const r = availableExtraRooms.find(x => x.id === e.target.value);
+                        setExtraRoom(r ?? null);
+                      }}>
+                      <option value="">{tx("-- اختر --", "-- Select --")}</option>
+                      {availableExtraRooms.map(r => (
+                        <option key={r.id} value={r.id}>
+                          {tx(r.name_ar, r.name_en)} — ${r.price_per_night}/{tx("ليلة", "night")} ({r.max_guests} {tx("أشخاص", "guests")})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 {/* Breakfast Question */}
-                {isBreakfastInSeason() && (
+                {breakfastInSeason() && (
                   <div className="border border-amber-200 bg-amber-50 rounded-xl p-4 space-y-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-xl">🍳</span>
-                      <p className="font-semibold text-amber-800">
-                        {tx(
-                          `هل تريد تضمين الفطور؟ ($${breakfastPrice}/شخص/ليلة)`,
-                          `Include breakfast? ($${breakfastPrice}/person/night)`
-                        )}
-                      </p>
+                      <span className="text-2xl">🍳</span>
+                      <div>
+                        <p className="font-semibold text-amber-800">
+                          {tx("هذا الفندق يقدم فطور مجاناً متضمن في السعر",
+                              "This hotel offers complimentary breakfast included in room rate")}
+                        </p>
+                        <p className="text-xs text-red-600 mt-0.5">
+                          * {tx("هذا السؤال إجباري", "Required")}
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-xs text-amber-700">
-                      {tx("* هذا السؤال إجباري", "* This question is required")}
-                    </p>
                     <div className="flex gap-4">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="breakfast"
                           checked={breakfastIncluded === true}
                           onChange={() => setBreakfastIncluded(true)}
-                          className="accent-primary"
-                        />
+                          className="accent-primary" />
                         <span className="text-sm font-medium text-green-700">
-                          {tx("✅ نعم، أريد الفطور", "✅ Yes, include breakfast")}
+                          ✅ {tx("نعم، أريد الفطور", "Yes, include breakfast")}
                         </span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="breakfast"
                           checked={breakfastIncluded === false}
                           onChange={() => setBreakfastIncluded(false)}
-                          className="accent-primary"
-                        />
-                        <span className="text-sm font-medium text-red-700">
-                          {tx("❌ لا شكراً", "❌ No thanks")}
+                          className="accent-primary" />
+                        <span className="text-sm font-medium text-muted-foreground">
+                          ❌ {tx("لا شكراً", "No thanks")}
                         </span>
                       </label>
                     </div>
-                    {breakfastIncluded && (
-                      <p className="text-xs text-amber-700 bg-amber-100 rounded-lg px-3 py-2">
-                        🍳 {tx(
-                          `الفطور: $${breakfastPrice} × ${effectiveAdults} أشخاص × ${nights} ليالي = $${breakfastTotal}`,
-                          `Breakfast: $${breakfastPrice} × ${effectiveAdults} persons × ${nights} nights = $${breakfastTotal}`
-                        )}
-                      </p>
-                    )}
                   </div>
                 )}
 
@@ -581,7 +623,7 @@ const BookingForm = () => {
                       toast.error(tx("تاريخ المغادرة يجب أن يكون بعد الوصول", "Check-out must be after check-in"));
                       return;
                     }
-                    if (isBreakfastInSeason() && breakfastIncluded === null) {
+                    if (breakfastInSeason() && breakfastIncluded === null) {
                       toast.error(tx("يرجى الإجابة على سؤال الفطور", "Please answer the breakfast question"));
                       return;
                     }
@@ -611,30 +653,50 @@ const BookingForm = () => {
                   </div>
                 </div>
 
-                {/* Payment summary */}
-                <div className="bg-muted/50 rounded-xl p-5 space-y-3 border border-border/30">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{roomName} × {nights} {tx("ليالي", "nights")}</span>
-                    <span className="font-medium text-foreground" dir="ltr">${roomPrice * nights}</span>
+                {/* Price Summary */}
+                <div className="space-y-2 text-sm border border-border/50 rounded-xl p-4">
+                  <p className="font-semibold mb-2">{tx("ملخص السعر", "Price Summary")}</p>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">
+                      {tx("الغرفة الأولى", "Room 1")} × {nights} {tx("ليالي", "nights")}
+                    </span>
+                    <span className="font-medium text-foreground" dir="ltr">${room1Total}</span>
                   </div>
-                  {breakfastIncluded && (
-                    <div className="flex justify-between text-sm text-amber-700">
-                      <span>🍳 {tx("الفطور", "Breakfast")}</span>
-                      <span className="font-medium" dir="ltr">${breakfastPrice} × {effectiveAdults} × {nights} = ${breakfastTotal}</span>
+                  {extraRoom && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        {tx("الغرفة الثانية", "Room 2")} × {nights} {tx("ليالي", "nights")}
+                      </span>
+                      <span className="font-medium text-foreground" dir="ltr">${room2Total}</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-sm border-t border-border/50 pt-2">
-                    <span className="text-muted-foreground font-bold">{tx("الإجمالي", "Total")}</span>
-                    <span className="font-bold text-foreground" dir="ltr">${totalPrice}</span>
+                  {breakfastIncluded && (
+                    <div className="flex justify-between text-amber-700">
+                      <span>🍳 {tx("الفطور", "Breakfast")}</span>
+                      <span>{tx("متضمن", "Included")}</span>
+                    </div>
+                  )}
+                  <div className="border-t border-border/30 pt-2 flex justify-between font-bold">
+                    <span>{tx("الإجمالي", "Total")}</span>
+                    <span dir="ltr">${totalPrice}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{tx(`العربون (${DEPOSIT_PERCENT}%)`, `Deposit (${DEPOSIT_PERCENT}%)`)}</span>
-                    <span className="font-bold text-primary text-lg" dir="ltr">${depositAmount}</span>
+                  <div className="flex justify-between text-green-700">
+                    <span>{tx("العربون 10%", "Deposit 10%")}</span>
+                    <span dir="ltr">${totalDeposit}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{tx("الباقي عند الوصول", "Balance at check-in")}</span>
-                    <span className="font-medium text-foreground" dir="ltr">${balanceDue}</span>
+                  <div className="flex justify-between text-amber-700">
+                    <span>{tx("الباقي نقداً", "Balance cash")}</span>
+                    <span dir="ltr">${totalBalance}</span>
                   </div>
+                  {extraRoom && (
+                    <div className="bg-muted/50 rounded-lg p-2 text-xs text-muted-foreground space-y-1 mt-1">
+                      <p>• {tx("عربون الغرفة 1:", "Room 1 deposit:")} ${deposit1}</p>
+                      <p>• {tx("عربون الغرفة 2:", "Room 2 deposit:")} ${deposit2}</p>
+                      <p className="text-primary font-medium">
+                        {tx("يُدفع مجموعهما في دفعة واحدة", "Paid together in one payment")}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Stripe info */}
@@ -672,7 +734,7 @@ const BookingForm = () => {
                   disabled={processing}
                   className="w-full gradient-cta text-primary-foreground py-3 rounded-xl font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
-                  {processing ? tx("جاري المعالجة...", "Processing...") : tx(`ادفع $${depositAmount} عربون عبر Stripe`, `Pay $${depositAmount} Deposit via Stripe`)}
+                  {processing ? tx("جاري المعالجة...", "Processing...") : tx(`ادفع $${totalDeposit} عربون عبر Stripe`, `Pay $${totalDeposit} Deposit via Stripe`)}
                 </button>
               </motion.div>
             )}
@@ -724,11 +786,11 @@ const BookingForm = () => {
                     </div>
                     <div className="flex justify-between border-t border-border/50 pt-2">
                       <span className="text-muted-foreground">{tx("المدفوع", "Paid")}</span>
-                      <span className="font-bold text-primary" dir="ltr">${depositAmount}</span>
+                      <span className="font-bold text-primary" dir="ltr">${totalDeposit}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{tx("المتبقي", "Remaining")}</span>
-                      <span className="font-medium text-foreground" dir="ltr">${balanceDue}</span>
+                      <span className="font-medium text-foreground" dir="ltr">${totalBalance}</span>
                     </div>
                   </div>
                 </div>
@@ -772,20 +834,22 @@ const BookingForm = () => {
                   <span className="text-muted-foreground">{t("booking.pricePerNight")}</span>
                   <span className="font-medium text-foreground" dir="ltr">${room.price_per_night}</span>
                 </div>
+                {extraRoom && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{tx("غرفة إضافية", "Extra Room")}</span>
+                    <span className="font-medium text-foreground" dir="ltr">${extraRoom.price_per_night}/{tx("ليلة", "night")}</span>
+                  </div>
+                )}
                 {checkIn && checkOut && (
                   <>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{tx("عدد الليالي", "Nights")}</span>
                       <span className="font-medium text-foreground">{nights}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{tx("سعر الغرفة", "Room total")}</span>
-                      <span className="font-medium text-foreground" dir="ltr">${roomPrice * nights}</span>
-                    </div>
                     {breakfastIncluded && (
                       <div className="flex justify-between text-amber-700">
                         <span>🍳 {tx("فطور", "Breakfast")}</span>
-                        <span className="font-medium" dir="ltr">${breakfastTotal}</span>
+                        <span>{tx("متضمن", "Included")}</span>
                       </div>
                     )}
                     <div className="flex justify-between border-t border-border/50 pt-2">
@@ -794,7 +858,7 @@ const BookingForm = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{tx("العربون المطلوب", "Deposit Due")}</span>
-                      <span className="font-bold text-primary" dir="ltr">${depositAmount}</span>
+                      <span className="font-bold text-primary" dir="ltr">${totalDeposit}</span>
                     </div>
                   </>
                 )}
