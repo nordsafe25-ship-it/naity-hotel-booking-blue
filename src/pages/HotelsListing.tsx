@@ -236,6 +236,12 @@ const HotelsListing = () => {
               </div>
             </div>
 
+            {/* Breakfast Filter */}
+            <label className="flex items-center gap-2 cursor-pointer text-sm">
+              <Checkbox checked={breakfastOnly} onCheckedChange={v => setBreakfastOnly(!!v)} />
+              <span>🍳 {tx("يشمل الفطور", "Breakfast included")}</span>
+            </label>
+
             {/* Instantly Bookable */}
             <div className="flex items-center justify-between">
               <div>
