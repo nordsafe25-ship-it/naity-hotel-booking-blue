@@ -54,7 +54,7 @@ const AdminManagers = () => {
   const { data: hotels } = useQuery({
     queryKey: ["admin-hotels-list"],
     queryFn: async () => {
-      const { data } = await supabase.from("hotels").select("id, name_ar, name_en");
+      const { data } = await supabase.from("hotels").select("id, name_ar, name_en").order("name_en");
       return data ?? [];
     },
   });
