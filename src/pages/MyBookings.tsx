@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Search, Calendar, MapPin, Star,
+import { Mail, Search, Calendar, MapPin, Star, Users,
          ChevronDown, ChevronUp, Copy, Check, AlertTriangle, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
