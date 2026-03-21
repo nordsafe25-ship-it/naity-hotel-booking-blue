@@ -144,23 +144,32 @@ Deno.serve(async (req) => {
         userId = createData.user.id;
       }
 
-      await supabase.from("user_roles").delete().eq("user_id", userId);
+      // Delete existing roles first, then insert
+      const { error: delRoleErr } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", userId);
+      if (delRoleErr) {
+        console.error("Failed to delete existing roles:", delRoleErr.message);
+      }
+
       const { error: roleErr } = await supabase
         .from("user_roles")
         .insert({ user_id: userId, role });
 
       if (roleErr) {
+        // Handle duplicate key gracefully
+        if (roleErr.message.includes("duplicate key")) {
+          return json({ error: "User already has this role assigned" }, 400);
+        }
         if (authData?.user) await supabase.auth.admin.deleteUser(userId);
         return json({ error: roleErr.message }, 500);
       }
 
       // Send welcome email (non-blocking)
-      try {
-        await sendWelcomeEmail(email, full_name || "", role);
-      } catch (emailErr) {
+      sendWelcomeEmail(email, full_name || "", role).catch((emailErr) => {
         console.error("Welcome email failed:", emailErr);
-        // Do not fail the request if email fails
-      }
+      });
 
       return json({ success: true, user_id: userId, email });
     }
