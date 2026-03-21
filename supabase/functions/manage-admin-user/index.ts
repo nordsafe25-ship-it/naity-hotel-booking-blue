@@ -196,10 +196,44 @@ Deno.serve(async (req) => {
       if (user_id === callerId)
         return json({ error: "Cannot delete your own account" }, 400);
 
+      const { data: managedHotels, error: hotelCheckErr } = await supabase
+        .from("hotels")
+        .select("id")
+        .eq("manager_id", user_id)
+        .limit(1);
+
+      if (hotelCheckErr) {
+        return json({ error: hotelCheckErr.message }, 500);
+      }
+
+      if ((managedHotels?.length ?? 0) > 0) {
+        return json(
+          {
+            error:
+              "Cannot delete this user while they are assigned as a hotel manager. Reassign their hotel first.",
+          },
+          400
+        );
+      }
+
       await supabase.from("user_roles").delete().eq("user_id", user_id);
       const { error: delErr } = await supabase.auth.admin.deleteUser(user_id);
-      if (delErr && !delErr.message.toLowerCase().includes("not found")) {
-        return json({ error: delErr.message }, 500);
+      if (delErr) {
+        if (
+          delErr.message.toLowerCase().includes("hotels_manager_id_fkey") ||
+          delErr.message.toLowerCase().includes("database error deleting user")
+        ) {
+          return json(
+            {
+              error:
+                "Cannot delete this user while they are assigned as a hotel manager. Reassign their hotel first.",
+            },
+            400
+          );
+        }
+        if (!delErr.message.toLowerCase().includes("not found")) {
+          return json({ error: delErr.message }, 500);
+        }
       }
       return json({ success: true });
     }
