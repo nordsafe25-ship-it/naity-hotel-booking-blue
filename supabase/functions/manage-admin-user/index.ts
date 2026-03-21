@@ -177,11 +177,17 @@ Deno.serve(async (req) => {
     if (action === "update_role") {
       if (!user_id || !role)
         return json({ error: "user_id and role are required" }, 400);
-      await supabase.from("user_roles").delete().eq("user_id", user_id);
+      const { error: delErr2 } = await supabase.from("user_roles").delete().eq("user_id", user_id);
+      if (delErr2) console.error("Failed to delete role:", delErr2.message);
       const { error } = await supabase
         .from("user_roles")
         .insert({ user_id, role });
-      if (error) return json({ error: error.message }, 500);
+      if (error) {
+        if (error.message.includes("duplicate key")) {
+          return json({ error: "Role already assigned" }, 400);
+        }
+        return json({ error: error.message }, 500);
+      }
       return json({ success: true });
     }
 
