@@ -122,6 +122,7 @@ const AdminBookings = () => {
                     <th className="text-start p-3 font-medium text-muted-foreground">{lang === "ar" ? "العربون" : "Deposit"}</th>
                     <th className="text-start p-3 font-medium text-muted-foreground">{lang === "ar" ? "الحالة" : "Status"}</th>
                     <th className="text-start p-3 font-medium text-muted-foreground">{lang === "ar" ? "المزامنة" : "Sync"}</th>
+                    <th className="text-start p-3 font-medium text-muted-foreground">{lang === "ar" ? "ربح Naity" : "Naity Profit"}</th>
                     <th className="text-start p-3 font-medium text-muted-foreground"></th>
                   </tr>
                 </thead>
