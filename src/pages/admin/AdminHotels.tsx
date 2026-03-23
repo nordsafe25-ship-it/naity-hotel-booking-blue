@@ -50,7 +50,7 @@ const AdminHotels = () => {
   const { data: hotels, isLoading } = useQuery({
     queryKey: ["admin-hotels"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("hotels").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("hotels").select("*, api_companies:company_id(name, name_ar)").order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
