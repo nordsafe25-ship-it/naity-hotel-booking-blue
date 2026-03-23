@@ -50,7 +50,7 @@ const AdminHotels = () => {
   const { data: hotels, isLoading } = useQuery({
     queryKey: ["admin-hotels"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("hotels").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("hotels").select("*, api_companies:company_id(name, name_ar)").order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -298,6 +298,11 @@ const AdminHotels = () => {
                           <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${isApartment ? "bg-blue-100 text-blue-700" : "bg-muted text-muted-foreground"}`}>
                             {isApartment ? tx("🏠 شقة", "🏠 Apartment") : tx("🏨 فندق", "🏨 Hotel")}
                           </span>
+                          {(hotel as any).api_companies && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-purple-100 text-purple-700">
+                              {lang === "ar" ? ((hotel as any).api_companies.name_ar || (hotel as any).api_companies.name) : (hotel as any).api_companies.name}
+                            </span>
+                          )}
                         </div>
                         <p className="text-sm text-muted-foreground">{lang === "ar" ? hotel.name_en : hotel.name_ar} • {hotel.city}</p>
                         <div className="flex items-center gap-3 mt-1">

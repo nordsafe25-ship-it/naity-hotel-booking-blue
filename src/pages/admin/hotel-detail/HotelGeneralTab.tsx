@@ -79,6 +79,9 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
     breakfast_season_start: (hotel as any).breakfast_season_start ?? "",
     breakfast_season_end: (hotel as any).breakfast_season_end ?? "",
     breakfast_price: (hotel as any).breakfast_price ?? 0,
+    company_commission_percent: (hotel as any).company_commission_percent ?? 0,
+    sales_commission_percent: (hotel as any).sales_commission_percent ?? 0,
+    sales_name: (hotel as any).sales_name ?? "",
   });
 
   const toggleAmenity = (key: string) => {
@@ -370,6 +373,44 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Commission Settings */}
+      <div className="bg-card rounded-xl p-6 border border-border/50 shadow-card space-y-4">
+        <h2 className="font-semibold text-foreground text-lg">
+          {tx("إعدادات العمولة", "Commission Settings")}
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label>{tx("الشركة", "Company")}</Label>
+            <select
+              value={form.company_id ?? ""}
+              onChange={e => setForm(f => ({ ...f, company_id: e.target.value || null }))}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">{tx("بدون شركة", "No Company")}</option>
+              {apiCompanies.map((c: any) => (
+                <option key={c.id} value={c.id}>{lang === "ar" ? (c.name_ar || c.name) : c.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <Label>{tx("عمولة الشركة %", "Company Commission %")}</Label>
+            <Input type="number" min={0} max={100} step={0.5} value={form.company_commission_percent}
+              onChange={e => setForm(f => ({ ...f, company_commission_percent: +e.target.value }))} />
+          </div>
+          <div>
+            <Label>{tx("اسم مسؤول المبيعات", "Sales Person Name")}</Label>
+            <Input value={form.sales_name}
+              onChange={e => setForm(f => ({ ...f, sales_name: e.target.value }))}
+              placeholder={tx("مثال: أحمد", "e.g. Ahmad")} />
+          </div>
+          <div>
+            <Label>{tx("عمولة Sales %", "Sales Commission %")}</Label>
+            <Input type="number" min={0} max={100} step={0.5} value={form.sales_commission_percent}
+              onChange={e => setForm(f => ({ ...f, sales_commission_percent: +e.target.value }))} />
+          </div>
+        </div>
       </div>
 
       {/* Amenities */}

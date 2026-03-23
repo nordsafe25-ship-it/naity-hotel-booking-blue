@@ -34,7 +34,7 @@ const AdminBookings = () => {
     queryFn: async () => {
       let q = supabase
         .from("bookings")
-        .select("*, hotels(name_ar, name_en), room_categories(name_ar, name_en)")
+        .select("*, hotels(name_ar, name_en, company_commission_percent, sales_commission_percent), room_categories(name_ar, name_en)")
         .order("created_at", { ascending: false });
       if (statusFilter !== "all") q = q.eq("status", statusFilter);
       if (paymentFilter !== "all") q = q.eq("payment_status", paymentFilter);
@@ -122,11 +122,17 @@ const AdminBookings = () => {
                     <th className="text-start p-3 font-medium text-muted-foreground">{lang === "ar" ? "العربون" : "Deposit"}</th>
                     <th className="text-start p-3 font-medium text-muted-foreground">{lang === "ar" ? "الحالة" : "Status"}</th>
                     <th className="text-start p-3 font-medium text-muted-foreground">{lang === "ar" ? "المزامنة" : "Sync"}</th>
+                    <th className="text-start p-3 font-medium text-muted-foreground">{lang === "ar" ? "ربح Naity" : "Naity Profit"}</th>
                     <th className="text-start p-3 font-medium text-muted-foreground"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filteredBookings?.map((b) => (
+                  {filteredBookings?.map((b) => {
+                    const dep = Number(b.deposit_amount || 0);
+                    const compPct = Number((b.hotels as any)?.company_commission_percent || 0);
+                    const salesPct = Number((b.hotels as any)?.sales_commission_percent || 0);
+                    const naityProfit = dep * 0.75 * (1 - compPct / 100 - salesPct / 100);
+                    return (
                     <tr key={b.id} className="hover:bg-muted/50">
                       <td className="p-3">
                         <div className="font-medium text-foreground">{b.guest_first_name} {b.guest_last_name}</div>
@@ -151,12 +157,16 @@ const AdminBookings = () => {
                         </span>
                       </td>
                       <td className="p-3">
+                        <span className="text-green-600 font-semibold">${naityProfit.toFixed(2)}</span>
+                      </td>
+                      <td className="p-3">
                         <Button variant="ghost" size="sm" onClick={() => setSelectedBooking(b)}>
                           <Eye className="w-4 h-4" />
                         </Button>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

@@ -331,6 +331,35 @@ export type Database = {
           },
         ]
       }
+      company_users: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_users_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "api_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_messages: {
         Row: {
           country: string
@@ -423,6 +452,7 @@ export type Database = {
           check_in_time: string | null
           check_out_time: string | null
           city: string
+          company_commission_percent: number | null
           company_id: string | null
           contact_email: string | null
           contact_phone: string | null
@@ -445,6 +475,8 @@ export type Database = {
           name_en: string
           neighborhood: string | null
           property_type: string
+          sales_commission_percent: number | null
+          sales_name: string | null
           slug: string | null
           stars: number
           tech_partner_id: string | null
@@ -464,6 +496,7 @@ export type Database = {
           check_in_time?: string | null
           check_out_time?: string | null
           city: string
+          company_commission_percent?: number | null
           company_id?: string | null
           contact_email?: string | null
           contact_phone?: string | null
@@ -486,6 +519,8 @@ export type Database = {
           name_en: string
           neighborhood?: string | null
           property_type?: string
+          sales_commission_percent?: number | null
+          sales_name?: string | null
           slug?: string | null
           stars?: number
           tech_partner_id?: string | null
@@ -505,6 +540,7 @@ export type Database = {
           check_in_time?: string | null
           check_out_time?: string | null
           city?: string
+          company_commission_percent?: number | null
           company_id?: string | null
           contact_email?: string | null
           contact_phone?: string | null
@@ -527,6 +563,8 @@ export type Database = {
           name_en?: string
           neighborhood?: string | null
           property_type?: string
+          sales_commission_percent?: number | null
+          sales_name?: string | null
           slug?: string | null
           stars?: number
           tech_partner_id?: string | null
@@ -629,6 +667,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          profit_share_percent: number | null
           updated_at: string
           user_id: string
         }
@@ -638,6 +677,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          profit_share_percent?: number | null
           updated_at?: string
           user_id: string
         }
@@ -647,6 +687,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          profit_share_percent?: number | null
           updated_at?: string
           user_id?: string
         }
@@ -925,7 +966,7 @@ export type Database = {
       unlist_stale_rooms: { Args: never; Returns: undefined }
     }
     Enums: {
-      app_role: "admin" | "hotel_manager" | "viewer"
+      app_role: "admin" | "hotel_manager" | "viewer" | "company"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1053,7 +1094,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "hotel_manager", "viewer"],
+      app_role: ["admin", "hotel_manager", "viewer", "company"],
     },
   },
 } as const

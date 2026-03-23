@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import naityLogo from "@/assets/naity-logo.png";
 import {
   Hotel, Users, BookOpen, LogOut, LayoutDashboard, Settings,
-  Menu, X, Globe, ChevronLeft, Activity, MessageSquare, Handshake, Plug, UserCog
+  Menu, X, Globe, ChevronLeft, Activity, MessageSquare, Handshake, Plug, UserCog, Wallet
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -36,6 +36,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     { to: "/admin/messages", icon: MessageSquare, label: lang === "ar" ? "الرسائل" : "Messages", badge: unreadCount },
     { to: "/admin/users", icon: UserCog, label: lang === "ar" ? "المستخدمون" : "Users" },
     { to: "/admin/sync", icon: Activity, label: lang === "ar" ? "إعدادات المزامنة" : "Sync Settings" },
+    { to: "/admin/finance", icon: Wallet, label: lang === "ar" ? "التوزيع المالي" : "Finance" },
   ];
 
   const isActive = (path: string) => location.pathname === path;
