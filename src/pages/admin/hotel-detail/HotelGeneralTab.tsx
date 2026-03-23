@@ -79,6 +79,9 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
     breakfast_season_start: (hotel as any).breakfast_season_start ?? "",
     breakfast_season_end: (hotel as any).breakfast_season_end ?? "",
     breakfast_price: (hotel as any).breakfast_price ?? 0,
+    company_commission_percent: (hotel as any).company_commission_percent ?? 0,
+    sales_commission_percent: (hotel as any).sales_commission_percent ?? 0,
+    sales_name: (hotel as any).sales_name ?? "",
   });
 
   const toggleAmenity = (key: string) => {
