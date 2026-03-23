@@ -34,7 +34,7 @@ const AdminBookings = () => {
     queryFn: async () => {
       let q = supabase
         .from("bookings")
-        .select("*, hotels(name_ar, name_en), room_categories(name_ar, name_en)")
+        .select("*, hotels(name_ar, name_en, company_commission_percent, sales_commission_percent), room_categories(name_ar, name_en)")
         .order("created_at", { ascending: false });
       if (statusFilter !== "all") q = q.eq("status", statusFilter);
       if (paymentFilter !== "all") q = q.eq("payment_status", paymentFilter);
