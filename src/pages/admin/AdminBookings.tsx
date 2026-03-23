@@ -127,7 +127,12 @@ const AdminBookings = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filteredBookings?.map((b) => (
+                  {filteredBookings?.map((b) => {
+                    const dep = Number(b.deposit_amount || 0);
+                    const compPct = Number((b.hotels as any)?.company_commission_percent || 0);
+                    const salesPct = Number((b.hotels as any)?.sales_commission_percent || 0);
+                    const naityProfit = dep * 0.75 * (1 - compPct / 100 - salesPct / 100);
+                    return (
                     <tr key={b.id} className="hover:bg-muted/50">
                       <td className="p-3">
                         <div className="font-medium text-foreground">{b.guest_first_name} {b.guest_last_name}</div>
@@ -152,12 +157,16 @@ const AdminBookings = () => {
                         </span>
                       </td>
                       <td className="p-3">
+                        <span className="text-green-600 font-semibold">${naityProfit.toFixed(2)}</span>
+                      </td>
+                      <td className="p-3">
                         <Button variant="ghost" size="sm" onClick={() => setSelectedBooking(b)}>
                           <Eye className="w-4 h-4" />
                         </Button>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
