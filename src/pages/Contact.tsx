@@ -399,7 +399,7 @@ const Contact = () => {
                 <h3 className="font-bold text-lg">{t("contact.hotelCta")}</h3>
                 <p className="text-sm text-accent-foreground/80">{t("contact.hotelCtaDesc")}</p>
                 <a
-                  href="https://wa.me/963988495629?text=مرحباً،%20أريد%20إضافة%20فندقي%20إلى%20Naity"
+                  href="https://wa.me/963981941098?text=مرحباً،%20أريد%20إضافة%20فندقي%20إلى%20Naity"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-opacity"
