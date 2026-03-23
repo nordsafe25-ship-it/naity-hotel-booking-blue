@@ -311,7 +311,7 @@ const Contact = () => {
                 </div>
 
                 {/* WhatsApp */}
-                <a href="https://wa.me/963988495629" target="_blank" rel="noopener noreferrer"
+                <a href="https://wa.me/963981941098" target="_blank" rel="noopener noreferrer"
                    className="flex items-start gap-3 hover:opacity-80 transition group">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                        style={{ background: "#25D366" }}>
