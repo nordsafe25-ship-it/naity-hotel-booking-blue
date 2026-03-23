@@ -3,13 +3,12 @@ import { useAuth } from "@/hooks/useAuth";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: "admin" | "hotel_manager" | "viewer";
+  requiredRole?: "admin" | "hotel_manager" | "viewer" | "company";
 }
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const { user, loading, role } = useAuth();
 
-  // Still loading auth session
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -18,7 +17,6 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     );
   }
 
-  // User logged in but role not fetched yet
   if (user && requiredRole && role === null) {
     return (
       <div className="min-h-screen flex items-center justify-center">

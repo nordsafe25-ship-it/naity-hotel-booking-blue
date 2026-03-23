@@ -18,8 +18,6 @@ const Dashboard = () => {
       });
   }, [user]);
 
-  console.log("Dashboard debug:", { user: user?.email, role, isPartner, loading, checking });
-
   if (loading || checking) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -29,6 +27,8 @@ const Dashboard = () => {
   if (isPartner) return <Navigate to="/partner" replace />;
   if (role === "admin") return <Navigate to="/admin" replace />;
   if (role === "hotel_manager") return <Navigate to="/hotel-panel" replace />;
+  if (role === "viewer") return <Navigate to="/viewer-dashboard" replace />;
+  if (role === "company") return <Navigate to="/company-dashboard" replace />;
   return <Navigate to="/" replace />;
 };
 

@@ -8,7 +8,7 @@ interface AuthContextType {
   user: UserType;
   session: SessionType;
   loading: boolean;
-  role: "admin" | "hotel_manager" | "viewer" | null;
+  role: "admin" | "hotel_manager" | "viewer" | "company" | null;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserType>(null);
   const [session, setSession] = useState<SessionType>(null);
   const [loading, setLoading] = useState(true);
-  const [role, setRole] = useState<"admin" | "hotel_manager" | "viewer" | null>(null);
+  const [role, setRole] = useState<"admin" | "hotel_manager" | "viewer" | "company" | null>(null);
 
   const fetchRole = async (userId: string) => {
     try {
@@ -28,10 +28,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .from("user_roles")
         .select("role")
         .eq("user_id", userId);
-      // Prioritize: admin > hotel_manager > viewer > null
       const roles = (data ?? []).map((r: any) => r.role);
       if (roles.includes("admin")) setRole("admin");
       else if (roles.includes("hotel_manager")) setRole("hotel_manager");
+      else if (roles.includes("company")) setRole("company");
       else if (roles.includes("viewer")) setRole("viewer");
       else setRole(null);
     } catch {

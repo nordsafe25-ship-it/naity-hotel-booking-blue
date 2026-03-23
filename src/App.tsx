@@ -33,8 +33,12 @@ import AdminMessages from "./pages/admin/AdminMessages";
 import AdminPartners from "./pages/admin/AdminPartners";
 import AdminApiCompanies from "./pages/admin/AdminApiCompanies";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminFinance from "./pages/admin/AdminFinance";
 import HotelPanel from "./pages/hotel/HotelPanel";
 import PartnerDashboard from "./pages/partner/PartnerDashboard";
+import ViewerDashboard from "./pages/viewer/ViewerDashboard";
+import CompanyDashboard from "./pages/company/CompanyDashboard";
+import Receipt from "./pages/Receipt";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +66,7 @@ const App = () => (
               <Route path="/my-bookings" element={<MyBookings />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/receipt" element={<Receipt />} />
 
               {/* Dashboard redirect */}
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -78,9 +83,16 @@ const App = () => (
               <Route path="/admin/partners" element={<ProtectedRoute requiredRole="admin"><AdminPartners /></ProtectedRoute>} />
               <Route path="/admin/api-companies" element={<ProtectedRoute requiredRole="admin"><AdminApiCompanies /></ProtectedRoute>} />
               <Route path="/admin/users" element={<ProtectedRoute requiredRole="admin"><AdminUsers /></ProtectedRoute>} />
+              <Route path="/admin/finance" element={<ProtectedRoute requiredRole="admin"><AdminFinance /></ProtectedRoute>} />
 
               {/* Hotel Manager */}
               <Route path="/hotel-panel" element={<ProtectedRoute requiredRole="hotel_manager"><HotelPanel /></ProtectedRoute>} />
+
+              {/* Viewer */}
+              <Route path="/viewer-dashboard" element={<ProtectedRoute requiredRole="viewer"><ViewerDashboard /></ProtectedRoute>} />
+
+              {/* Company */}
+              <Route path="/company-dashboard" element={<ProtectedRoute requiredRole="company"><CompanyDashboard /></ProtectedRoute>} />
 
               {/* Partner */}
               <Route path="/partner" element={<ProtectedRoute><PartnerDashboard /></ProtectedRoute>} />
