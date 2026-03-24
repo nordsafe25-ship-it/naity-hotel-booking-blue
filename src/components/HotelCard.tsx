@@ -16,7 +16,7 @@ const HotelCard = ({ hotel }: { hotel: Hotel & { property_type?: string } }) => 
         <img
           src={hotel.image}
           alt={localizeHotelName(Number(hotel.id), hotel.name)}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-cover [@media(hover:hover)]:group-hover:scale-105 transition-transform duration-500"
         />
         <div className="absolute top-3 left-3 bg-card/90 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-semibold text-primary" dir="ltr">
           ${hotel.pricePerNight}{t("hotel.perNight")}
