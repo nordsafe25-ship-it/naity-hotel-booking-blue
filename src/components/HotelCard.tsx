@@ -39,7 +39,7 @@ const HotelCard = ({ hotel }: { hotel: Hotel & { property_type?: string } }) => 
           </span>
         )}
         <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-          {localizeHotelName(hotel.id, hotel.name)}
+          {localizeHotelName(String(hotel.id), hotel.name)}
         </h3>
         <div className="flex items-center gap-1 text-sm text-muted-foreground">
           <MapPin className="w-3.5 h-3.5" />
