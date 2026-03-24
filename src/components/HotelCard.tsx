@@ -1,4 +1,4 @@
-import { Hotel } from "@/lib/mockData";
+import type { Hotel } from "@/lib/mockData";
 import { Star, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useI18n, useLocalizedHotelData } from "@/lib/i18n";
@@ -15,7 +15,7 @@ const HotelCard = ({ hotel }: { hotel: Hotel & { property_type?: string } }) => 
       <div className="relative h-48 overflow-hidden">
         <img
           src={hotel.image}
-          alt={localizeHotelName(hotel.id, hotel.name)}
+          alt={localizeHotelName(Number(hotel.id), hotel.name)}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
         <div className="absolute top-3 left-3 bg-card/90 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-semibold text-primary" dir="ltr">
@@ -39,7 +39,7 @@ const HotelCard = ({ hotel }: { hotel: Hotel & { property_type?: string } }) => 
           </span>
         )}
         <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-          {localizeHotelName(hotel.id, hotel.name)}
+          {localizeHotelName(Number(hotel.id), hotel.name)}
         </h3>
         <div className="flex items-center gap-1 text-sm text-muted-foreground">
           <MapPin className="w-3.5 h-3.5" />
