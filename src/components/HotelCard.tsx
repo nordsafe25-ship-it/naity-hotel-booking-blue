@@ -1,4 +1,4 @@
-import { Hotel } from "@/lib/mockData";
+import type { Hotel } from "@/lib/mockData";
 import { Star, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useI18n, useLocalizedHotelData } from "@/lib/i18n";
