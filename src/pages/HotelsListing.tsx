@@ -378,7 +378,7 @@ const HotelsListing = () => {
                     >
                       <Link
                         to={`/hotels/${hotel.id}`}
-                        className="group block rounded-xl overflow-hidden bg-card shadow-card border border-border/50 hover:shadow-elevated transition-all duration-300 hover:-translate-y-1"
+                        className="group block rounded-xl overflow-hidden bg-card shadow-card border border-border/50 [@media(hover:hover)]:hover:shadow-elevated transition-all duration-300 [@media(hover:hover)]:hover:-translate-y-1 touch-action-manipulation"
                       >
                         <div className="relative h-48 overflow-hidden">
                           <img
