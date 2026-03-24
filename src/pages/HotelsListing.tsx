@@ -384,7 +384,7 @@ const HotelsListing = () => {
                           <img
                             src={hotel.cover_image || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80"}
                             alt={name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            className="w-full h-full object-cover [@media(hover:hover)]:group-hover:scale-105 transition-transform duration-500"
                           />
                           {price && (
                             <div className="absolute top-3 left-3 bg-card/90 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-semibold text-primary" dir="ltr">
