@@ -4,6 +4,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .touch-action-manipulation {
+    touch-action: manipulation;
+  }
+}
+
 @layer base {
   :root {
     --background: 210 20% 98%;

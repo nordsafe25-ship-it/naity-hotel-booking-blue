@@ -65,7 +65,7 @@ const FeaturedHotels = () => {
             const price = prices[hotel.id];
             return (
               <motion.div key={hotel.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
-                <Link to={`/hotels/${hotel.id}`} className="group block rounded-2xl overflow-hidden bg-card shadow-card border border-border/50 hover:shadow-elevated transition-all duration-300 hover:-translate-y-1">
+                <Link to={`/hotels/${hotel.id}`} className="group block rounded-2xl overflow-hidden bg-card shadow-card border border-border/50 [@media(hover:hover)]:hover:shadow-elevated transition-all duration-300 [@media(hover:hover)]:hover:-translate-y-1 touch-action-manipulation">
                   <div className="relative h-52 overflow-hidden">
                     <img src={hotel.cover_image} alt={name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                     {price && (
