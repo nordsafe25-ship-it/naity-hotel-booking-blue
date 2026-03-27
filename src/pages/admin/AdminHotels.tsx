@@ -15,6 +15,8 @@ import { Plus, Star, MapPin, Pencil, Trash2, AlertTriangle, ChevronRight, Clock 
 import HeartbeatIndicator from "@/components/admin/HeartbeatIndicator";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { SYRIAN_MAIN_CITIES } from "@/lib/cities";
+import { STRUCTURED_AMENITIES } from "@/lib/amenities";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const AdminHotels = () => {
   const { lang } = useI18n();
