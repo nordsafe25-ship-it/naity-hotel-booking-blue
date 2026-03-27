@@ -218,7 +218,7 @@ const HotelsListing = () => {
             <div className="space-y-3">
               <label className="text-sm font-medium text-foreground">{tx("المرافق", "Amenities")}</label>
               <div className="flex flex-col gap-2">
-                {AMENITY_OPTIONS.map(a => (
+                {AMENITY_FILTER_OPTIONS.map(a => (
                   <label key={a.key} className="flex items-center gap-2 cursor-pointer">
                     <Checkbox
                       checked={amenityFilters.includes(a.key)}
@@ -230,12 +230,6 @@ const HotelsListing = () => {
                 ))}
               </div>
             </div>
-
-            {/* Breakfast Filter */}
-            <label className="flex items-center gap-2 cursor-pointer text-sm">
-              <Checkbox checked={breakfastOnly} onCheckedChange={v => setBreakfastOnly(!!v)} />
-              <span>🍳 {tx("يشمل الفطور", "Breakfast included")}</span>
-            </label>
 
             {/* Instantly Bookable */}
             <div className="flex items-center justify-between">
