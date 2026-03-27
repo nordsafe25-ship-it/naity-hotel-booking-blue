@@ -388,6 +388,7 @@ const HotelsListing = () => {
                             </span>
                           </div>
                           <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{name}</h3>
+                          <AmenityBadges hotel={hotel} compact />
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
                             <MapPin className="w-3.5 h-3.5" />
                             {hotel.city}
