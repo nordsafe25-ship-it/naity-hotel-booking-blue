@@ -15,6 +15,8 @@ import { Plus, Star, MapPin, Pencil, Trash2, AlertTriangle, ChevronRight, Clock 
 import HeartbeatIndicator from "@/components/admin/HeartbeatIndicator";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { SYRIAN_MAIN_CITIES } from "@/lib/cities";
+import { STRUCTURED_AMENITIES } from "@/lib/amenities";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const AdminHotels = () => {
   const { lang } = useI18n();
@@ -27,6 +29,8 @@ const AdminHotels = () => {
   const [form, setForm] = useState<Partial<TablesInsert<"hotels">> & { property_type?: string; tech_partner_id?: string | null; company_id?: string | null; external_hotel_id?: number | null }>({
     name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "",
     contact_phone: "", contact_email: "", property_type: "hotel", tech_partner_id: null, company_id: null, external_hotel_id: null,
+    amenity_wifi: false, amenity_breakfast: false, amenity_electricity_24h: false, amenity_hot_water_24h: false,
+    amenity_parking: false, amenity_pool: false, amenity_ac_heating: false,
   });
 
   const { data: techPartners = [] } = useQuery({
@@ -119,7 +123,7 @@ const AdminHotels = () => {
   });
 
   const resetForm = () => {
-    setForm({ name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "", contact_phone: "", contact_email: "", property_type: "hotel", tech_partner_id: null, company_id: null, external_hotel_id: null });
+    setForm({ name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "", contact_phone: "", contact_email: "", property_type: "hotel", tech_partner_id: null, company_id: null, external_hotel_id: null, amenity_wifi: false, amenity_breakfast: false, amenity_electricity_24h: false, amenity_hot_water_24h: false, amenity_parking: false, amenity_pool: false, amenity_ac_heating: false });
     setEditing(null);
   };
 
@@ -134,6 +138,13 @@ const AdminHotels = () => {
       tech_partner_id: (hotel as any).tech_partner_id ?? null,
       company_id: (hotel as any).company_id ?? null,
       external_hotel_id: (hotel as any).external_hotel_id ?? null,
+      amenity_wifi: hotel.amenity_wifi ?? false,
+      amenity_breakfast: hotel.amenity_breakfast ?? false,
+      amenity_electricity_24h: hotel.amenity_electricity_24h ?? false,
+      amenity_hot_water_24h: hotel.amenity_hot_water_24h ?? false,
+      amenity_parking: hotel.amenity_parking ?? false,
+      amenity_pool: hotel.amenity_pool ?? false,
+      amenity_ac_heating: hotel.amenity_ac_heating ?? false,
     });
     setOpen(true);
   };
@@ -259,6 +270,22 @@ const AdminHotels = () => {
                 <div>
                   <Label>Description (English)</Label>
                   <Textarea value={form.description_en ?? ""} onChange={(e) => setForm(f => ({ ...f, description_en: e.target.value }))} />
+                </div>
+                {/* Amenities */}
+                <div className="space-y-2">
+                  <Label>{tx("المرافق والخدمات", "Amenities")}</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {STRUCTURED_AMENITIES.map(a => (
+                      <label key={a.key} className="flex items-center gap-2 cursor-pointer p-2 rounded-lg border border-border/50 hover:bg-muted/50 transition">
+                        <Checkbox
+                          checked={!!(form as any)[a.key]}
+                          onCheckedChange={(v) => setForm(f => ({ ...f, [a.key]: !!v }))}
+                        />
+                        <a.icon className="w-4 h-4 text-primary" />
+                        <span className="text-sm">{lang === "ar" ? a.label_ar : a.label_en}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
                 <Button type="submit" className="w-full gradient-cta" disabled={saveMutation.isPending}>
                   {saveMutation.isPending ? "..." : editing ? tx("تحديث", "Update") : tx("إضافة", "Add")}
