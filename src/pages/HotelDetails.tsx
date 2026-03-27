@@ -240,19 +240,11 @@ const HotelDetails = () => {
           </div>
         )}
 
-        {/* Amenities */}
-        {hotel.amenities && hotel.amenities.length > 0 && (
-          <div>
-            <h2 className="text-xl font-bold text-foreground mb-3">{t("hotel.amenities")}</h2>
-            <div className="flex flex-wrap gap-2">
-              {hotel.amenities.map((a: string) => (
-                <span key={a} className="bg-muted text-muted-foreground px-3 py-1.5 rounded-lg text-sm flex items-center gap-1">
-                  <Check className="w-3.5 h-3.5 text-primary" /> {a}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Structured Amenities */}
+        <div>
+          <h2 className="text-xl font-bold text-foreground mb-3">{t("hotel.amenities")}</h2>
+          <AmenityBadges hotel={hotel as any} />
+        </div>
 
         {/* Date Picker for Availability */}
         <div className="bg-card rounded-xl p-6 shadow-card border border-border/50 space-y-4">

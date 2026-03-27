@@ -22,13 +22,7 @@ const SYRIAN_CITIES = [
   { en: "Tartus",    ar: "طرطوس" },
 ];
 
-const AMENITY_OPTIONS = [
-  { key: "wifi", label_en: "High-speed Wi-Fi", label_ar: "واي فاي عالي السرعة", icon: Wifi },
-  { key: "electricity", label_en: "24/7 Electricity", label_ar: "كهرباء 24/7", icon: ZapIcon },
-  { key: "shuttle", label_en: "Airport Shuttle", label_ar: "نقل من المطار", icon: PlaneTakeoff },
-  { key: "breakfast", label_en: "Breakfast Included", label_ar: "إفطار مشمول", icon: UtensilsCrossed },
-  { key: "gym", label_en: "Gym/Spa", label_ar: "صالة رياضية/سبا", icon: Dumbbell },
-];
+const AMENITY_FILTER_OPTIONS = STRUCTURED_AMENITIES;
 
 const HotelsListing = () => {
   const [searchParams] = useSearchParams();
