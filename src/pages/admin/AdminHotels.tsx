@@ -271,6 +271,22 @@ const AdminHotels = () => {
                   <Label>Description (English)</Label>
                   <Textarea value={form.description_en ?? ""} onChange={(e) => setForm(f => ({ ...f, description_en: e.target.value }))} />
                 </div>
+                {/* Amenities */}
+                <div className="space-y-2">
+                  <Label>{tx("المرافق والخدمات", "Amenities")}</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {STRUCTURED_AMENITIES.map(a => (
+                      <label key={a.key} className="flex items-center gap-2 cursor-pointer p-2 rounded-lg border border-border/50 hover:bg-muted/50 transition">
+                        <Checkbox
+                          checked={!!(form as any)[a.key]}
+                          onCheckedChange={(v) => setForm(f => ({ ...f, [a.key]: !!v }))}
+                        />
+                        <a.icon className="w-4 h-4 text-primary" />
+                        <span className="text-sm">{lang === "ar" ? a.label_ar : a.label_en}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
                 <Button type="submit" className="w-full gradient-cta" disabled={saveMutation.isPending}>
                   {saveMutation.isPending ? "..." : editing ? tx("تحديث", "Update") : tx("إضافة", "Add")}
                 </Button>
