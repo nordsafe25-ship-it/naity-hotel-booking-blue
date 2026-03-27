@@ -102,10 +102,9 @@ const HotelsListing = () => {
         if (!amenityFilters.every(af => !!(h as any)[af])) return false;
       }
       if (instantOnly && !syncStatuses[h.id]) return false;
-      if (breakfastOnly && !(h as any).breakfast_available) return false;
       return true;
     }),
-    [hotels, city, propertyTypeFilter, starFilters, amenityFilters, instantOnly, breakfastOnly, priceRange, minPrices, syncStatuses]
+    [hotels, city, propertyTypeFilter, starFilters, amenityFilters, instantOnly, priceRange, minPrices, syncStatuses]
   );
 
   return (
