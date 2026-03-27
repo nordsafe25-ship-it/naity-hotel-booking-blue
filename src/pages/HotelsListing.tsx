@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { SlidersHorizontal, Star, MapPin, X, Wifi, Zap as ZapIcon, PlaneTakeoff, UtensilsCrossed, Dumbbell } from "lucide-react";
+import { SlidersHorizontal, Star, MapPin, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { STRUCTURED_AMENITIES } from "@/lib/amenities";
+import AmenityBadges from "@/components/AmenityBadges";
 import Layout from "@/components/Layout";
 import { useI18n } from "@/lib/i18n";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,13 +22,7 @@ const SYRIAN_CITIES = [
   { en: "Tartus",    ar: "طرطوس" },
 ];
 
-const AMENITY_OPTIONS = [
-  { key: "wifi", label_en: "High-speed Wi-Fi", label_ar: "واي فاي عالي السرعة", icon: Wifi },
-  { key: "electricity", label_en: "24/7 Electricity", label_ar: "كهرباء 24/7", icon: ZapIcon },
-  { key: "shuttle", label_en: "Airport Shuttle", label_ar: "نقل من المطار", icon: PlaneTakeoff },
-  { key: "breakfast", label_en: "Breakfast Included", label_ar: "إفطار مشمول", icon: UtensilsCrossed },
-  { key: "gym", label_en: "Gym/Spa", label_ar: "صالة رياضية/سبا", icon: Dumbbell },
-];
+const AMENITY_FILTER_OPTIONS = STRUCTURED_AMENITIES;
 
 const HotelsListing = () => {
   const [searchParams] = useSearchParams();
@@ -45,10 +41,9 @@ const HotelsListing = () => {
   const [instantOnly, setInstantOnly] = useState(false);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<"all" | "hotel" | "apartment">("all");
-  const [breakfastOnly, setBreakfastOnly] = useState(false);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
-  const hasActiveFilters = city !== "" || starFilters.length > 0 || amenityFilters.length > 0 || instantOnly || priceRange[0] > 0 || priceRange[1] < 500 || propertyTypeFilter !== "all" || breakfastOnly;
+  const hasActiveFilters = city !== "" || starFilters.length > 0 || amenityFilters.length > 0 || instantOnly || priceRange[0] > 0 || priceRange[1] < 500 || propertyTypeFilter !== "all";
 
   const ALLOWED_CITY_NAMES = SYRIAN_CITIES.map(c => c.en);
 
@@ -92,7 +87,6 @@ const HotelsListing = () => {
     setInstantOnly(false);
     setPriceRange([0, 500]);
     setPropertyTypeFilter("all");
-    setBreakfastOnly(false);
   };
 
   const filtered = useMemo(() =>
@@ -104,15 +98,13 @@ const HotelsListing = () => {
         const p = minPrices[h.id];
         if (p !== undefined && (p < priceRange[0] || p > priceRange[1])) return false;
       }
-      if (amenityFilters.length > 0 && h.amenities) {
-        const ha = (h.amenities as string[]).map((a: string) => a.toLowerCase());
-        if (!amenityFilters.every(af => ha.some(a => a.includes(af)))) return false;
+      if (amenityFilters.length > 0) {
+        if (!amenityFilters.every(af => !!(h as any)[af])) return false;
       }
       if (instantOnly && !syncStatuses[h.id]) return false;
-      if (breakfastOnly && !(h as any).breakfast_available) return false;
       return true;
     }),
-    [hotels, city, propertyTypeFilter, starFilters, amenityFilters, instantOnly, breakfastOnly, priceRange, minPrices, syncStatuses]
+    [hotels, city, propertyTypeFilter, starFilters, amenityFilters, instantOnly, priceRange, minPrices, syncStatuses]
   );
 
   return (
@@ -223,7 +215,7 @@ const HotelsListing = () => {
             <div className="space-y-3">
               <label className="text-sm font-medium text-foreground">{tx("المرافق", "Amenities")}</label>
               <div className="flex flex-col gap-2">
-                {AMENITY_OPTIONS.map(a => (
+                {AMENITY_FILTER_OPTIONS.map(a => (
                   <label key={a.key} className="flex items-center gap-2 cursor-pointer">
                     <Checkbox
                       checked={amenityFilters.includes(a.key)}
@@ -235,12 +227,6 @@ const HotelsListing = () => {
                 ))}
               </div>
             </div>
-
-            {/* Breakfast Filter */}
-            <label className="flex items-center gap-2 cursor-pointer text-sm">
-              <Checkbox checked={breakfastOnly} onCheckedChange={v => setBreakfastOnly(!!v)} />
-              <span>🍳 {tx("يشمل الفطور", "Breakfast included")}</span>
-            </label>
 
             {/* Instantly Bookable */}
             <div className="flex items-center justify-between">
@@ -320,7 +306,7 @@ const HotelsListing = () => {
                     <div className="space-y-3">
                       <label className="text-sm font-medium text-foreground">{tx("المرافق", "Amenities")}</label>
                       <div className="flex flex-col gap-2">
-                        {AMENITY_OPTIONS.map(a => (
+                        {AMENITY_FILTER_OPTIONS.map(a => (
                           <label key={a.key} className="flex items-center gap-2 cursor-pointer">
                             <Checkbox checked={amenityFilters.includes(a.key)} onCheckedChange={() => setAmenityFilters(prev => prev.includes(a.key) ? prev.filter(x => x !== a.key) : [...prev, a.key])} />
                             <a.icon className="w-4 h-4 text-muted-foreground" />
@@ -329,11 +315,6 @@ const HotelsListing = () => {
                         ))}
                       </div>
                     </div>
-                    {/* Breakfast Filter */}
-                    <label className="flex items-center gap-2 cursor-pointer text-sm">
-                      <Checkbox checked={breakfastOnly} onCheckedChange={v => setBreakfastOnly(!!v)} />
-                      <span>🍳 {tx("يشمل الفطور", "Breakfast included")}</span>
-                    </label>
                     {/* Instantly Bookable */}
                     <div className="flex items-center justify-between">
                       <div>
@@ -404,6 +385,7 @@ const HotelsListing = () => {
                             </span>
                           </div>
                           <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{name}</h3>
+                          <AmenityBadges hotel={hotel} compact />
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
                             <MapPin className="w-3.5 h-3.5" />
                             {hotel.city}

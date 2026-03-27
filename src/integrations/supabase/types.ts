@@ -441,6 +441,13 @@ export type Database = {
         Row: {
           address: string | null
           amenities: string[] | null
+          amenity_ac_heating: boolean
+          amenity_breakfast: boolean
+          amenity_electricity_24h: boolean
+          amenity_hot_water_24h: boolean
+          amenity_parking: boolean
+          amenity_pool: boolean
+          amenity_wifi: boolean
           area_sqm: number | null
           bathrooms: number | null
           bedrooms: number | null
@@ -485,6 +492,13 @@ export type Database = {
         Insert: {
           address?: string | null
           amenities?: string[] | null
+          amenity_ac_heating?: boolean
+          amenity_breakfast?: boolean
+          amenity_electricity_24h?: boolean
+          amenity_hot_water_24h?: boolean
+          amenity_parking?: boolean
+          amenity_pool?: boolean
+          amenity_wifi?: boolean
           area_sqm?: number | null
           bathrooms?: number | null
           bedrooms?: number | null
@@ -529,6 +543,13 @@ export type Database = {
         Update: {
           address?: string | null
           amenities?: string[] | null
+          amenity_ac_heating?: boolean
+          amenity_breakfast?: boolean
+          amenity_electricity_24h?: boolean
+          amenity_hot_water_24h?: boolean
+          amenity_parking?: boolean
+          amenity_pool?: boolean
+          amenity_wifi?: boolean
           area_sqm?: number | null
           bathrooms?: number | null
           bedrooms?: number | null

@@ -12,14 +12,7 @@ import { Save, Star } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Tables } from "@/integrations/supabase/types";
 import { SYRIAN_MAIN_CITIES } from "@/lib/cities";
-
-const HOTEL_AMENITY_OPTIONS = [
-  { key: "wifi", label_en: "High-speed Wi-Fi", label_ar: "واي فاي عالي السرعة" },
-  { key: "electricity", label_en: "24/7 Electricity", label_ar: "كهرباء 24/7" },
-  { key: "shuttle", label_en: "Airport Shuttle", label_ar: "نقل من المطار" },
-  { key: "breakfast", label_en: "Breakfast Included", label_ar: "إفطار مشمول" },
-  { key: "gym", label_en: "Gym/Spa", label_ar: "صالة رياضية/سبا" },
-];
+import { STRUCTURED_AMENITIES } from "@/lib/amenities";
 
 const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
   const { lang } = useI18n();
@@ -62,6 +55,13 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
     contact_email: hotel.contact_email ?? "",
     property_type: (hotel as any).property_type ?? "hotel",
     amenities: (hotel.amenities as string[]) ?? [],
+    amenity_wifi: (hotel as any).amenity_wifi ?? false,
+    amenity_breakfast: (hotel as any).amenity_breakfast ?? false,
+    amenity_electricity_24h: (hotel as any).amenity_electricity_24h ?? false,
+    amenity_hot_water_24h: (hotel as any).amenity_hot_water_24h ?? false,
+    amenity_parking: (hotel as any).amenity_parking ?? false,
+    amenity_pool: (hotel as any).amenity_pool ?? false,
+    amenity_ac_heating: (hotel as any).amenity_ac_heating ?? false,
     floor: (hotel as any).floor ?? null,
     neighborhood: (hotel as any).neighborhood ?? "",
     check_in_time: (hotel as any).check_in_time ?? "14:00",
@@ -413,18 +413,19 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
         </div>
       </div>
 
-      {/* Amenities */}
+      {/* Structured Amenities */}
       <div className="bg-card rounded-xl p-6 border border-border/50 shadow-card space-y-4">
         <h2 className="font-semibold text-foreground text-lg">
           {tx("مرافق الفندق", "Hotel Amenities")}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {HOTEL_AMENITY_OPTIONS.map(a => (
+          {STRUCTURED_AMENITIES.map(a => (
             <label key={a.key} className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-muted transition">
               <Checkbox
-                checked={form.amenities.includes(a.key)}
-                onCheckedChange={() => toggleAmenity(a.key)}
+                checked={(form as any)[a.key]}
+                onCheckedChange={(v) => setForm(f => ({ ...f, [a.key]: !!v }))}
               />
+              <a.icon className="w-4 h-4 text-primary" />
               <span className="text-sm text-foreground">{lang === "ar" ? a.label_ar : a.label_en}</span>
             </label>
           ))}
