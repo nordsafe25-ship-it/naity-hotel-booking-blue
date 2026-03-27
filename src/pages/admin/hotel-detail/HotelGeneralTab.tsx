@@ -12,14 +12,7 @@ import { Save, Star } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Tables } from "@/integrations/supabase/types";
 import { SYRIAN_MAIN_CITIES } from "@/lib/cities";
-
-const HOTEL_AMENITY_OPTIONS = [
-  { key: "wifi", label_en: "High-speed Wi-Fi", label_ar: "واي فاي عالي السرعة" },
-  { key: "electricity", label_en: "24/7 Electricity", label_ar: "كهرباء 24/7" },
-  { key: "shuttle", label_en: "Airport Shuttle", label_ar: "نقل من المطار" },
-  { key: "breakfast", label_en: "Breakfast Included", label_ar: "إفطار مشمول" },
-  { key: "gym", label_en: "Gym/Spa", label_ar: "صالة رياضية/سبا" },
-];
+import { STRUCTURED_AMENITIES } from "@/lib/amenities";
 
 const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
   const { lang } = useI18n();
