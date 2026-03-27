@@ -413,18 +413,19 @@ const HotelGeneralTab = ({ hotel }: { hotel: Tables<"hotels"> }) => {
         </div>
       </div>
 
-      {/* Amenities */}
+      {/* Structured Amenities */}
       <div className="bg-card rounded-xl p-6 border border-border/50 shadow-card space-y-4">
         <h2 className="font-semibold text-foreground text-lg">
           {tx("مرافق الفندق", "Hotel Amenities")}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {HOTEL_AMENITY_OPTIONS.map(a => (
+          {STRUCTURED_AMENITIES.map(a => (
             <label key={a.key} className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-muted transition">
               <Checkbox
-                checked={form.amenities.includes(a.key)}
-                onCheckedChange={() => toggleAmenity(a.key)}
+                checked={(form as any)[a.key]}
+                onCheckedChange={(v) => setForm(f => ({ ...f, [a.key]: !!v }))}
               />
+              <a.icon className="w-4 h-4 text-primary" />
               <span className="text-sm text-foreground">{lang === "ar" ? a.label_ar : a.label_en}</span>
             </label>
           ))}
