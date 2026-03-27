@@ -138,6 +138,13 @@ const AdminHotels = () => {
       tech_partner_id: (hotel as any).tech_partner_id ?? null,
       company_id: (hotel as any).company_id ?? null,
       external_hotel_id: (hotel as any).external_hotel_id ?? null,
+      amenity_wifi: hotel.amenity_wifi ?? false,
+      amenity_breakfast: hotel.amenity_breakfast ?? false,
+      amenity_electricity_24h: hotel.amenity_electricity_24h ?? false,
+      amenity_hot_water_24h: hotel.amenity_hot_water_24h ?? false,
+      amenity_parking: hotel.amenity_parking ?? false,
+      amenity_pool: hotel.amenity_pool ?? false,
+      amenity_ac_heating: hotel.amenity_ac_heating ?? false,
     });
     setOpen(true);
   };
