@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { SlidersHorizontal, Star, MapPin, X, Wifi, Zap as ZapIcon, PlaneTakeoff, UtensilsCrossed, Dumbbell } from "lucide-react";
+import { SlidersHorizontal, Star, MapPin, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { STRUCTURED_AMENITIES } from "@/lib/amenities";
+import AmenityBadges from "@/components/AmenityBadges";
 import Layout from "@/components/Layout";
 import { useI18n } from "@/lib/i18n";
 import { Checkbox } from "@/components/ui/checkbox";
