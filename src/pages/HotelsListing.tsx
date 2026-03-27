@@ -87,7 +87,6 @@ const HotelsListing = () => {
     setInstantOnly(false);
     setPriceRange([0, 500]);
     setPropertyTypeFilter("all");
-    setBreakfastOnly(false);
   };
 
   const filtered = useMemo(() =>
