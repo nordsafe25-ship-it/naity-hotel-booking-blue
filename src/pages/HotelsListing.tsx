@@ -41,10 +41,9 @@ const HotelsListing = () => {
   const [instantOnly, setInstantOnly] = useState(false);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<"all" | "hotel" | "apartment">("all");
-  const [breakfastOnly, setBreakfastOnly] = useState(false);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
-  const hasActiveFilters = city !== "" || starFilters.length > 0 || amenityFilters.length > 0 || instantOnly || priceRange[0] > 0 || priceRange[1] < 500 || propertyTypeFilter !== "all" || breakfastOnly;
+  const hasActiveFilters = city !== "" || starFilters.length > 0 || amenityFilters.length > 0 || instantOnly || priceRange[0] > 0 || priceRange[1] < 500 || propertyTypeFilter !== "all";
 
   const ALLOWED_CITY_NAMES = SYRIAN_CITIES.map(c => c.en);
 
