@@ -9,6 +9,7 @@ import { useI18n } from "@/lib/i18n";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
+import AmenityBadges from "@/components/AmenityBadges";
 
 const DEPOSIT_PERCENT = 10;
 
