@@ -100,9 +100,8 @@ const HotelsListing = () => {
         const p = minPrices[h.id];
         if (p !== undefined && (p < priceRange[0] || p > priceRange[1])) return false;
       }
-      if (amenityFilters.length > 0 && h.amenities) {
-        const ha = (h.amenities as string[]).map((a: string) => a.toLowerCase());
-        if (!amenityFilters.every(af => ha.some(a => a.includes(af)))) return false;
+      if (amenityFilters.length > 0) {
+        if (!amenityFilters.every(af => !!(h as any)[af])) return false;
       }
       if (instantOnly && !syncStatuses[h.id]) return false;
       if (breakfastOnly && !(h as any).breakfast_available) return false;
