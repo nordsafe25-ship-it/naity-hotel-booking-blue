@@ -27,6 +27,8 @@ const AdminHotels = () => {
   const [form, setForm] = useState<Partial<TablesInsert<"hotels">> & { property_type?: string; tech_partner_id?: string | null; company_id?: string | null; external_hotel_id?: number | null }>({
     name_en: "", name_ar: "", city: "", stars: 3, description_en: "", description_ar: "", address: "",
     contact_phone: "", contact_email: "", property_type: "hotel", tech_partner_id: null, company_id: null, external_hotel_id: null,
+    amenity_wifi: false, amenity_breakfast: false, amenity_electricity_24h: false, amenity_hot_water_24h: false,
+    amenity_parking: false, amenity_pool: false, amenity_ac_heating: false,
   });
 
   const { data: techPartners = [] } = useQuery({
