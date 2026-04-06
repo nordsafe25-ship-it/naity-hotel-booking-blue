@@ -26,6 +26,9 @@ async function sendEmail(to: string, subject: string, html: string) {
       content: "auto",
       html,
     });
+  } catch (e) {
+    console.error("SMTP send failed:", (e as Error).message);
+    // Don't re-throw — notification failure is non-critical
   } finally {
     await client.close();
   }
