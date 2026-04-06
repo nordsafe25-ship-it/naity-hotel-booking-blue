@@ -150,6 +150,17 @@ const BookingForm = () => {
     load();
   }, [hotelId, roomId]);
 
+  // Detect user country
+  useEffect(() => {
+    supabase.functions.invoke("detect-country").then(({ data, error }) => {
+      if (error) {
+        setIsSyria(false);
+        return;
+      }
+      setIsSyria(data?.is_syria ?? false);
+    }).catch(() => setIsSyria(false));
+  }, []);
+
   // Detect Stripe return
   useEffect(() => {
     const sessionId = new URLSearchParams(window.location.search).get("session_id");
