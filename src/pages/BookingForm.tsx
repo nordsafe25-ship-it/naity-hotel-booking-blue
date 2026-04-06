@@ -725,8 +725,8 @@ const BookingForm = () => {
                     <CreditCard className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h2 className="font-semibold text-foreground text-lg">{tx("دفع العربون", "Deposit Payment")}</h2>
-                    <p className="text-xs text-muted-foreground">{tx("ادفع العربون فقط لتأكيد حجزك", "Pay only the deposit to confirm your booking")}</p>
+                    <h2 className="font-semibold text-foreground text-lg">{tx("تأكيد الحجز والدفع", "Confirm & Pay")}</h2>
+                    <p className="text-xs text-muted-foreground">{tx("راجع التفاصيل واختر طريقة الدفع", "Review details and choose payment method")}</p>
                   </div>
                 </div>
 
@@ -757,32 +757,6 @@ const BookingForm = () => {
                     <span>{tx("الإجمالي", "Total")}</span>
                     <span dir="ltr">${totalPrice}</span>
                   </div>
-                  <div className="flex justify-between text-green-700">
-                    <span>{tx("العربون 10%", "Deposit 10%")}</span>
-                    <span dir="ltr">${totalDeposit}</span>
-                  </div>
-                  <div className="flex justify-between text-amber-700">
-                    <span>{tx("الباقي نقداً", "Balance cash")}</span>
-                    <span dir="ltr">${totalBalance}</span>
-                  </div>
-                  {extraRoom && (
-                    <div className="bg-muted/50 rounded-lg p-2 text-xs text-muted-foreground space-y-1 mt-1">
-                      <p>• {tx("عربون الغرفة 1:", "Room 1 deposit:")} ${deposit1}</p>
-                      <p>• {tx("عربون الغرفة 2:", "Room 2 deposit:")} ${deposit2}</p>
-                      <p className="text-primary font-medium">
-                        {tx("يُدفع مجموعهما في دفعة واحدة", "Paid together in one payment")}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Stripe info */}
-                <div className="bg-primary/5 rounded-lg p-3 border border-primary/20">
-                  <p className="text-xs text-primary font-medium flex items-start gap-2">
-                    <Shield className="w-4 h-4 shrink-0 mt-0.5" />
-                    {tx("الدفع الآمن عبر Stripe. لا نخزن بيانات بطاقتك. المبلغ المطلوب هو العربون فقط.",
-                        "Secure payment via Stripe. We never store your card details. Only the deposit is charged.")}
-                  </p>
                 </div>
 
                 {/* Peak season warning */}
@@ -806,13 +780,80 @@ const BookingForm = () => {
                   </div>
                 )}
 
-                <button
-                  onClick={handleStripeCheckout}
-                  disabled={processing}
-                  className="w-full gradient-cta text-primary-foreground py-3 rounded-xl font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
-                >
-                  {processing ? tx("جاري المعالجة...", "Processing...") : tx(`ادفع $${totalDeposit} عربون عبر Stripe`, `Pay $${totalDeposit} Deposit via Stripe`)}
-                </button>
+                {/* Loading country detection */}
+                {isSyria === null && (
+                  <div className="text-center py-4 text-muted-foreground text-sm">
+                    {tx("جاري التحقق...", "Detecting location...")}
+                  </div>
+                )}
+
+                {/* Syria — Cash on Arrival */}
+                {isSyria === true && (
+                  <div className="space-y-4">
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 space-y-2">
+                      <p className="font-semibold text-blue-700 dark:text-blue-400">
+                        {tx("الدفع عند الوصول", "Pay at Hotel")}
+                      </p>
+                      <p className="text-sm text-blue-600 dark:text-blue-300">
+                        {tx(
+                          "يمكنك الحجز الآن والدفع نقداً عند وصولك للفندق. لا يلزم دفع مسبق.",
+                          "Book now and pay cash when you arrive. No upfront payment required."
+                        )}
+                      </p>
+                      <div className="flex justify-between text-sm font-semibold">
+                        <span>{tx("المبلغ الكامل عند الوصول:", "Total to pay at hotel:")}</span>
+                        <span className="text-blue-700 dark:text-blue-400" dir="ltr">${totalPrice}</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleCashBooking}
+                      disabled={processing}
+                      className="w-full gradient-cta text-primary-foreground py-3 rounded-xl font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+                    >
+                      {processing
+                        ? tx("جاري الحجز...", "Processing...")
+                        : tx(`احجز الآن — ادفع $${totalPrice} عند الوصول`, `Book Now — Pay $${totalPrice} at Hotel`)}
+                    </button>
+                  </div>
+                )}
+
+                {/* International — Stripe */}
+                {isSyria === false && (
+                  <div className="space-y-4">
+                    <div className="bg-muted rounded-xl p-4 space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>{tx("الإجمالي:", "Total:")}</span>
+                        <span dir="ltr">${totalPrice}</span>
+                      </div>
+                      <div className="flex justify-between text-primary font-semibold">
+                        <span>{tx("العربون (10%):", "Deposit (10%):")}</span>
+                        <span dir="ltr">${totalDeposit}</span>
+                      </div>
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>{tx("المتبقي نقداً:", "Remaining cash:")}</span>
+                        <span dir="ltr">${totalPrice - totalDeposit}</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-primary/5 rounded-lg p-3 border border-primary/20">
+                      <p className="text-xs text-primary font-medium flex items-start gap-2">
+                        <Shield className="w-4 h-4 shrink-0 mt-0.5" />
+                        {tx("الدفع الآمن عبر Stripe. لا نخزن بيانات بطاقتك. المبلغ المطلوب هو العربون فقط.",
+                            "Secure payment via Stripe. We never store your card details. Only the deposit is charged.")}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={handleStripeCheckout}
+                      disabled={processing}
+                      className="w-full gradient-cta text-primary-foreground py-3 rounded-xl font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+                    >
+                      {processing
+                        ? tx("جاري المعالجة...", "Processing...")
+                        : tx(`ادفع $${totalDeposit} عربون عبر Stripe`, `Pay $${totalDeposit} Deposit via Stripe`)}
+                    </button>
+                  </div>
+                )}
               </motion.div>
             )}
 
