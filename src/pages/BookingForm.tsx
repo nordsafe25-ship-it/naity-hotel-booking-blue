@@ -131,6 +131,8 @@ const BookingForm = () => {
   // Payment / Voucher
   const [processing, setProcessing] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
+  const [isSyria, setIsSyria] = useState<boolean | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
 
   const today = new Date().toISOString().split("T")[0];
 
