@@ -229,6 +229,49 @@ const BookingForm = () => {
   const totalDeposit = deposit1 + deposit2;
   const totalBalance = totalPrice - totalDeposit;
 
+  const handleCashBooking = async () => {
+    setProcessing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("cash-booking", {
+        body: {
+          hotel_id: hotelId,
+          room_category_id: roomId,
+          guest_first_name: firstName,
+          guest_last_name: lastName,
+          guest_email: email,
+          guest_phone: `${phoneCode}${phone}`,
+          nationality,
+          guests_count: effectiveAdults,
+          children_count: actualChildren,
+          children_ages: childrenAges,
+          breakfast_included: breakfastIncluded ?? false,
+          check_in: checkIn,
+          check_out: checkOut,
+          nights,
+          total_price: totalPrice,
+          special_requests: specialRequests || null,
+          room_number: roomNumberParam || null,
+          extra_room: extraRoom ? {
+            room_category_id: extraRoom.id,
+            price_per_night: extraRoom.price_per_night,
+          } : null,
+        },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        setBookingId(data.booking_id);
+        setPaymentMethod("cash_on_arrival");
+        setStep("voucher");
+      } else {
+        throw new Error(data?.message || tx("حدث خطأ", "An error occurred"));
+      }
+    } catch (err: any) {
+      toast.error(err.message || tx("حدث خطأ", "An error occurred"));
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const handleStripeCheckout = async () => {
     setProcessing(true);
     try {
