@@ -902,14 +902,28 @@ const BookingForm = () => {
                       <span className="text-muted-foreground">{t("booking.checkOut")}</span>
                       <span className="font-medium text-foreground">{checkOut}</span>
                     </div>
-                    <div className="flex justify-between border-t border-border/50 pt-2">
-                      <span className="text-muted-foreground">{tx("المدفوع", "Paid")}</span>
-                      <span className="font-bold text-primary" dir="ltr">${totalDeposit}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{tx("المتبقي", "Remaining")}</span>
-                      <span className="font-medium text-foreground" dir="ltr">${totalBalance}</span>
-                    </div>
+                    {paymentMethod === "cash_on_arrival" ? (
+                      <>
+                        <div className="flex justify-between border-t border-border/50 pt-2">
+                          <span className="font-semibold text-blue-700 dark:text-blue-400">{tx("ادفع عند الوصول", "Pay at Hotel")}</span>
+                          <span className="font-bold text-blue-700 dark:text-blue-400" dir="ltr">${totalPrice}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground text-center">
+                          {tx("يُدفع نقداً عند الوصول للفندق", "Pay cash at hotel reception")}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex justify-between border-t border-border/50 pt-2">
+                          <span className="text-muted-foreground">{tx("المدفوع", "Paid")}</span>
+                          <span className="font-bold text-primary" dir="ltr">${totalDeposit}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">{tx("المتبقي", "Remaining")}</span>
+                          <span className="font-medium text-foreground" dir="ltr">${totalBalance}</span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
